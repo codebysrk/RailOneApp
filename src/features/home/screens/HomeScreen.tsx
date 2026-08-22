@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Defs, LinearGradient as SvgLinearGradient, Rect, Stop } from 'react-native-svg';
 import { colors } from '../../../theme/colors';
 import { spacing, radius, elevation } from '../../../theme/spacing';
 import { FirebaseService } from '../../../services/FirebaseService';
@@ -111,6 +111,7 @@ export const HomeScreen = () => {
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.upcomingScroll}>
               {upcomingList.map((journey, idx) => {
                 const trainNum = journey.train ? journey.train.split(' ')[0] : '12279';
+                const gradId = `ticketGrad-${journey.id}-${idx}`;
                 return (
                   <TouchableOpacity 
                     key={`journey-${journey.id}-${idx}`}
@@ -118,12 +119,21 @@ export const HomeScreen = () => {
                     activeOpacity={0.9}
                     onPress={() => navigation.navigate('Ticket', { ticket: journey })}
                   >
-                    <LinearGradient
-                      colors={['#3b2d71', '#543b8c', '#754da7', '#935ec2', '#aa6ccf']}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={styles.upcomingCardGradient}
-                    >
+                    {/* SVG Gradient Background */}
+                    <Svg height="100%" width="100%" style={StyleSheet.absoluteFill}>
+                      <Defs>
+                        <SvgLinearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
+                          <Stop offset="0%" stopColor="#3b2d71" />
+                          <Stop offset="25%" stopColor="#543b8c" />
+                          <Stop offset="50%" stopColor="#754da7" />
+                          <Stop offset="75%" stopColor="#935ec2" />
+                          <Stop offset="100%" stopColor="#aa6ccf" />
+                        </SvgLinearGradient>
+                      </Defs>
+                      <Rect width="100%" height="100%" fill={`url(#${gradId})`} rx={24} ry={24} />
+                    </Svg>
+
+                    <View style={styles.upcomingCardInner}>
                       {/* Top Semicircle Cutout */}
                       <View style={[styles.cardNotch, styles.cardNotchTop]} />
 
@@ -167,7 +177,7 @@ export const HomeScreen = () => {
 
                       {/* Bottom Semicircle Cutout */}
                       <View style={[styles.cardNotch, styles.cardNotchBottom]} />
-                    </LinearGradient>
+                    </View>
                   </TouchableOpacity>
                 );
               })}
@@ -242,7 +252,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     ...elevation.md,
   },
-  upcomingCardGradient: {
+  upcomingCardInner: {
     paddingHorizontal: 18,
     paddingVertical: 16,
     position: 'relative',
