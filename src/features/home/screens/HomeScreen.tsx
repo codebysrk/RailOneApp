@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '../../../theme/colors';
 import { spacing, radius, elevation } from '../../../theme/spacing';
 import { FirebaseService } from '../../../services/FirebaseService';
@@ -108,52 +109,68 @@ export const HomeScreen = () => {
           <View style={{ marginBottom: spacing.lg }}>
             <Text style={styles.sectionTitle}>Upcoming Journey</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.upcomingScroll}>
-              {upcomingList.map((journey, idx) => (
-                <TouchableOpacity 
-                  key={`journey-${journey.id}-${idx}`}
-                  style={styles.upcomingCard}
-                  activeOpacity={0.9}
-                  onPress={() => navigation.navigate('Ticket', { ticket: journey })}
-                >
-                  {/* Top Notch */}
-                  <View style={[styles.cardNotch, styles.cardNotchTop]} />
+              {upcomingList.map((journey, idx) => {
+                const trainNum = journey.train ? journey.train.split(' ')[0] : '12279';
+                return (
+                  <TouchableOpacity 
+                    key={`journey-${journey.id}-${idx}`}
+                    style={styles.upcomingCardWrapper}
+                    activeOpacity={0.9}
+                    onPress={() => navigation.navigate('Ticket', { ticket: journey })}
+                  >
+                    <LinearGradient
+                      colors={['#3b2d71', '#543b8c', '#754da7', '#935ec2', '#aa6ccf']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.upcomingCardGradient}
+                    >
+                      {/* Top Semicircle Cutout */}
+                      <View style={[styles.cardNotch, styles.cardNotchTop]} />
 
-                  <View style={styles.upcomingCardTop}>
-                    <Text style={styles.upcomingDate}>{journey.date}</Text>
-                    <View style={styles.trainNumBadge}>
-                      <Ionicons name="ticket" size={16} color="#86efac" style={{ marginRight: 6 }} />
-                      <Text style={styles.trainNumText}>{journey.train}</Text>
-                    </View>
-                  </View>
+                      {/* Top Row: Date & Train Number + Icon */}
+                      <View style={styles.upcomingCardTop}>
+                        <Text style={styles.upcomingDate}>{journey.date || 'Sat, 29 Aug 26'}</Text>
+                        <View style={styles.trainNumBadge}>
+                          <Ionicons name="ticket" size={20} color="#a8f3b0" style={styles.ticketIconStyle} />
+                          <Text style={styles.trainNumText}>{trainNum}</Text>
+                        </View>
+                      </View>
 
-                  <View style={styles.cardDivider} />
+                      <View style={styles.cardDivider} />
 
-                  <View style={styles.upcomingRouteRow}>
-                    <Text style={styles.upcomingStationLeft}>{journey.source}</Text>
-                    <Text style={styles.upcomingStationRight}>{journey.dest}</Text>
-                  </View>
+                      {/* Middle Row: Stations */}
+                      <View style={styles.upcomingRouteRow}>
+                        <Text style={styles.upcomingStationLeft}>{journey.source || 'MORENA'}</Text>
+                        <Text style={styles.upcomingStationRight}>{journey.dest || 'HAZRAT NIZAMUDDIN JN'}</Text>
+                      </View>
 
-                  <View style={styles.cardDivider} />
+                      <View style={styles.cardDivider} />
 
-                  <View style={styles.upcomingCardBottom}>
-                    <Text style={styles.reservedBadgeText}>Reserved</Text>
-                    <View style={styles.upcomingBtnsRow}>
-                      <TouchableOpacity style={styles.cardBtnOutline}>
-                        <Text style={styles.cardBtnText}>Book Again</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity 
-                        style={styles.cardBtnOutline}
-                        onPress={() => navigation.navigate('Ticket', { ticket: journey })}
-                      >
-                        <Text style={styles.cardBtnText}>View Details</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
+                      {/* Bottom Row: Reserved Badge & Pill Action Buttons */}
+                      <View style={styles.upcomingCardBottom}>
+                        <Text style={styles.reservedBadgeText}>Reserved</Text>
+                        <View style={styles.upcomingBtnsRow}>
+                          <TouchableOpacity 
+                            style={styles.cardBtnPill}
+                            onPress={() => navigation.navigate('Unreserved')}
+                          >
+                            <Text style={styles.cardBtnText}>Book Again</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity 
+                            style={styles.cardBtnPill}
+                            onPress={() => navigation.navigate('Ticket', { ticket: journey })}
+                          >
+                            <Text style={styles.cardBtnText}>View Details</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
 
-                  {/* Bottom Notch */}
-                  <View style={[styles.cardNotch, styles.cardNotchBottom]} />
-                </TouchableOpacity>
-              ))}
+                      {/* Bottom Semicircle Cutout */}
+                      <View style={[styles.cardNotch, styles.cardNotchBottom]} />
+                    </LinearGradient>
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
           </View>
         )}
@@ -218,39 +235,50 @@ const styles = StyleSheet.create({
   iconWrapper: { width: 65, height: 65, borderRadius: 18, justifyContent: 'center', alignItems: 'center', marginBottom: spacing.sm },
   gridTitle: { fontSize: 12, color: colors.textHeading, fontWeight: '500', textAlign: 'center', lineHeight: 16 },
   upcomingScroll: { marginHorizontal: -spacing.md, paddingHorizontal: spacing.md },
-  upcomingCard: {
-    width: width * 0.78,
-    backgroundColor: '#7c3aed',
-    borderRadius: 20,
-    padding: 14,
+  upcomingCardWrapper: {
+    width: width * 0.88,
+    borderRadius: 24,
     marginRight: 14,
-    position: 'relative',
     overflow: 'hidden',
     ...elevation.md,
   },
+  upcomingCardGradient: {
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+    position: 'relative',
+  },
   cardNotch: {
     position: 'absolute',
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: '#f8fafc',
-    right: 50,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.white,
+    right: 70,
   },
-  cardNotchTop: { top: -11 },
-  cardNotchBottom: { bottom: -11 },
+  cardNotchTop: { top: -14 },
+  cardNotchBottom: { bottom: -14 },
   upcomingCardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  upcomingDate: { color: colors.white, fontSize: 13, fontWeight: '500' },
-  trainNumBadge: { flexDirection: 'row', alignItems: 'center' },
-  trainNumText: { color: colors.white, fontSize: 14, fontWeight: 'bold' },
-  cardDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.2)', marginVertical: 10 },
+  upcomingDate: { color: colors.white, fontSize: 17, fontWeight: '500' },
+  trainNumBadge: { alignItems: 'flex-end', justifyContent: 'center' },
+  ticketIconStyle: { marginBottom: 2 },
+  trainNumText: { color: colors.white, fontSize: 21, fontWeight: '700', letterSpacing: 0.5 },
+  cardDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.22)', marginVertical: 11 },
   upcomingRouteRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  upcomingStationLeft: { color: colors.white, fontSize: 14, fontWeight: 'bold' },
-  upcomingStationRight: { color: 'rgba(255,255,255,0.9)', fontSize: 12, fontWeight: '500' },
+  upcomingStationLeft: { color: colors.white, fontSize: 14.5, fontWeight: '500', letterSpacing: 0.2 },
+  upcomingStationRight: { color: colors.white, fontSize: 14.5, fontWeight: '500', letterSpacing: 0.2, textAlign: 'right' },
   upcomingCardBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  reservedBadgeText: { color: '#86efac', fontSize: 14, fontWeight: 'bold' },
-  upcomingBtnsRow: { flexDirection: 'row' },
-  cardBtnOutline: { borderWidth: 1, borderColor: colors.white, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 4, marginLeft: 6 },
-  cardBtnText: { color: colors.white, fontSize: 11, fontWeight: '600' },
+  reservedBadgeText: { color: '#a8f3b0', fontSize: 17, fontWeight: '700' },
+  upcomingBtnsRow: { flexDirection: 'row', alignItems: 'center' },
+  cardBtnPill: { 
+    borderWidth: 1.5, 
+    borderColor: colors.white, 
+    borderRadius: 20, 
+    paddingHorizontal: 14, 
+    paddingVertical: 6, 
+    marginLeft: 8,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  cardBtnText: { color: colors.white, fontSize: 13, fontWeight: '500' },
 
   factsContainer: { flexDirection: 'row', marginHorizontal: -spacing.md, paddingHorizontal: spacing.md },
   factCard: { width: 140, marginRight: 12 },
