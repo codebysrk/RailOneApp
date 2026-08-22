@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Share } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Share, Animated } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,6 +7,81 @@ import { AppHeader } from '../../../components/common';
 import { colors } from '../../../theme/colors';
 import { spacing, elevation } from '../../../theme/spacing';
 import { useAuth } from '../../../context/AuthContext';
+
+// ─── Reverse Sliding Counter (Odometer Block) ───────────────────
+const ReverseSlidingBlock = ({ value }: { value: string }) => {
+  const [currentVal, setCurrentVal] = useState(value);
+  const [prevVal, setPrevVal] = useState<string | null>(null);
+
+  const anim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (value !== currentVal) {
+      setPrevVal(currentVal);
+      setCurrentVal(value);
+      anim.setValue(0);
+
+      Animated.timing(anim, {
+        toValue: 1,
+        duration: 380,
+        useNativeDriver: true,
+      }).start(() => {
+        setPrevVal(null);
+      });
+    }
+  }, [value, currentVal, anim]);
+
+  // Outgoing number: slides down from 0 to +44 and fades out
+  const outgoingTranslateY = anim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 44],
+  });
+  const outgoingOpacity = anim.interpolate({
+    inputRange: [0, 0.7, 1],
+    outputRange: [1, 0.3, 0],
+  });
+
+  // Incoming number: slides from top -44 to 0 and fades in
+  const incomingTranslateY = anim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-44, 0],
+  });
+  const incomingOpacity = anim.interpolate({
+    inputRange: [0, 0.4, 1],
+    outputRange: [0, 0.8, 1],
+  });
+
+  return (
+    <View style={styles.odometerBlock}>
+      {prevVal !== null && (
+        <Animated.Text
+          style={[
+            styles.timerDigital,
+            styles.odometerAbsolute,
+            {
+              transform: [{ translateY: outgoingTranslateY }],
+              opacity: outgoingOpacity,
+            },
+          ]}
+        >
+          {prevVal}
+        </Animated.Text>
+      )}
+      <Animated.Text
+        style={[
+          styles.timerDigital,
+          prevVal !== null && styles.odometerAbsolute,
+          prevVal !== null && {
+            transform: [{ translateY: incomingTranslateY }],
+            opacity: incomingOpacity,
+          },
+        ]}
+      >
+        {currentVal}
+      </Animated.Text>
+    </View>
+  );
+};
 
 export const TicketScreen = () => {
   const navigation = useNavigation<any>();
@@ -84,11 +159,15 @@ export const TicketScreen = () => {
 
             <View style={styles.verticalDashedSeparator} />
 
-            {/* Center Main Countdown Content */}
+            {/* Center Main Countdown Content with Reverse Sliding Odometer */}
             <View style={styles.centerBannerContent}>
               <Text style={styles.previewCloseText}>Dynamic preview will close in</Text>
               
-              <Text style={styles.timerDigital}>{minutes}:{seconds}</Text>
+              <View style={styles.timerRow}>
+                <ReverseSlidingBlock value={minutes} />
+                <Text style={styles.timerColon}>:</Text>
+                <ReverseSlidingBlock value={seconds} />
+              </View>
               
               <Text style={styles.bookingDateLabel}>Ticket Booking Date & Time</Text>
               
@@ -296,13 +375,44 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 0.2,
   },
+  timerRow: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center',
+    marginVertical: 1,
+  },
+  odometerBlock: { 
+    width: 60, 
+    height: 46, 
+    overflow: 'hidden', 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    position: 'relative',
+  },
+  odometerAbsolute: { 
+    position: 'absolute', 
+    top: 0, 
+    left: 0, 
+    right: 0, 
+    bottom: 0, 
+    textAlign: 'center',
+  },
+  timerColon: { 
+    color: '#ff2323', 
+    fontSize: 38, 
+    fontWeight: '900', 
+    lineHeight: 44,
+    marginHorizontal: 1,
+    paddingBottom: 4,
+    textAlign: 'center',
+  },
   timerDigital: { 
     color: '#ff2323', 
     fontSize: 42, 
     fontWeight: '900', 
     letterSpacing: 1.5, 
-    marginVertical: 0,
     lineHeight: 46,
+    textAlign: 'center',
   },
   bookingDateLabel: { 
     color: '#8491a2', 
