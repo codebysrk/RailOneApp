@@ -69,16 +69,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   blueHeader: {
-    backgroundColor: '#0066ff',
+    backgroundColor: '#005bab',
   },
   lightHeader: {
     backgroundColor: '#f8fafc',
   },
   circleBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    borderWidth: 1,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1.2,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -92,11 +92,11 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
   subtitle: {
-    fontSize: 12,
-    marginTop: 2,
+    fontSize: 12.5,
+    marginTop: 1,
   },
   rightActionBtn: {
     padding: 6,
