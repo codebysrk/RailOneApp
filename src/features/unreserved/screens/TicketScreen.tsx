@@ -347,30 +347,23 @@ export const TicketScreen = () => {
           {/* Full-width Divider */}
           <View style={styles.sectionDivider} />
 
-          {/* ─── 3. "Do you know?" Section (5 Official Cards) ────────── */}
+          {/* ─── 3. "Do you know?" Section ───────────────────────────── */}
           <View style={styles.infoSection}>
             <Text style={styles.infoTitle}>Do you know?</Text>
 
             <Text style={styles.infoParagraph}>
-              1. IR recovers only 57% of cost of travel on an average.
+              IR recovers only 57% of cost of travel on an average.
             </Text>
 
             <Text style={styles.infoParagraph}>
-              2. This ticket is booked on a personal user ID.{'\n'}
+              This ticket is booked on a personal user ID.{'\n'}
               It's sale/purchase is an offence u/s 143 of the{'\n'}
-              Railways Act, 1989.
+              Railways Act, 1989
             </Text>
 
             <Text style={styles.infoParagraph}>
-              3. For enquiry and integrated railway helpline, please dial 139.
-            </Text>
-
-            <Text style={styles.infoParagraph}>
-              4. Carrying inflammable articles or explosives in trains is a punishable offence under Section 164 of the Railways Act, 1989.
-            </Text>
-
-            <Text style={styles.infoParagraph}>
-              5. Unauthorised alarm chain pulling is a punishable offence with imprisonment up to 1 year or fine under Section 141 of Railways Act.
+              For enquiry and integrated railway helpline.{'\n'}
+              please dial 139.
             </Text>
           </View>
 
