@@ -80,7 +80,7 @@ export const BookingConfigScreen = () => {
     } catch {
       await StorageService.saveBookedTicket(newTicket);
     }
-    navigation.navigate('Ticket', { ticket: newTicket });
+    navigation.navigate('Ticket', { ticket: newTicket, fromBooking: true });
   };
 
   return (

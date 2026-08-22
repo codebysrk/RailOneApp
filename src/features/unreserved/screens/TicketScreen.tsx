@@ -12,6 +12,7 @@ import {
   Platform,
   Share,
   Animated,
+  BackHandler,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -101,6 +102,7 @@ export const TicketScreen = () => {
   const route = useRoute<any>();
   const { user } = useAuth();
   const ticketData = route.params?.ticket;
+  const fromBooking = route.params?.fromBooking;
 
   const pnr = ticketData?.pnr || '2160978001';
   const ticketId = ticketData?.ticketId || 'XMJTEFH005';
@@ -120,6 +122,33 @@ export const TicketScreen = () => {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Back Navigation Handler
+  const handleBack = () => {
+    if (fromBooking) {
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Main' }],
+      });
+    } else {
+      navigation.goBack();
+    }
+  };
+
+  // Hardware Android Back Button Handler
+  useEffect(() => {
+    if (!fromBooking) return;
+    const backAction = () => {
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Main' }],
+      });
+      return true; // prevent default back stack pop
+    };
+
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+    return () => backHandler.remove();
+  }, [fromBooking, navigation]);
 
   const minutes = Math.floor(timeLeft / 60).toString().padStart(2, '0');
   const seconds = (timeLeft % 60).toString().padStart(2, '0');
@@ -167,7 +196,7 @@ export const TicketScreen = () => {
         title="Booking Details"
         subtitle={`Mobile: ${userMobile}`}
         variant="blue"
-        onBack={() => navigation.goBack()}
+        onBack={handleBack}
         rightAction={{
           icon: 'share-social-outline',
           onPress: onShare,
