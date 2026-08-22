@@ -135,6 +135,7 @@ export const TicketScreen = () => {
   // Feedback State
   const [rating, setRating] = useState<number>(0);
   const [description, setDescription] = useState<string>('');
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState<boolean>(false);
 
   const onShare = async () => {
     try {
@@ -151,7 +152,8 @@ export const TicketScreen = () => {
       Alert.alert('Feedback', 'Please provide a star rating or comments before submitting.');
       return;
     }
-    Alert.alert('Thank You!', 'Your feedback has been recorded successfully.');
+    setFeedbackSubmitted(true);
+    Alert.alert('Thank You!', 'Your rating and feedback have been recorded successfully.');
   };
 
   const qrUri = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(
@@ -336,61 +338,65 @@ export const TicketScreen = () => {
             </Text>
           </View>
 
-          {/* Full-width Divider */}
-          <View style={styles.sectionDivider} />
+          {/* ─── 4. Rating & Experience Section (Disappears once submitted) ── */}
+          {!feedbackSubmitted && (
+            <>
+              {/* Full-width Divider */}
+              <View style={styles.sectionDivider} />
 
-          {/* ─── 4. Rating & Experience Section ──────────────────────── */}
-          <View style={styles.ratingSection}>
-            <Text style={styles.experienceTitle}>
-              How was your ticket booking experience ?
-            </Text>
+              <View style={styles.ratingSection}>
+                <Text style={styles.experienceTitle}>
+                  How was your ticket booking experience ?
+                </Text>
 
-            <Text style={styles.ratingLabel}>Your Rating</Text>
+                <Text style={styles.ratingLabel}>Your Rating</Text>
 
-            {/* 5 Outlined Stars */}
-            <View style={styles.starsRow}>
-              {[1, 2, 3, 4, 5].map((star) => (
-                <TouchableOpacity
-                  key={star}
-                  onPress={() => setRating(star)}
-                  activeOpacity={0.7}
-                  style={styles.starBtn}
-                >
-                  <Ionicons
-                    name={rating >= star ? 'star' : 'star-outline'}
-                    size={28}
-                    color={rating >= star ? '#f59e0b' : '#6b655c'}
+                {/* 5 Outlined Stars */}
+                <View style={styles.starsRow}>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <TouchableOpacity
+                      key={star}
+                      onPress={() => setRating(star)}
+                      activeOpacity={0.7}
+                      style={styles.starBtn}
+                    >
+                      <Ionicons
+                        name={rating >= star ? 'star' : 'star-outline'}
+                        size={28}
+                        color={rating >= star ? '#f59e0b' : '#6b655c'}
+                      />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {/* Description Textarea Box */}
+                <View style={styles.textareaContainer}>
+                  <TextInput
+                    style={styles.textareaInput}
+                    placeholder="Description"
+                    placeholderTextColor="#7a746b"
+                    multiline
+                    maxLength={200}
+                    value={description}
+                    onChangeText={setDescription}
                   />
+                  <Text style={styles.charCounter}>{description.length}/200</Text>
+                </View>
+
+                {/* Submit Button */}
+                <TouchableOpacity
+                  style={[
+                    styles.submitBtn,
+                    (rating > 0 || description.length > 0) && styles.submitBtnActive,
+                  ]}
+                  onPress={handleSubmitFeedback}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.submitBtnText}>Submit</Text>
                 </TouchableOpacity>
-              ))}
-            </View>
-
-            {/* Description Textarea Box */}
-            <View style={styles.textareaContainer}>
-              <TextInput
-                style={styles.textareaInput}
-                placeholder="Description"
-                placeholderTextColor="#7a746b"
-                multiline
-                maxLength={200}
-                value={description}
-                onChangeText={setDescription}
-              />
-              <Text style={styles.charCounter}>{description.length}/200</Text>
-            </View>
-
-            {/* Submit Button */}
-            <TouchableOpacity
-              style={[
-                styles.submitBtn,
-                (rating > 0 || description.length > 0) && styles.submitBtnActive,
-              ]}
-              onPress={handleSubmitFeedback}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.submitBtnText}>Submit</Text>
-            </TouchableOpacity>
-          </View>
+              </View>
+            </>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -404,7 +410,7 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    backgroundColor: '#ded5c7',
+    backgroundColor: '#ffffff',
   },
   scrollContent: {
     padding: spacing.md,
