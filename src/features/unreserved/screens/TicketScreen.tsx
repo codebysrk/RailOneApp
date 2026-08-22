@@ -15,26 +15,34 @@ export const TicketScreen = () => {
   const ticketData = route.params?.ticket;
 
   const pnr = ticketData?.pnr || '2160978001';
-  const ticketId = ticketData?.ticketId || 'XMSQEB4004';
-  const source = ticketData?.source || 'MORENA';
-  const dest = ticketData?.dest || 'HAZRAT NIZAMUDDIN JN';
-  const fare = ticketData?.fare || '120.00';
-  const bookingDate = ticketData?.date || '10 Mar 2026, 07:37';
+  const ticketId = ticketData?.ticketId || 'XMJTEFH005';
+  const source = ticketData?.source || 'RAJA-KI-MANDI';
+  const dest = ticketData?.dest || 'AGRA CANTT';
+  const fare = ticketData?.fare || '10.00';
+  const bookingDate = ticketData?.date || '14 Aug 2026, 14:01';
 
   const userMobile = user?.mobile || '—';
   const userName = user?.name || 'Passenger';
 
-  const [timeLeft, setTimeLeft] = useState(285);
+  const [timeLeft, setTimeLeft] = useState(268);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft(prev => (prev > 0 ? prev - 1 : 300));
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 300));
     }, 1000);
     return () => clearInterval(timer);
   }, []);
 
   const minutes = Math.floor(timeLeft / 60).toString().padStart(2, '0');
   const seconds = (timeLeft % 60).toString().padStart(2, '0');
+
+  // Compute formatted timestamps
+  const bookedNumeric = '14/08/2026 14:01';
+  const validTillNumeric = '14/08/2026 17:01';
+  const rNumber = ticketData?.rNumber || 'R15594';
+  const irCode = ticketData?.irCode || 'IR:09AAAGM0289C1ZH';
+  const via = ticketData?.via || '---';
+  const distance = ticketData?.distance || '4 km';
 
   const onShare = async () => {
     try {
@@ -62,82 +70,88 @@ export const TicketScreen = () => {
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <Text style={styles.greetingText}>Thank You {userName}, Happy Journey !</Text>
 
-        {/* Main Ticket Card */}
+        {/* ─── Main Pixel-Perfect Ticket Card ────────────────────────── */}
         <View style={styles.ticketCardWrapper}>
-          {/* Top Cyan Ribbon */}
-          <View style={styles.cyanRibbon} />
+          {/* Top Lavender Ribbon */}
+          <View style={styles.purpleRibbon} />
 
-          {/* Dynamic Top Dark Banner */}
+          {/* Dynamic Dark Banner */}
           <View style={styles.darkBanner}>
-            {/* Left Vertical Text */}
-            <View style={styles.verticalTextCol}>
-              <Text style={styles.verticalText}>INDIAN RAILWAYS</Text>
+            {/* Left Vertical Column */}
+            <View style={styles.verticalColLeft}>
+              <Text style={styles.verticalTextEnglish}>INDIAN RAILWAYS</Text>
             </View>
 
-            <View style={styles.verticalDashedLine} />
+            <View style={styles.verticalDashedSeparator} />
 
-            {/* Center Dynamic Content */}
+            {/* Center Main Countdown Content */}
             <View style={styles.centerBannerContent}>
               <Text style={styles.previewCloseText}>Dynamic preview will close in</Text>
+              
               <Text style={styles.timerDigital}>{minutes}:{seconds}</Text>
               
               <Text style={styles.bookingDateLabel}>Ticket Booking Date & Time</Text>
+              
               <Text style={styles.bookingDateValue}>{bookingDate}</Text>
               
-              <Text style={styles.rNumberText}>R13491</Text>
+              <Text style={styles.rNumberText}>{rNumber}</Text>
+              
               <Text style={styles.nonTransferableText}>Ticket is Non-Transferable</Text>
             </View>
 
-            <View style={styles.verticalDashedLine} />
+            <View style={styles.verticalDashedSeparator} />
 
-            {/* Right Vertical Text */}
-            <View style={styles.verticalTextCol}>
+            {/* Right Vertical Column */}
+            <View style={styles.verticalColRight}>
               <Text style={styles.verticalTextHindi}>भारतीय रेल</Text>
             </View>
           </View>
 
-          {/* Middle Ticket Details */}
+          {/* Ticket Body (Warm Paper Section) */}
           <View style={styles.ticketBody}>
+            {/* Row 1: Journey Ticket & ID */}
             <View style={styles.rowBetween}>
               <Text style={styles.ticketTypeTitle}>Journey Ticket</Text>
               <Text style={styles.ticketIdText}>{ticketId}</Text>
             </View>
 
-            {/* Station Route */}
+            {/* Row 2: Stations Route & Distance */}
             <View style={styles.routeRow}>
               <Text style={styles.stnNameLeft}>{source}</Text>
-              <Text style={styles.distanceText}>—268 km—</Text>
+              <Text style={styles.distanceText}>—{distance}—</Text>
               <Text style={styles.stnNameRight}>{dest}</Text>
             </View>
 
-            {/* Via & Passenger */}
+            {/* Row 3: Via & Passenger */}
             <View style={styles.detailsGrid}>
-              <View style={styles.gridCol}>
+              <View style={styles.gridColLeft}>
                 <Text style={styles.gridLabel}>Via</Text>
-                <Text style={styles.gridValue}>TKD</Text>
+                <Text style={styles.gridValue}>{via}</Text>
               </View>
-              <View style={[styles.gridCol, { alignItems: 'flex-end' }]}>
-                <Text style={styles.gridLabel}>Passenger</Text>
-                <Text style={styles.gridValue}>{ticketData?.passengers || '1 Adult, 0 Child'}</Text>
+              <View style={styles.gridColRight}>
+                <Text style={styles.gridLabelRight}>Passenger</Text>
+                <Text style={styles.gridValueRight}>{ticketData?.passengers || '1 Adult, 0 Child'}</Text>
               </View>
             </View>
 
-            {/* Booked on & Valid Till */}
+            {/* Row 4: Booked on & Valid Till */}
             <View style={styles.detailsGrid}>
-              <View style={styles.gridCol}>
+              <View style={styles.gridColLeft}>
                 <Text style={styles.gridLabel}>Booked on</Text>
-                <Text style={styles.gridValue}>{bookingDate}</Text>
+                <Text style={styles.gridValue}>{bookedNumeric}</Text>
               </View>
-              <View style={[styles.gridCol, { alignItems: 'flex-end' }]}>
-                <Text style={styles.gridLabel}>*Valid Till</Text>
-                <Text style={styles.gridValue}>10/03/2026 23:59</Text>
+              <View style={styles.gridColRight}>
+                <Text style={styles.gridLabelRight}>*Valid Till</Text>
+                <Text style={styles.gridValueRight}>{validTillNumeric}</Text>
               </View>
             </View>
 
-            {/* Class & Fare */}
+            {/* Row 5: Class | Train Type | Ticket Type | Fare */}
             <View style={styles.fareInfoBlock}>
-              <Text style={styles.fareSummaryText}>{ticketData?.classType || 'SECOND'} | {ticketData?.trainType || 'SUPERFAST'} | JOURNEY | ₹{fare}</Text>
-              <Text style={styles.irCodeText}>IR:23AAAGM0289C1ZR</Text>
+              <Text style={styles.fareSummaryText}>
+                {ticketData?.classType || 'SECOND'} | {ticketData?.trainType || 'ORDINARY'} | JOURNEY | ₹{fare}
+              </Text>
+              <Text style={styles.irCodeText}>{irCode}</Text>
             </View>
 
             {/* Tear Cutout Line */}
@@ -147,15 +161,17 @@ export const TicketScreen = () => {
               <View style={[styles.tearCutout, styles.tearCutoutRight]} />
             </View>
 
+            {/* Row 6: Validity Subtext */}
             <Text style={styles.validityNote}>
-              *Valid for start of journey by 10/03/2026 or until departure of first train
+              *Valid for start of journey within 3 hour or until departure of the first train.
             </Text>
           </View>
 
-          {/* Bottom Cyan Ribbon */}
-          <View style={styles.cyanRibbon} />
+          {/* Bottom Lavender Ribbon */}
+          <View style={styles.purpleRibbon} />
         </View>
 
+        {/* ─── Other Secondary Features (Preserved) ────────────────── */}
         {/* Warning Note */}
         <View style={styles.warningCard}>
           <Text style={styles.warningText}>
@@ -205,90 +221,243 @@ export const TicketScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
+  container: { flex: 1, backgroundColor: '#e9e8e3' },
   scroll: { padding: spacing.md, paddingBottom: 40 },
   greetingText: { fontSize: 13, color: '#64748b', marginBottom: spacing.md, textAlign: 'center' },
 
+  // ─── Ticket Wrapper ──────────────────────────────────────────
   ticketCardWrapper: { 
-    backgroundColor: colors.white, 
-    borderRadius: 16, 
+    backgroundColor: '#ffffff', 
+    borderRadius: 18, 
     overflow: 'hidden', 
     borderWidth: 1, 
-    borderColor: '#e2e8f0', 
+    borderColor: '#d5d3cb', 
     ...elevation.md,
-    marginBottom: spacing.md
+    marginBottom: spacing.lg,
   },
-  cyanRibbon: { height: 14, backgroundColor: '#06b6d4' },
+  purpleRibbon: { 
+    height: 9, 
+    backgroundColor: '#8278b3', 
+  },
 
+  // ─── Top Dark Section ────────────────────────────────────────
   darkBanner: { 
-    backgroundColor: '#0f172a', 
+    backgroundColor: '#101622', 
     flexDirection: 'row', 
-    paddingVertical: 12, 
+    paddingTop: 16,
+    paddingBottom: 16,
     alignItems: 'center',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
   },
-  verticalTextCol: { width: 38, alignItems: 'center', justifyContent: 'center' },
-  verticalText: { 
-    color: '#e2e8f0', 
-    fontSize: 14, 
-    fontWeight: 'bold', 
-    letterSpacing: 1.5,
+  verticalColLeft: { 
+    width: 36, 
+    alignItems: 'center', 
+    justifyContent: 'center',
+  },
+  verticalTextEnglish: { 
+    color: '#8b96a5', 
+    fontSize: 13, 
+    fontWeight: '700', 
+    letterSpacing: 2.2,
     transform: [{ rotate: '-90deg' }],
-    width: 140,
-    textAlign: 'center'
+    width: 170,
+    textAlign: 'center',
+  },
+  verticalColRight: { 
+    width: 36, 
+    alignItems: 'center', 
+    justifyContent: 'center',
   },
   verticalTextHindi: { 
-    color: '#e2e8f0', 
-    fontSize: 19, 
-    fontWeight: 'bold', 
-    letterSpacing: 2,
+    color: '#8b96a5', 
+    fontSize: 16, 
+    fontWeight: '700', 
+    letterSpacing: 2.2,
     transform: [{ rotate: '-90deg' }],
-    width: 140,
-    textAlign: 'center'
+    width: 170,
+    textAlign: 'center',
   },
-  verticalDashedLine: { width: 1, height: '88%', borderWidth: 1, borderColor: '#334155', borderStyle: 'dashed' },
-  centerBannerContent: { flex: 1, alignItems: 'center', paddingHorizontal: 4 },
-  previewCloseText: { color: colors.white, fontSize: 13, fontWeight: '500' },
-  timerDigital: { color: '#ef4444', fontSize: 36, fontWeight: '900', letterSpacing: 2, marginVertical: 2 },
-  bookingDateLabel: { color: '#94a3b8', fontSize: 11, marginTop: 2 },
-  bookingDateValue: { color: '#f59e0b', fontSize: 17, fontWeight: 'bold', marginTop: 1 },
-  rNumberText: { color: '#94a3b8', fontSize: 11, marginTop: 4 },
-  nonTransferableText: { color: colors.white, fontSize: 11, marginTop: 2 },
+  verticalDashedSeparator: { 
+    width: 1, 
+    height: '92%', 
+    borderWidth: 1, 
+    borderColor: '#2e3846', 
+    borderStyle: 'dashed',
+  },
 
-  ticketBody: { padding: spacing.md, backgroundColor: '#ffffff' },
-  rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  ticketTypeTitle: { fontSize: 16, fontWeight: 'bold', color: '#1e293b' },
-  ticketIdText: { fontSize: 15, fontWeight: 'bold', color: '#1e293b' },
+  centerBannerContent: { 
+    flex: 1, 
+    alignItems: 'center', 
+    paddingHorizontal: 4,
+  },
+  previewCloseText: { 
+    color: '#f0ece3', 
+    fontSize: 16, 
+    fontWeight: '600',
+    letterSpacing: 0.2,
+    marginTop: 2,
+  },
+  timerDigital: { 
+    color: '#ff2323', 
+    fontSize: 48, 
+    fontWeight: '900', 
+    letterSpacing: 1.5, 
+    marginVertical: 1,
+  },
+  bookingDateLabel: { 
+    color: '#8491a2', 
+    fontSize: 12.5, 
+    fontWeight: '500',
+    marginTop: 4, 
+  },
+  bookingDateValue: { 
+    color: '#f26211', 
+    fontSize: 25, 
+    fontWeight: '800', 
+    letterSpacing: 0.3,
+    marginTop: 2, 
+  },
+  rNumberText: { 
+    color: '#cbd5e1', 
+    fontSize: 13, 
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    marginTop: 8, 
+  },
+  nonTransferableText: { 
+    color: '#e2e8f0', 
+    fontSize: 13, 
+    fontWeight: '500',
+    marginTop: 2, 
+    marginBottom: 4,
+  },
 
-  routeRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginVertical: 10 },
-  stnNameLeft: { fontSize: 14, fontWeight: 'bold', color: '#1e293b', flex: 1 },
-  distanceText: { fontSize: 12, color: '#64748b', marginHorizontal: 8 },
-  stnNameRight: { fontSize: 13, fontWeight: 'bold', color: '#1e293b', flex: 1, textAlign: 'right' },
+  // ─── Ticket Body Section (Paper) ─────────────────────────────
+  ticketBody: { 
+    paddingHorizontal: 20, 
+    paddingTop: 16,
+    paddingBottom: 8,
+    backgroundColor: '#f7f7f5', 
+  },
+  rowBetween: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginBottom: 14,
+  },
+  ticketTypeTitle: { 
+    fontSize: 16.5, 
+    fontWeight: '600', 
+    color: '#262626',
+    letterSpacing: 0.2,
+  },
+  ticketIdText: { 
+    fontSize: 16.5, 
+    fontWeight: '800', 
+    color: '#1a1a1a',
+    letterSpacing: 0.5,
+  },
 
-  detailsGrid: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 8 },
-  gridCol: { flex: 1 },
-  gridLabel: { fontSize: 12, color: '#94a3b8', marginBottom: 2 },
-  gridValue: { fontSize: 13, fontWeight: '600', color: '#1e293b' },
+  routeRow: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginBottom: 14,
+  },
+  stnNameLeft: { 
+    fontSize: 15.5, 
+    fontWeight: '700', 
+    color: '#1e293b', 
+    flex: 1,
+    letterSpacing: 0.2,
+  },
+  distanceText: { 
+    fontSize: 13, 
+    color: '#475569', 
+    marginHorizontal: 6,
+    fontWeight: '500',
+  },
+  stnNameRight: { 
+    fontSize: 15.5, 
+    fontWeight: '700', 
+    color: '#1e293b', 
+    flex: 1, 
+    textAlign: 'right',
+    letterSpacing: 0.2,
+  },
 
-  fareInfoBlock: { marginTop: 8, marginBottom: 12 },
-  fareSummaryText: { fontSize: 13, fontWeight: 'bold', color: '#1e293b' },
-  irCodeText: { fontSize: 12, color: '#64748b', marginTop: 2 },
+  detailsGrid: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    marginBottom: 14,
+  },
+  gridColLeft: { flex: 1 },
+  gridColRight: { flex: 1, alignItems: 'flex-end' },
+  gridLabel: { fontSize: 13.5, color: '#737373', fontWeight: '500', marginBottom: 2 },
+  gridLabelRight: { fontSize: 13.5, color: '#737373', fontWeight: '500', marginBottom: 2, textAlign: 'right' },
+  gridValue: { fontSize: 14.5, fontWeight: '700', color: '#1c1917' },
+  gridValueRight: { fontSize: 14.5, fontWeight: '700', color: '#1c1917', textAlign: 'right' },
 
-  tearWrapper: { height: 20, flexDirection: 'row', alignItems: 'center', position: 'relative', marginVertical: 6 },
-  tearDashedLine: { flex: 1, height: 1, borderWidth: 1, borderColor: '#cbd5e1', borderStyle: 'dashed' },
-  tearCutout: { width: 22, height: 22, borderRadius: 11, backgroundColor: '#f8fafc', position: 'absolute', top: -1 },
-  tearCutoutLeft: { left: -26 },
-  tearCutoutRight: { right: -26 },
+  fareInfoBlock: { 
+    marginTop: 4, 
+    marginBottom: 16,
+  },
+  fareSummaryText: { 
+    fontSize: 14.5, 
+    fontWeight: '700', 
+    color: '#1f2937',
+    letterSpacing: 0.2,
+  },
+  irCodeText: { 
+    fontSize: 13.5, 
+    fontWeight: '600',
+    color: '#475569', 
+    marginTop: 3, 
+  },
 
-  validityNote: { fontSize: 10, color: '#64748b', textAlign: 'center', marginTop: 6 },
+  // ─── Tear Notch & Dashed Cutout Line ─────────────────────────
+  tearWrapper: { 
+    height: 28, 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    position: 'relative', 
+    marginVertical: 4,
+  },
+  tearDashedLine: { 
+    flex: 1, 
+    height: 1, 
+    borderWidth: 1, 
+    borderColor: '#c7c7c0', 
+    borderStyle: 'dashed',
+  },
+  tearCutout: { 
+    width: 28, 
+    height: 28, 
+    borderRadius: 14, 
+    backgroundColor: '#e9e8e3', 
+    position: 'absolute', 
+    top: 0,
+  },
+  tearCutoutLeft: { left: -34 },
+  tearCutoutRight: { right: -34 },
 
+  validityNote: { 
+    fontSize: 11.5, 
+    color: '#57534e', 
+    lineHeight: 16,
+    fontWeight: '500',
+    marginTop: 8,
+    marginBottom: 8,
+  },
+
+  // ─── Preserved Outer Section Styles ──────────────────────────
   warningCard: { 
     backgroundColor: '#fef2f2', 
     borderRadius: 12, 
     padding: spacing.md, 
     borderWidth: 1, 
     borderColor: '#fecaca', 
-    marginBottom: spacing.md 
+    marginBottom: spacing.md,
   },
   warningText: { color: '#ef4444', fontSize: 12, lineHeight: 17, textAlign: 'center' },
 
@@ -299,7 +468,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, 
     borderColor: '#0066ff', 
     alignItems: 'center',
-    marginBottom: spacing.lg
+    marginBottom: spacing.lg,
   },
   connectingBtnText: { color: '#0066ff', fontSize: 14, fontWeight: '600' },
 
@@ -312,7 +481,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, 
     borderColor: '#e2e8f0', 
     marginBottom: spacing.lg,
-    ...elevation.sm
+    ...elevation.sm,
   },
   qrHeaderRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
   qrHeaderText: { fontSize: 13, fontWeight: '800', color: '#1e293b', letterSpacing: 0.8 },
@@ -328,5 +497,5 @@ const styles = StyleSheet.create({
 
   infoSection: { paddingHorizontal: 4, marginBottom: spacing.xl },
   infoSectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#065f46', marginBottom: 6 },
-  infoText: { fontSize: 13, color: '#334155', lineHeight: 20, marginBottom: 12 }
+  infoText: { fontSize: 13, color: '#334155', lineHeight: 20, marginBottom: 12 },
 });
