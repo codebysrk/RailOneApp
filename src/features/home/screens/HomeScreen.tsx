@@ -9,6 +9,16 @@ import { spacing, radius, elevation } from '../../../theme/spacing';
 import { FirebaseService } from '../../../services';
 import { useAuth } from '../../../context/AuthContext';
 import { APP_OFFERINGS as offerings, APP_FACTS as facts } from '../../../constants';
+import {
+  SearchTrainsIcon,
+  PNRStatusIcon,
+  CoachPositionIcon,
+  TrackYourTrainIcon,
+  OrderFoodIcon,
+  FileRefundIcon,
+  RailMadadIcon,
+  GoToWavesIcon,
+} from '../components/OfferingIcons';
 
 const { width } = Dimensions.get('window');
 
@@ -30,6 +40,29 @@ export const HomeScreen = () => {
     });
     return () => unsubscribe();
   }, [user?.uid]);
+
+  const renderOfferingIcon = (type: string, color: string) => {
+    switch (type) {
+      case 'search':
+        return <SearchTrainsIcon color={color} size={32} />;
+      case 'pnr':
+        return <PNRStatusIcon color={color} size={32} />;
+      case 'coach':
+        return <CoachPositionIcon color={color} size={32} />;
+      case 'track':
+        return <TrackYourTrainIcon color={color} size={32} />;
+      case 'food':
+        return <OrderFoodIcon color={color} size={32} />;
+      case 'refund':
+        return <FileRefundIcon color={color} size={32} />;
+      case 'madad':
+        return <RailMadadIcon color={color} size={32} />;
+      case 'waves':
+        return <GoToWavesIcon color={color} size={32} />;
+      default:
+        return null;
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -87,10 +120,10 @@ export const HomeScreen = () => {
 
         <Text style={styles.sectionTitle}>More Offerings</Text>
         <View style={styles.grid}>
-          {offerings.map(item => (
-            <TouchableOpacity key={item.id} style={styles.gridItem} activeOpacity={0.7}>
+          {offerings.map((item) => (
+            <TouchableOpacity key={item.id} style={styles.gridItem} activeOpacity={0.75}>
               <View style={[styles.iconWrapper, { backgroundColor: item.bg }]}>
-                <Ionicons name={item.icon as any} size={28} color={item.color} />
+                {renderOfferingIcon(item.type, item.color)}
               </View>
               <Text style={styles.gridTitle}>{item.title}</Text>
             </TouchableOpacity>
@@ -224,7 +257,7 @@ const styles = StyleSheet.create({
   logo: { height: 32, width: 120 },
   scroll: { padding: spacing.md, paddingBottom: 40 },
   greeting: { fontSize: 16, fontWeight: '700', color: colors.textHeading, marginBottom: spacing.md },
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', color: colors.textHeading, marginBottom: spacing.md, marginTop: spacing.lg },
+  sectionTitle: { fontSize: 20, fontWeight: '700', color: '#16274e', marginBottom: spacing.md, marginTop: spacing.lg },
   journeyPlanner: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   jpItem: { width: (width - spacing.md * 2 - 24) / 3, alignItems: 'center' },
   jpImageWrapper: {
@@ -237,9 +270,16 @@ const styles = StyleSheet.create({
   jpImage: { width: '100%', height: '100%' },
   jpText: { fontSize: 14.5, fontWeight: '500', color: '#243b6b', textAlign: 'center', marginTop: 8 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-  gridItem: { width: (width - spacing.md * 2) / 4, alignItems: 'center', marginBottom: spacing.lg },
-  iconWrapper: { width: 65, height: 65, borderRadius: 18, justifyContent: 'center', alignItems: 'center', marginBottom: spacing.sm },
-  gridTitle: { fontSize: 12, color: colors.textHeading, fontWeight: '500', textAlign: 'center', lineHeight: 16 },
+  gridItem: { width: (width - spacing.md * 2 - 36) / 4, alignItems: 'center', marginBottom: spacing.md },
+  iconWrapper: {
+    width: (width - spacing.md * 2 - 36) / 4,
+    height: (width - spacing.md * 2 - 36) / 4,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  gridTitle: { fontSize: 13, color: '#243b6b', fontWeight: '500', textAlign: 'center', lineHeight: 16.5 },
   upcomingScroll: { marginHorizontal: -spacing.md, paddingHorizontal: spacing.md },
   upcomingCardWrapper: {
     width: width * 0.82,
