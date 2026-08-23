@@ -207,7 +207,7 @@ export const BookingConfigScreen = () => {
       <View style={styles.footer}>
         <View style={styles.fareRow}>
           <View style={styles.fareLeft}>
-            <Ionicons name="ticket" size={24} color={colors.brandBlue} />
+            <Ionicons name="ticket" size={26} color="#0066ff" />
             <Text style={styles.fareLabel}>Fare</Text>
           </View>
           <View style={styles.fareRight}>
@@ -217,9 +217,11 @@ export const BookingConfigScreen = () => {
             </View>
           </View>
         </View>
-        <TouchableOpacity style={styles.bookBtn} onPress={handleBookNow} activeOpacity={0.8}>
-          <Text style={styles.bookBtnText}>Book Now</Text>
-        </TouchableOpacity>
+        <View style={styles.bookBtnContainer}>
+          <TouchableOpacity style={styles.bookBtn} onPress={handleBookNow} activeOpacity={0.8}>
+            <Text style={styles.bookBtnText}>Book Now</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -227,41 +229,50 @@ export const BookingConfigScreen = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.white },
-  content: { paddingBottom: 130 },
+  content: { paddingBottom: 160 },
   stationRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#f8fafc',
-    padding: spacing.lg,
+    backgroundColor: '#f1f5f9',
+    paddingVertical: 18,
+    paddingHorizontal: 20,
   },
   stationCol: { flex: 1 },
-  stationName: { fontSize: 14, fontWeight: 'bold', color: '#1e293b' },
-  stationCode: { fontSize: 12, color: '#64748b', marginTop: 2 },
+  stationName: { fontSize: 14.5, fontWeight: '700', color: '#1e293b' },
+  stationCode: { fontSize: 12.5, color: '#64748b', marginTop: 2 },
 
-  formContainer: { padding: spacing.lg },
+  formContainer: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 32 },
 
-  checkboxRow: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.md },
-  checkboxLabel: { marginLeft: 10, fontSize: 15, color: '#64748b' },
+  checkboxRow: { flexDirection: 'row', alignItems: 'center', marginTop: 32 },
+  checkboxLabel: { marginLeft: 12, fontSize: 15, color: '#64748b', fontWeight: '400' },
 
   footer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#f8fafc',
-    padding: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: '#e2e8f0',
+    backgroundColor: '#ffffff',
   },
-  fareRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
+  fareRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#f1f5f9',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
   fareLeft: { flexDirection: 'row', alignItems: 'center' },
-  fareLabel: { fontSize: 18, fontWeight: 'bold', color: '#1e293b', marginLeft: 10 },
+  fareLabel: { fontSize: 18, fontWeight: '700', color: '#1e293b', marginLeft: 10 },
   fareRight: { alignItems: 'flex-end' },
-  fareAmount: { fontSize: 18, fontWeight: '600', color: '#1e293b' },
-  fareBadge: { borderWidth: 1, borderColor: '#94a3b8', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 2, marginTop: 4 },
-  fareBadgeText: { fontSize: 10, color: '#475569', fontWeight: '500' },
-
-  bookBtn: { backgroundColor: '#0066ff', paddingVertical: 14, borderRadius: 24, alignItems: 'center' },
-  bookBtnText: { color: colors.white, fontSize: 16, fontWeight: 'bold' },
+  fareAmount: { fontSize: 16, fontWeight: '700', color: '#1e293b' },
+  fareBadge: { borderWidth: 1, borderColor: '#64748b', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 3, marginTop: 4 },
+  fareBadgeText: { fontSize: 9.5, color: '#64748b', fontWeight: '500' },
+  bookBtnContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    backgroundColor: '#ffffff',
+  },
+  bookBtn: { backgroundColor: '#0066ff', paddingVertical: 16, borderRadius: 28, alignItems: 'center' },
+  bookBtnText: { color: colors.white, fontSize: 16.5, fontWeight: '600' },
 });

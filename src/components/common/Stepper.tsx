@@ -52,22 +52,23 @@ export const Stepper: React.FC<StepperProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: spacing.sm,
+    marginTop: 12,
   },
   card: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#d1d5db',
     borderRadius: 8,
-    padding: spacing.md,
+    paddingHorizontal: 16,
+    paddingVertical: 18,
     backgroundColor: colors.white,
   },
   label: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#64748b',
+    fontWeight: '700',
+    color: '#9ca3af',
   },
   controls: {
     flexDirection: 'row',
@@ -80,18 +81,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#0066ff',
     justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: spacing.md,
+    marginHorizontal: 16,
   },
   value: {
     color: colors.white,
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 15,
+    fontWeight: '700',
   },
   helperText: {
     fontSize: 11,
-    color: '#64748b',
-    marginTop: spacing.xs,
-    marginBottom: spacing.xs,
+    color: '#6b7280',
+    marginTop: 6,
+    marginBottom: 6,
   },
 });
 

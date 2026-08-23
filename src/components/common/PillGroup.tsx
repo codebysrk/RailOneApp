@@ -50,7 +50,7 @@ export const PillGroup: React.FC<PillGroupProps> = ({
                 {opt.label}
               </Text>
               {opt.hasDropdown && (
-                <Ionicons name="chevron-down" size={16} color={isSelected ? colors.white : '#64748b'} />
+                <Ionicons name="chevron-down" size={16} color={isSelected ? colors.white : '#0066ff'} />
               )}
             </TouchableOpacity>
           );
@@ -62,14 +62,15 @@ export const PillGroup: React.FC<PillGroupProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: spacing.xs,
+    marginTop: 8,
+    marginBottom: 4,
   },
   label: {
-    fontSize: 14,
+    fontSize: 14.5,
     color: '#475569',
-    marginTop: spacing.sm,
-    marginBottom: spacing.xs,
-    fontWeight: '500',
+    marginTop: 8,
+    marginBottom: 12,
+    fontWeight: '400',
   },
   row: {
     flexDirection: 'row',
@@ -77,15 +78,17 @@ const styles = StyleSheet.create({
   },
   pillBtn: {
     paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     borderRadius: 24,
-    marginRight: spacing.sm,
-    marginBottom: spacing.sm,
+    marginRight: 8,
+    marginBottom: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
   pillBtnActive: {
     backgroundColor: '#0066ff',
+    borderWidth: 1,
+    borderColor: '#0066ff',
   },
   pillBtnInactive: {
     backgroundColor: colors.white,
@@ -93,7 +96,7 @@ const styles = StyleSheet.create({
     borderColor: '#cbd5e1',
   },
   pillText: {
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '600',
   },
   pillTextActive: {
