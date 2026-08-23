@@ -2,8 +2,9 @@ export const colors = {
   textHeading: '#1e293b',
   textMain: '#334155',
   textLight: '#64748b',
-  brandBlue: '#0056d2',
-  brandBlueBright: '#0065ff',
+  brandBlue: '#0066ff',
+  brandBlueBright: '#0066ff',
+  headerBlue: '#0066ff',
   notifTitleBlue: '#1e3a8a',
   ticketGreen: '#16a34a',
   

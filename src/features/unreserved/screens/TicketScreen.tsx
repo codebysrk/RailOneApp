@@ -435,7 +435,7 @@ export const TicketScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#005bab',
+    backgroundColor: '#0066ff',
   },
   scrollView: {
     flex: 1,

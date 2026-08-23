@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   blueHeader: {
-    backgroundColor: '#005bab',
+    backgroundColor: '#0066ff',
   },
   lightHeader: {
     backgroundColor: '#f8fafc',
