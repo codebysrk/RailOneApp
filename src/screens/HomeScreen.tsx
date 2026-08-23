@@ -54,7 +54,10 @@ export const HomeScreen = () => {
         const tickets: any[] = [];
         snapshot.forEach((doc: any) => {
           const data = { id: doc.id, ...doc.data() };
-          if (data.status === "upcoming") tickets.push(data);
+          // Only show 'Reserved' tickets in the HomeScreen upcoming section
+          if (data.status === "upcoming" && data.moduleType !== "UNRESERVED" && data.moduleType !== "PLATFORM") {
+            tickets.push(data);
+          }
         });
         setUpcomingList(tickets);
       },
