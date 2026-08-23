@@ -74,14 +74,15 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    alignItems: 'center',
+    flexWrap: 'nowrap',
   },
   pillBtn: {
     paddingVertical: 10,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     borderRadius: 24,
     marginRight: 8,
-    marginBottom: 12,
+    marginBottom: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -96,7 +97,7 @@ const styles = StyleSheet.create({
     borderColor: '#cbd5e1',
   },
   pillText: {
-    fontSize: 12.5,
+    fontSize: 12,
     fontWeight: '600',
   },
   pillTextActive: {
