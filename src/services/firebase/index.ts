@@ -1,11 +1,11 @@
-import { FirebaseAuthService } from './auth';
-import { FirebaseFirestoreService } from './firestore';
-import { DatabaseSeedService } from './seed';
+import { FirebaseAuthService } from '@/services/firebase/auth';
+import { FirebaseFirestoreService } from '@/services/firebase/firestore';
+import { DatabaseSeedService } from '@/services/firebase/seed';
 
-export * from './config';
-export * from './auth';
-export * from './firestore';
-export * from './seed';
+export * from '@/services/firebase/config';
+export * from '@/services/firebase/auth';
+export * from '@/services/firebase/firestore';
+export * from '@/services/firebase/seed';
 
 // Attempt master seed in background
 DatabaseSeedService.seedMastersIfEmpty();

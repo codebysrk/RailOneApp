@@ -1,4 +1,4 @@
-export * from './user';
-export * from './ticket';
-export * from './navigation';
+export * from '@/types/user';
+export * from '@/types/ticket';
+export * from '@/types/navigation';
 

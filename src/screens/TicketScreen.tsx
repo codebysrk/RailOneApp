@@ -19,10 +19,10 @@ import {
 import { useNavigation, useRoute, useIsFocused } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { AppHeader } from "../../../components/common";
-import { colors } from "../../../theme/colors";
-import { spacing, elevation } from "../../../theme/spacing";
-import { useAuth } from "../../../context/AuthContext";
+import { AppHeader } from '@/components/common';
+import { colors } from '@/theme/colors';
+import { spacing, elevation } from '@/theme/spacing';
+import { useAuth } from '@/context/AuthContext';
 
 // ─── Reverse Sliding Counter (Odometer Block) ───────────────────
 const ReverseSlidingBlock = ({ value }: { value: string }) => {
@@ -106,25 +106,23 @@ export const TicketScreen = () => {
   const ticketData = route.params?.ticket;
   const fromBooking = route.params?.fromBooking;
 
-  const pnr = ticketData?.pnr || "2160978001";
-  const ticketId = ticketData?.ticketId || "XMJTEFH005";
-  const source = ticketData?.source || "RAJA-KI-MANDI";
-  const dest = ticketData?.dest || "AGRA CANTT";
-  const fare = ticketData?.fare || "10.00";
   const now = new Date();
-  let bookingDate =
-    ticketData?.bookingDateTime || ticketData?.date || "14 Aug 2026, 14:01";
+  const dateFormatted = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  const timeFormatted = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+  const currentDateTime = `${dateFormatted}, ${timeFormatted}`;
+
+  const pnr = ticketData?.pnr || '---';
+  const ticketId = ticketData?.ticketId || '---';
+  const source = ticketData?.source || '---';
+  const dest = ticketData?.dest || '---';
+  const fare = ticketData?.fare || '0.00';
+  let bookingDate = ticketData?.bookingDateTime || ticketData?.date || currentDateTime;
   if (bookingDate && !bookingDate.includes(":")) {
-    const timeFormatted = now.toLocaleTimeString("en-GB", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
     bookingDate = `${bookingDate}, ${timeFormatted}`;
   }
 
-  const userMobile = user?.mobile || "9584113861";
-  const userName = user?.name || "Passenger";
+  const userMobile = user?.mobile || ticketData?.userMobile || '---';
+  const userName = user?.name || ticketData?.userName || 'Passenger';
 
   const TOTAL_DURATION = 300; // 5 minutes window
   const [timeLeft, setTimeLeft] = useState(TOTAL_DURATION);
@@ -243,9 +241,9 @@ export const TicketScreen = () => {
 
   const bookedNumeric = ticketData?.bookedOn || defaultBookedNumeric;
   const validTillNumeric = ticketData?.validTill || defaultValidTillNumeric;
-  const rNumber = ticketData?.rNumber || 'R13491';
-  const irCode = ticketData?.irCode || 'IR:09AAAGM0289C1ZH';
-  const via = ticketData?.via || '---';
+  const rNumber = ticketData?.rNumber || ('R' + Math.floor(10000 + Math.random() * 90000));
+  const irCode = ticketData?.irCode || ('IR:' + Math.random().toString(36).substring(2, 10).toUpperCase() + 'C1ZR');
+  const via = ticketData?.via || 'TKD';
   const distance = ticketData?.distance || '---';
 
   // Feedback State
@@ -279,7 +277,7 @@ export const TicketScreen = () => {
   };
 
   const qrUri = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(
-    `CRIS//IR-UTS//VER-4.8.2//PNR:${pnr}//TK:${ticketId}//TRN:${ticketData?.train || "12279-TAJ-EXP"}//FROM:${source}//TO:${dest}//DATE:${bookingDate}//FARE:${fare}//PAX:${ticketData?.passengers || "1A0C"}//CLS:${ticketData?.classType || "2S"}//TYP:${ticketData?.trainType || "SF"}//MOB:${userMobile}//CRIS_SIG:9AF83E1C0D724B91823C5E0A72B81F94CD039EA6182B40D5//SHA256:7e8b91a2c3d4e5f60718293a4b5c6d7e8f90123456789abcdef0123456789abc//SEC:CRIS-ENCRYPTED-AES256`,
+    `CRIS//IR-UTS//VER-4.8.2//PNR:${pnr}//TK:${ticketId}//TRN:${ticketData?.train || "12279-TAJ-EXP"}//FROM:${source}//TO:${dest}//DATE:${bookingDate}//FARE:${fare}//PAX:${ticketData?.passengers || "1A0C"}//CLS:${ticketData?.classType || "2S"}//TYP:${ticketData?.trainType || "SF"}//MOB:${userMobile}//CRIS_SIG:9AF83E1C0D724B91823C5E0A72B81F94CD039EA6182B40D5//SHA256:7e8b91a2c3d4e5f60718293a4b5c6d7e8f90123456789abcdef0123456789abc//SEC:CRIS-ENCRYPTED-AES256`
   )}&ecc=H&margin=1`;
 
   return (
@@ -567,15 +565,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     marginHorizontal: -12,
     marginTop: -6,
-    paddingTop: 10,
+    paddingVertical: 12,
     paddingHorizontal: 12,
-    paddingBottom: 10,
     marginBottom: 12,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 3,
-    elevation: 3,
+    elevation: 1,
     zIndex: 10,
   },
   greetingText: {
@@ -597,7 +594,7 @@ const styles = StyleSheet.create({
   cyanRibbon: { height: 12, backgroundColor: "rgb(0, 190, 204)" },
   progressBarTrack: {
     height: 4,
-    backgroundColor: "#111722",
+    backgroundColor: "#adadad",
     width: "100%",
     overflow: "hidden",
   },
@@ -616,7 +613,7 @@ const styles = StyleSheet.create({
   },
   verticalTextEnglish: {
     color: "#a0aab8",
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: "700",
     letterSpacing: 1.5,
     transform: [{ rotate: "-90deg" }],
@@ -630,7 +627,7 @@ const styles = StyleSheet.create({
   },
   verticalTextHindi: {
     color: "#a0aab8",
-    fontSize: 12.5,
+    fontSize: 18,
     fontWeight: "700",
     letterSpacing: 1.5,
     transform: [{ rotate: "-90deg" }],

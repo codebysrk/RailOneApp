@@ -1,14 +1,8 @@
 import { doc, writeBatch, getDoc } from 'firebase/firestore';
-import { db } from './config';
+import { db } from '@/services/firebase/config';
+import { ALL_INDIAN_STATIONS, StationModel } from '@/constants/stations';
 
-export interface StationModel {
-  code: string;
-  name: string;
-  city: string;
-  state: string;
-  zone: string;
-  isPopular: boolean;
-}
+export { StationModel };
 
 export interface TrainModel {
   trainNumber: string;
@@ -22,35 +16,7 @@ export interface TrainModel {
   runsOn: string[];
 }
 
-export const INITIAL_STATIONS: StationModel[] = [
-  { code: 'NDLS', name: 'NEW DELHI', city: 'Delhi', state: 'Delhi', zone: 'NR', isPopular: true },
-  { code: 'NZM', name: 'HAZRAT NIZAMUDDIN JN', city: 'Delhi', state: 'Delhi', zone: 'NR', isPopular: true },
-  { code: 'DLI', name: 'OLD DELHI JN', city: 'Delhi', state: 'Delhi', zone: 'NR', isPopular: true },
-  { code: 'MRA', name: 'MORENA', city: 'Morena', state: 'Madhya Pradesh', zone: 'NCR', isPopular: true },
-  { code: 'GWL', name: 'GWALIOR JN', city: 'Gwalior', state: 'Madhya Pradesh', zone: 'NCR', isPopular: true },
-  { code: 'AGC', name: 'AGRA CANTT', city: 'Agra', state: 'Uttar Pradesh', zone: 'NCR', isPopular: true },
-  { code: 'AF', name: 'AGRA FORT', city: 'Agra', state: 'Uttar Pradesh', zone: 'NCR', isPopular: false },
-  { code: 'MTJ', name: 'MATHURA JN', city: 'Mathura', state: 'Uttar Pradesh', zone: 'NCR', isPopular: true },
-  { code: 'BPL', name: 'BHOPAL JN', city: 'Bhopal', state: 'Madhya Pradesh', zone: 'WCR', isPopular: true },
-  { code: 'RKMP', name: 'RANI KAMLAPATI', city: 'Bhopal', state: 'Madhya Pradesh', zone: 'WCR', isPopular: true },
-  { code: 'JHS', name: 'VIRANGANA LAKSHMIBAI (JHANSI)', city: 'Jhansi', state: 'Uttar Pradesh', zone: 'NCR', isPopular: true },
-  { code: 'CNB', name: 'KANPUR CENTRAL', city: 'Kanpur', state: 'Uttar Pradesh', zone: 'NCR', isPopular: true },
-  { code: 'LKO', name: 'LUCKNOW CHARBAGH', city: 'Lucknow', state: 'Uttar Pradesh', zone: 'NR', isPopular: true },
-  { code: 'BSB', name: 'VARANASI JN', city: 'Varanasi', state: 'Uttar Pradesh', zone: 'NR', isPopular: true },
-  { code: 'PRYJ', name: 'PRAYAGRAJ JN', city: 'Prayagraj', state: 'Uttar Pradesh', zone: 'NCR', isPopular: true },
-  { code: 'CSTM', name: 'CHHATRAPATI SHIVAJI MAHARAJ TERMINUS', city: 'Mumbai', state: 'Maharashtra', zone: 'CR', isPopular: true },
-  { code: 'MMCT', name: 'MUMBAI CENTRAL', city: 'Mumbai', state: 'Maharashtra', zone: 'WR', isPopular: true },
-  { code: 'LTT', name: 'LOKMANYA TILAK TERMINUS', city: 'Mumbai', state: 'Maharashtra', zone: 'CR', isPopular: true },
-  { code: 'HWH', name: 'HOWRAH JN', city: 'Kolkata', state: 'West Bengal', zone: 'ER', isPopular: true },
-  { code: 'SDAH', name: 'SEALDAH', city: 'Kolkata', state: 'West Bengal', zone: 'ER', isPopular: true },
-  { code: 'MAS', name: 'CHENNAI CENTRAL', city: 'Chennai', state: 'Tamil Nadu', zone: 'SR', isPopular: true },
-  { code: 'SBC', name: 'KSR BENGALURU', city: 'Bengaluru', state: 'Karnataka', zone: 'SWR', isPopular: true },
-  { code: 'HYB', name: 'HYDERABAD DECCAN', city: 'Hyderabad', state: 'Telangana', zone: 'SCR', isPopular: true },
-  { code: 'SC', name: 'SECUNDERABAD JN', city: 'Hyderabad', state: 'Telangana', zone: 'SCR', isPopular: true },
-  { code: 'ADI', name: 'AHMEDABAD JN', city: 'Ahmedabad', state: 'Gujarat', zone: 'WR', isPopular: true },
-  { code: 'JP', name: 'JAIPUR JN', city: 'Jaipur', state: 'Rajasthan', zone: 'NWR', isPopular: true },
-  { code: 'PNBE', name: 'PATNA JN', city: 'Patna', state: 'Bihar', zone: 'ECR', isPopular: true },
-];
+export const INITIAL_STATIONS: StationModel[] = ALL_INDIAN_STATIONS;
 
 export const INITIAL_TRAINS: TrainModel[] = [
   {

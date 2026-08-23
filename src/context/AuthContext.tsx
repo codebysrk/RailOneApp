@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { FirebaseService } from "../services";
+import { FirebaseService } from '@/services';
 
 export type UserProfile = {
   uid: string;

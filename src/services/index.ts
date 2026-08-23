@@ -1,3 +1,3 @@
-export * from './firebase';
-export * from './storage';
+export * from '@/services/firebase';
+export * from '@/services/storage';
 

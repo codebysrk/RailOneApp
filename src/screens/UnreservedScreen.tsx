@@ -6,10 +6,10 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../../theme/colors';
-import { spacing, elevation } from '../../../theme/spacing';
-import { AppHeader, SegmentedControl } from '../../../components/common';
-import { FirebaseService, StationModel } from '../../../services';
+import { colors } from '@/theme/colors';
+import { spacing, elevation } from '@/theme/spacing';
+import { AppHeader, SegmentedControl } from '@/components/common';
+import { FirebaseService, StationModel } from '@/services';
 
 const mainTabs = [
   { id: 'normal', label: 'Normal' },

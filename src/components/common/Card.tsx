@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
-import { colors } from '../../theme/colors';
-import { radius, elevation, spacing } from '../../theme/spacing';
+import { colors } from '@/theme/colors';
+import { radius, elevation, spacing } from '@/theme/spacing';
 
 interface CardProps {
   children: React.ReactNode;

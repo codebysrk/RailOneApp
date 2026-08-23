@@ -11,8 +11,8 @@ import {
   serverTimestamp,
   runTransaction,
 } from 'firebase/firestore';
-import { db } from './config';
-import { StationModel, TrainModel, INITIAL_STATIONS, INITIAL_TRAINS } from './seed';
+import { db } from '@/services/firebase/config';
+import { StationModel, TrainModel, INITIAL_STATIONS, INITIAL_TRAINS } from '@/services/firebase/seed';
 
 export interface WalletTransaction {
   id: string;
@@ -164,10 +164,17 @@ export const FirebaseFirestoreService = {
 
   searchStations: async (queryText: string): Promise<StationModel[]> => {
     const q = queryText.toUpperCase().trim();
-    if (!q) return INITIAL_STATIONS.slice(0, 10);
     const all = await FirebaseFirestoreService.getStations();
+    if (!q) {
+      const popular = all.filter((s) => s.isPopular);
+      return popular.length > 0 ? popular : all.slice(0, 25);
+    }
     return all.filter(
-      (s) => s.code.includes(q) || s.name.toUpperCase().includes(q) || s.city.toUpperCase().includes(q)
+      (s) =>
+        s.code.toUpperCase().includes(q) ||
+        s.name.toUpperCase().includes(q) ||
+        s.city.toUpperCase().includes(q) ||
+        s.state.toUpperCase().includes(q)
     );
   },
 

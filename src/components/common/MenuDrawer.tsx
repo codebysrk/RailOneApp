@@ -1,17 +1,35 @@
-﻿import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import {
-  Modal, View, Text, StyleSheet, TouchableOpacity,
-  TouchableWithoutFeedback, Animated, Dimensions, Share, ScrollView, Alert,
+  Modal,
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  Animated,
+  Dimensions,
+  Share,
+  ScrollView,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const DRAWER_WIDTH = SCREEN_WIDTH * 0.86;
+const DRAWER_WIDTH = SCREEN_WIDTH * 0.84;
 
-type Props = { visible: boolean; onClose: () => void; };
-type MenuItem = { id: string; label: string; icon: keyof typeof Ionicons.glyphMap; onPress?: () => void; };
+type Props = {
+  visible: boolean;
+  onClose: () => void;
+};
+
+type MenuItem = {
+  id: string;
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  onPress?: () => void;
+};
 
 export const MenuDrawer = ({ visible, onClose }: Props) => {
   const { user, logout } = useAuth();
@@ -19,59 +37,88 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
 
   useEffect(() => {
     if (visible) {
-      Animated.spring(translateX, { toValue: 0, useNativeDriver: true, damping: 18, stiffness: 120 }).start();
+      Animated.spring(translateX, {
+        toValue: 0,
+        useNativeDriver: true,
+        damping: 20,
+        stiffness: 140,
+      }).start();
     } else {
-      Animated.timing(translateX, { toValue: DRAWER_WIDTH, duration: 220, useNativeDriver: true }).start();
+      Animated.timing(translateX, {
+        toValue: DRAWER_WIDTH,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
     }
   }, [visible]);
 
   const handleShare = async () => {
-    try { await Share.share({ message: "Check out RailOne – book Indian Railways tickets! 🚂" }); } catch {}
+    try {
+      await Share.share({
+        message: "Check out RailOne – Indian Railways Unreserved Ticket Booking! 🚂",
+      });
+    } catch {}
   };
 
   const handleLogout = () => {
     Alert.alert("Log Out", "Are you sure you want to log out?", [
       { text: "Cancel", style: "cancel" },
-      { text: "Log Out", style: "destructive", onPress: async () => { onClose(); await logout(); } },
+      {
+        text: "Log Out",
+        style: "destructive",
+        onPress: async () => {
+          onClose();
+          await logout();
+        },
+      },
     ]);
   };
 
   const menuItems: MenuItem[] = [
-    { id: "1", label: "Show/Hide Services", icon: "grid-outline" },
-    { id: "2", label: "FAQs", icon: "chatbox-outline" },
-    { id: "3", label: "Help & Support", icon: "headset-outline" },
-    { id: "4", label: "About", icon: "information-circle-outline" },
-    { id: "5", label: "Rate Us", icon: "thumbs-up-outline" },
-    { id: "6", label: "Share", icon: "share-social-outline", onPress: handleShare },
-    { id: "7", label: "Log Out", icon: "log-out-outline", onPress: handleLogout },
+    { id: "1", label: "Show/Hide Services", icon: "bookmark" },
+    { id: "2", label: "FAQs", icon: "chatbubble-ellipses" },
+    { id: "3", label: "Help & Support", icon: "headset" },
+    { id: "4", label: "About", icon: "information-circle" },
+    { id: "5", label: "Rate Us", icon: "thumbs-up" },
+    { id: "6", label: "Share", icon: "share-social", onPress: handleShare },
+    { id: "7", label: "Log Out", icon: "log-out", onPress: handleLogout },
   ];
 
-  const firstName = user?.name?.split(" ")[0] || "User";
-  const walletBalance = user?.wallet?.toFixed(2) || "0.00";
+  const userName = user?.name || "Passenger";
+  const walletBalance = user?.wallet !== undefined ? user.wallet.toFixed(2) : "0.00";
 
   return (
-    <Modal transparent visible={visible} onRequestClose={onClose} animationType="none">
+    <Modal
+      transparent
+      visible={visible}
+      onRequestClose={onClose}
+      animationType="none"
+    >
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.backdrop} />
       </TouchableWithoutFeedback>
 
       <Animated.View style={[styles.drawer, { transform: [{ translateX }] }]}>
-        <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
-          <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-
-            <View style={styles.profileCard}>
+        <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+          <ScrollView
+            contentContainerStyle={styles.scroll}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* ─── 1. Top Profile Header Card ─────────────────────────── */}
+            <View style={styles.profileHeaderCard}>
               <View style={styles.avatarCircle}>
-                <Ionicons name="person" size={48} color="#ffffff" />
+                <Ionicons name="person" size={50} color="#b8e6fe" />
               </View>
-              <Text style={styles.userName}>{firstName}</Text>
+              <Text style={styles.userName}>{userName}</Text>
             </View>
 
+            {/* ─── 2. R-Wallet Card ───────────────────────────────────── */}
             <View style={styles.walletCard}>
               <View style={styles.walletLeft}>
-                <View style={styles.walletIconCircle}>
-                  <Ionicons name="wallet-outline" size={20} color="#6366f1" />
+                <View style={styles.walletIconBox}>
+                  <Ionicons name="wallet" size={24} color="#818cf8" />
                 </View>
-                <View style={{ marginLeft: 12 }}>
+                <View style={styles.walletTextContainer}>
                   <Text style={styles.walletLabel}>R-Wallet</Text>
                   <Text style={styles.walletBalance}>₹ {walletBalance}</Text>
                 </View>
@@ -81,22 +128,27 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
               </TouchableOpacity>
             </View>
 
-            <View style={styles.menuCard}>
-              {menuItems.map((item, idx) => (
+            {/* ─── 3. Menu Items List ─────────────────────────────────── */}
+            <View style={styles.menuList}>
+              {menuItems.map((item) => (
                 <TouchableOpacity
                   key={item.id}
-                  style={[styles.menuRow, idx < menuItems.length - 1 && styles.menuRowBorder]}
-                  activeOpacity={0.7}
+                  style={styles.menuRow}
+                  activeOpacity={0.65}
                   onPress={item.onPress}
                 >
-                  <Ionicons name={item.icon} size={24} color="#6366f1" style={styles.menuIcon} />
-                  <Text style={[styles.menuLabel, item.id === "7" && { color: "#ef4444" }]}>
-                    {item.label}
-                  </Text>
+                  <Ionicons
+                    name={item.icon}
+                    size={22}
+                    color="#818cf8"
+                    style={styles.menuIcon}
+                  />
+                  <Text style={styles.menuLabel}>{item.label}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
+            {/* ─── 4. Footer Version ──────────────────────────────────── */}
             <Text style={styles.version}>V-2.1.62-231</Text>
           </ScrollView>
         </SafeAreaView>
@@ -106,40 +158,136 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
 };
 
 const styles = StyleSheet.create({
-  backdrop: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.35)" },
-  drawer: {
-    position: "absolute", top: 0, right: 0, bottom: 0, width: DRAWER_WIDTH,
-    backgroundColor: "#ffffff", borderTopLeftRadius: 24, borderBottomLeftRadius: 24,
-    shadowColor: "#000", shadowOpacity: 0.25, shadowRadius: 16, elevation: 16,
+  backdrop: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
   },
-  scroll: { paddingHorizontal: 16, paddingBottom: 32 },
-  profileCard: {
-    alignItems: "center", backgroundColor: "#ffffff", borderRadius: 20,
-    paddingVertical: 28, marginTop: 16, marginBottom: 14,
-    shadowColor: "#000", shadowOpacity: 0.07, shadowRadius: 8, elevation: 3,
+  drawer: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    width: DRAWER_WIDTH,
+    backgroundColor: "#ffffff",
+    borderTopLeftRadius: 32,
+    borderBottomLeftRadius: 32,
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 20,
+    overflow: "hidden",
+  },
+  safeArea: {
+    flex: 1,
+  },
+  scroll: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 28,
+  },
+
+  /* Profile Header */
+  profileHeaderCard: {
+    backgroundColor: "#eef2ff",
+    borderRadius: 24,
+    alignItems: "center",
+    paddingVertical: 26,
+    paddingHorizontal: 16,
+    marginBottom: 16,
   },
   avatarCircle: {
-    width: 96, height: 96, borderRadius: 48, backgroundColor: "#38bdf8",
-    justifyContent: "center", alignItems: "center", marginBottom: 12,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: "#38bdf8",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 14,
   },
-  userName: { fontSize: 20, fontWeight: "700", color: "#1e293b" },
+  userName: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#0f172a",
+    letterSpacing: -0.2,
+  },
+
+  /* R-Wallet Card */
   walletCard: {
-    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    backgroundColor: "#ede9fe", borderRadius: 16, padding: 16, marginBottom: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#eef2ff",
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginBottom: 20,
   },
-  walletLeft: { flexDirection: "row", alignItems: "center" },
-  walletIconCircle: { width: 42, height: 42, borderRadius: 21, backgroundColor: "#c4b5fd", justifyContent: "center", alignItems: "center" },
-  walletLabel: { fontSize: 12, color: "#64748b", fontWeight: "500", marginBottom: 2 },
-  walletBalance: { fontSize: 20, fontWeight: "800", color: "#1e293b" },
-  addMoneyBtn: { backgroundColor: "#0066ff", borderRadius: 24, paddingHorizontal: 20, paddingVertical: 11 },
-  addMoneyText: { color: "#ffffff", fontSize: 14, fontWeight: "700" },
-  menuCard: {
-    backgroundColor: "#ffffff", borderRadius: 16, marginBottom: 14,
-    shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 6, elevation: 2, overflow: "hidden",
+  walletLeft: {
+    flexDirection: "row",
+    alignItems: "center",
   },
-  menuRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 18 },
-  menuRowBorder: { borderBottomWidth: 1, borderBottomColor: "#f1f5f9" },
-  menuIcon: { marginRight: 16 },
-  menuLabel: { fontSize: 15, fontWeight: "500", color: "#1e293b" },
-  version: { textAlign: "center", fontSize: 12, color: "#94a3b8", marginTop: 8 },
+  walletIconBox: {
+    marginRight: 10,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  walletTextContainer: {
+    justifyContent: "center",
+  },
+  walletLabel: {
+    fontSize: 12.5,
+    color: "#334155",
+    fontWeight: "500",
+    marginBottom: 1,
+  },
+  walletBalance: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#0f172a",
+  },
+  addMoneyBtn: {
+    backgroundColor: "#0066ff",
+    borderRadius: 22,
+    paddingHorizontal: 18,
+    paddingVertical: 9,
+  },
+  addMoneyText: {
+    color: "#ffffff",
+    fontSize: 13.5,
+    fontWeight: "700",
+  },
+
+  /* Menu List */
+  menuList: {
+    paddingHorizontal: 6,
+    marginBottom: 20,
+  },
+  menuRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 13,
+  },
+  menuIcon: {
+    width: 32,
+    marginRight: 12,
+  },
+  menuLabel: {
+    fontSize: 15.5,
+    fontWeight: "600",
+    color: "#1e293b",
+    letterSpacing: -0.1,
+  },
+
+  /* Version */
+  version: {
+    textAlign: "center",
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#94a3b8",
+    marginTop: 10,
+  },
 });

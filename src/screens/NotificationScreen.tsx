@@ -9,9 +9,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { AppHeader } from '../../../components/common';
-import { colors } from '../../../theme/colors';
-import { spacing } from '../../../theme/spacing';
+import { AppHeader } from '@/components/common';
+import { colors } from '@/theme/colors';
+import { spacing } from '@/theme/spacing';
 
 interface NotificationItem {
   id: string;

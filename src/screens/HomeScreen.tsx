@@ -18,14 +18,14 @@ import Svg, {
   Rect,
   Stop,
 } from "react-native-svg";
-import { colors } from "../../../theme/colors";
-import { spacing, elevation } from "../../../theme/spacing";
-import { FirebaseService } from "../../../services";
-import { useAuth } from "../../../context/AuthContext";
+import { colors } from '@/theme/colors';
+import { spacing, elevation } from '@/theme/spacing';
+import { FirebaseService } from '@/services';
+import { useAuth } from '@/context/AuthContext';
 import {
   APP_OFFERINGS as offerings,
   APP_FACTS as facts,
-} from "../../../constants";
+} from "@/constants";
 import {
   SearchTrainsIcon,
   PNRStatusIcon,
@@ -35,7 +35,7 @@ import {
   FileRefundIcon,
   RailMadadIcon,
   GoToWavesIcon,
-} from "../components/OfferingIcons";
+} from "@/components/OfferingIcons";
 
 const { width } = Dimensions.get("window");
 const JP_CARD_WIDTH = (width - 32 - 20) / 3;
@@ -95,7 +95,7 @@ export const HomeScreen = () => {
         </TouchableOpacity>
 
         <Image
-          source={require("../../../../assets/images/brand-logo.webp")}
+          source={require("../../assets/images/brand-logo.webp")}
           style={styles.logo}
           resizeMode="contain"
         />
@@ -125,7 +125,7 @@ export const HomeScreen = () => {
           <TouchableOpacity style={styles.jpItem} activeOpacity={0.85}>
             <View style={styles.jpImageWrapper}>
               <Image
-                source={require("../../../../assets/images/one.webp")}
+                source={require("../../assets/images/one.webp")}
                 style={styles.jpImage}
                 resizeMode="cover"
               />
@@ -140,7 +140,7 @@ export const HomeScreen = () => {
           >
             <View style={styles.jpImageWrapper}>
               <Image
-                source={require("../../../../assets/images/two.webp")}
+                source={require("../../assets/images/two.webp")}
                 style={styles.jpImage}
                 resizeMode="cover"
               />
@@ -151,7 +151,7 @@ export const HomeScreen = () => {
           <TouchableOpacity style={styles.jpItem} activeOpacity={0.85}>
             <View style={styles.jpImageWrapper}>
               <Image
-                source={require("../../../../assets/images/three.webp")}
+                source={require("../../assets/images/three.webp")}
                 style={styles.jpImage}
                 resizeMode="cover"
               />
@@ -163,7 +163,7 @@ export const HomeScreen = () => {
         {/* ─── 2. More Offerings ───────────────────────────────────── */}
         <Text style={styles.sectionTitle}>More Offerings</Text>
         <View style={styles.grid}>
-          {offerings.map((item) => (
+          {offerings.map((item: any) => (
             <TouchableOpacity
               key={item.id}
               style={styles.gridItem}
@@ -187,7 +187,7 @@ export const HomeScreen = () => {
               style={styles.upcomingScroll}
               contentContainerStyle={styles.upcomingScrollContent}
             >
-              {upcomingList.map((journey, idx) => {
+              {upcomingList.map((journey: any, idx: number) => {
                 const trainNum = journey.train
                   ? journey.train.split(" ")[0]
                   : "";
@@ -316,7 +316,7 @@ export const HomeScreen = () => {
           style={styles.factsContainer}
           contentContainerStyle={styles.factsContentContainer}
         >
-          {facts.map((fact) => (
+          {facts.map((fact: any) => (
             <View key={fact.id} style={styles.factCard}>
               <Image
                 source={fact.img}

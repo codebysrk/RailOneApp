@@ -1,37 +1,7 @@
 // In-memory fallback cache to ensure zero crashes if native AsyncStorage module is unlinked
 const memoryStore: Record<string, string> = {
-  railone_booked_tickets: JSON.stringify([
-    {
-      id: '1',
-      pnr: '2160978001',
-      ticketId: 'XMSQEB4004',
-      train: '12279 (TAJ EXPRESS)',
-      date: 'Sat, 29 Aug 26',
-      source: 'MORENA',
-      dest: 'HAZRAT NIZAMUDDIN JN',
-      duration: '4h:8m',
-      fare: '120.00',
-      passengers: '1 Adult, 0 Child',
-      classType: 'SECOND',
-      trainType: 'SUPERFAST',
-      status: 'upcoming',
-    },
-    {
-      id: '2',
-      pnr: '2261626145',
-      ticketId: 'XMSQEB4005',
-      train: '12279 (TAJ EXPRESS)',
-      date: 'Sat, 29 Aug 26',
-      source: 'MORENA',
-      dest: 'HAZRAT NIZAMUDDIN JN',
-      duration: '4h:7m',
-      fare: '120.00',
-      passengers: '1 Adult, 0 Child',
-      classType: 'SECOND',
-      trainType: 'SUPERFAST',
-      status: 'upcoming',
-    },
-  ]),
+  railone_booked_tickets: JSON.stringify([]),
+  railone_saved_passengers: JSON.stringify([]),
 };
 
 const safeGetItem = async (key: string): Promise<string | null> => {
@@ -62,7 +32,18 @@ const safeSetItem = async (key: string, value: string): Promise<void> => {
 const KEYS = {
   RECENT_SEARCHES: 'un_recent',
   BOOKED_TICKETS: 'railone_booked_tickets',
+  SAVED_PASSENGERS: 'railone_saved_passengers',
 };
+
+export interface SavedPassenger {
+  id: string;
+  name: string;
+  age: number;
+  gender: 'M' | 'F' | 'T';
+  berthPreference?: string;
+  foodPreference?: string;
+  verified?: boolean;
+}
 
 export const StorageService = {
   getRecentSearches: async () => {
@@ -105,5 +86,37 @@ export const StorageService = {
       // Ignored
     }
   },
+  getSavedPassengers: async (): Promise<SavedPassenger[]> => {
+    try {
+      const data = await safeGetItem(KEYS.SAVED_PASSENGERS);
+      return data ? JSON.parse(data) : [];
+    } catch {
+      return [];
+    }
+  },
+  savePassenger: async (passenger: SavedPassenger): Promise<SavedPassenger[]> => {
+    try {
+      const list = await StorageService.getSavedPassengers();
+      const existingIndex = list.findIndex(p => p.id === passenger.id);
+      if (existingIndex >= 0) {
+        list[existingIndex] = passenger;
+      } else {
+        list.push(passenger);
+      }
+      await safeSetItem(KEYS.SAVED_PASSENGERS, JSON.stringify(list));
+      return list;
+    } catch {
+      return [];
+    }
+  },
+  deletePassenger: async (id: string): Promise<SavedPassenger[]> => {
+    try {
+      const list = await StorageService.getSavedPassengers();
+      const filtered = list.filter(p => p.id !== id);
+      await safeSetItem(KEYS.SAVED_PASSENGERS, JSON.stringify(filtered));
+      return filtered;
+    } catch {
+      return [];
+    }
+  },
 };
-

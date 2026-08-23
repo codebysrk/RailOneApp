@@ -1,4 +1,4 @@
-export * from './colors';
-export * from './spacing';
-export * from './typography';
+export * from '@/theme/colors';
+export * from '@/theme/spacing';
+export * from '@/theme/typography';
 

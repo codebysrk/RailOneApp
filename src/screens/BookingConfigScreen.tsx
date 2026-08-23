@@ -3,12 +3,12 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-nati
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../../theme/colors';
-import { spacing } from '../../../theme/spacing';
-import { FirebaseService, StorageService } from '../../../services';
-import { useAuth } from '../../../context/AuthContext';
-import { AppHeader, PillGroup, Stepper } from '../../../components/common';
-import { calculateFare, TrainType } from '../services/FareEngine';
+import { colors } from '@/theme/colors';
+import { spacing } from '@/theme/spacing';
+import { FirebaseService, StorageService } from '@/services';
+import { useAuth } from '@/context/AuthContext';
+import { AppHeader, PillGroup, Stepper } from '@/components/common';
+import { calculateFare, TrainType } from '@/services/FareEngine';
 
 const trainTypeOptions = [
   { id: 'MAIL/EXP', label: 'MAIL/EXP' },
@@ -52,17 +52,17 @@ export const BookingConfigScreen = () => {
 
   const handleBookNow = async () => {
     // Calculate route via junctions
-    let computedVia = '---';
+    let computedVia = 'TKD';
     if ((srcCode === 'MRA' || srcCode === 'GWL') && (dstCode === 'NDLS' || dstCode === 'NZM' || dstCode === 'DLI')) {
-      computedVia = 'AGC, MTJ';
+      computedVia = 'TKD';
     } else if ((srcCode === 'NDLS' || srcCode === 'NZM') && (dstCode === 'MRA' || dstCode === 'GWL')) {
-      computedVia = 'MTJ, AGC';
+      computedVia = 'TKD';
     } else if (srcCode === 'NDLS' && (dstCode === 'BPL' || dstCode === 'RKMP')) {
-      computedVia = 'GWL, JHS';
+      computedVia = 'TKD, GWL, JHS';
     } else if (srcCode === 'NDLS' && dstCode === 'HWH') {
-      computedVia = 'CNB, PRYJ';
+      computedVia = 'TKD, CNB, PRYJ';
     } else if (srcCode === 'NDLS' && dstCode === 'MMCT') {
-      computedVia = 'KOTA, BRC';
+      computedVia = 'TKD, KOTA, BRC';
     }
 
     const now = new Date();

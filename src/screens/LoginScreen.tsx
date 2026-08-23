@@ -5,7 +5,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from '@/context/AuthContext';
 
 type Tab = "login" | "register";
 
@@ -100,7 +100,7 @@ export const LoginScreen = () => {
                 <Text style={styles.label}>Full Name</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Shahrukh Khan"
+                  placeholder="Enter your full name"
                   placeholderTextColor="#94a3b8"
                   value={name}
                   onChangeText={setName}

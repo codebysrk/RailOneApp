@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { colors } from '../../theme/colors';
-import { spacing, elevation } from '../../theme/spacing';
+import { colors } from '@/theme/colors';
+import { spacing, elevation } from '@/theme/spacing';
 
 export interface SegmentItem {
   id: string;

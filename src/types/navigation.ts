@@ -1,4 +1,4 @@
-import { Ticket } from './ticket';
+import { Ticket } from '@/types/ticket';
 
 export type RootStackParamList = {
   Login: undefined;

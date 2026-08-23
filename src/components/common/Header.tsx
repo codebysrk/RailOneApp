@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme/colors';
-import { spacing, elevation } from '../../theme/spacing';
+import { colors } from '@/theme/colors';
+import { spacing, elevation } from '@/theme/spacing';
 
 interface HeaderProps {
   title: string;
