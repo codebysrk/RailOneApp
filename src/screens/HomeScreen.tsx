@@ -271,7 +271,9 @@ export const HomeScreen = () => {
 
                       {/* Bottom Row: Reserved Badge & Action Pills */}
                       <View style={styles.upcomingCardBottom}>
-                        <Text style={styles.reservedBadgeText}>Reserved</Text>
+                        <Text style={styles.reservedBadgeText}>
+                          {journey.isReserved === false ? "Unreserved" : "Reserved"}
+                        </Text>
                         <View style={styles.upcomingBtnsRow}>
                           <TouchableOpacity
                             style={styles.cardBtnPill}

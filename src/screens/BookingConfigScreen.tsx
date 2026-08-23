@@ -109,6 +109,7 @@ export const BookingConfigScreen = () => {
       classType: classType,
       trainType: trainType,
       status: 'upcoming' as const,
+      isReserved: false,
     };
     // Save to Firestore if logged in with atomic wallet deduction, else fallback to local storage
     try {
