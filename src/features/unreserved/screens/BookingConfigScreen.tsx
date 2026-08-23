@@ -65,12 +65,18 @@ export const BookingConfigScreen = () => {
       computedVia = 'KOTA, BRC';
     }
 
+    const now = new Date();
+    const dateFormatted = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    const timeFormatted = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+    const fullDateTime = `${dateFormatted}, ${timeFormatted}`;
+
     const newTicket = {
       id: Date.now().toString(),
       pnr: '21' + Math.floor(10000000 + Math.random() * 90000000),
       ticketId: 'XMSQEB' + Math.floor(1000 + Math.random() * 9000),
       train: '12279 (TAJ EXPRESS)',
-      date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }),
+      date: fullDateTime,
+      bookingDateTime: fullDateTime,
       source: srcName,
       dest: dstName,
       sourceCode: srcCode,

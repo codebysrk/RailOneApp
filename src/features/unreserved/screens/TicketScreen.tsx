@@ -110,7 +110,12 @@ export const TicketScreen = () => {
   const source = ticketData?.source || 'RAJA-KI-MANDI';
   const dest = ticketData?.dest || 'AGRA CANTT';
   const fare = ticketData?.fare || '10.00';
-  const bookingDate = ticketData?.date || '14 Aug 2026, 14:01';
+  const now = new Date();
+  let bookingDate = ticketData?.bookingDateTime || ticketData?.date || '14 Aug 2026, 14:01';
+  if (bookingDate && !bookingDate.includes(':')) {
+    const timeFormatted = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+    bookingDate = `${bookingDate}, ${timeFormatted}`;
+  }
 
   const userMobile = user?.mobile || '9584113861';
   const userName = user?.name || 'Passenger';
@@ -169,8 +174,18 @@ export const TicketScreen = () => {
   const seconds = (timeLeft % 60).toString().padStart(2, '0');
 
   // Formatted timestamps & metadata
-  const bookedNumeric = '14/08/2026 14:01';
-  const validTillNumeric = '14/08/2026 17:01';
+  const currentDay = now.getDate().toString().padStart(2, '0');
+  const currentMonth = (now.getMonth() + 1).toString().padStart(2, '0');
+  const currentYear = now.getFullYear();
+  const currentHour = now.getHours().toString().padStart(2, '0');
+  const currentMin = now.getMinutes().toString().padStart(2, '0');
+  const validHour = ((now.getHours() + 3) % 24).toString().padStart(2, '0');
+
+  const defaultBookedNumeric = `${currentDay}/${currentMonth}/${currentYear} ${currentHour}:${currentMin}`;
+  const defaultValidTillNumeric = `${currentDay}/${currentMonth}/${currentYear} ${validHour}:${currentMin}`;
+
+  const bookedNumeric = ticketData?.bookedOn || defaultBookedNumeric;
+  const validTillNumeric = ticketData?.validTill || defaultValidTillNumeric;
   const rNumber = ticketData?.rNumber || 'R15594';
   const irCode = ticketData?.irCode || 'IR:09AAAGM0289C1ZH';
   const via = ticketData?.via || '---';
@@ -625,7 +640,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 8,
-    backgroundColor: '#f5f4f0',
+    backgroundColor: '#f4f4f4',
   },
   rowBetween: {
     flexDirection: 'row',
