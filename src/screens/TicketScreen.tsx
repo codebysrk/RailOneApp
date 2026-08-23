@@ -277,34 +277,30 @@ export const TicketScreen = () => {
   };
 
   const qrSecurityDigest = [
-    `CRIS//IR-UTS//V5.2.0//SECURE-QR`,
+    `CRIS//IR-UTS//VER-4.8.2`,
     `PNR:${pnr}`,
-    `TID:${ticketId}`,
+    `TK:${ticketId}`,
     `TRN:${ticketData?.train || '12279-TAJ-EXP'}`,
     `SRC:${source}`,
     `DST:${dest}`,
     `VIA:${via}`,
     `DIST:${distance}`,
-    `DT:${bookingDate}`,
+    `DATE:${bookingDate}`,
     `EXP:${validTillNumeric}`,
-    `FARE:INR-${fare}`,
+    `FARE:${fare}`,
+    `PAX:${ticketData?.passengers || '1A0C'}`,
+    `CLS:${ticketData?.classType || '2S'}`,
+    `TYP:${ticketData?.trainType || 'SF'}`,
     `RNUM:${rNumber}`,
     `IRCD:${irCode}`,
-    `PAX:${ticketData?.passengers || '1-ADULT-0-CHILD'}`,
-    `CLS:${ticketData?.classType || 'SECOND-2S'}`,
-    `TYP:${ticketData?.trainType || 'MAIL-EXP'}`,
-    `USER:${userName}//MOB:${userMobile}`,
-    `UTS_TERMID:DEL-CRIS-WS-99214`,
-    `DEV_SIG:A8F932D1-7B32-4E90-B8A1-1928374650AC`,
-    `CRIS_SIGNATURE_RSA2048:MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1v5zL0Q7e9rT3v4U1x8yZ2kL4w9v7P0r6t2y4u8i0o1p3e5r7t9y1u3i5o7p9a1s3d5f7g9h1j3k5l7z9x1c3v5b7n9m1q3w5e7r9t1y3u5i7o9p1a3s5d7f9g1h3j5k7l9z1x3c5v7b9n1m3q5w7e9r1t3y5u7i9o1p3a5s7d9f1g3h5j7k9l1z3x5c7v9b1n3m5q7w9e1r3t5y7u9i1o3p5a7s9d1f3g5h7j9k1l3z5x7c9v1b3n5m7q9w1e3r5t7y9u1i3o5p7a9s1d3f5g7h9j1k3l5z7x9c1v3b5n7m9q1w3e5r7t9y1u3i5o7p9a1s3d5f7g9h1j3`,
-    `HASH_SHA512:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`,
-    `CERT_EXP:2028-12-31T23:59:59Z`,
-    `AUTH:CENTRE-FOR-RAILWAY-INFORMATION-SYSTEMS`
+    `MOB:${userMobile}`,
+    `SIG:8F932D17B32E4E90B8A11928374650AC7E8B91A2`,
+    `SEC:CRIS-ENCRYPTED`,
   ].join('//');
 
-  const qrUri = `https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&data=${encodeURIComponent(
+  const qrUri = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(
     qrSecurityDigest
-  )}&ecc=H&margin=1`;
+  )}&ecc=M&margin=1`;
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
@@ -887,7 +883,7 @@ const styles = StyleSheet.create({
   },
   connectingBtnText: { color: "#0066ff", fontSize: 14, fontWeight: "600" },
   qrSection: { paddingVertical: 16, alignItems: "center" },
-  qrImage: { width: 240, height: 240 },
+  qrImage: { width: 230, height: 230 },
   sectionDivider: {
     height: 1,
     backgroundColor: "#e2e8f0",
