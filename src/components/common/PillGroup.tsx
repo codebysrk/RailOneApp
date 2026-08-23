@@ -62,14 +62,14 @@ export const PillGroup: React.FC<PillGroupProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 8,
-    marginBottom: 4,
+    marginTop: 4,
+    marginBottom: 2,
   },
   label: {
-    fontSize: 14.5,
+    fontSize: 14,
     color: '#475569',
-    marginTop: 8,
-    marginBottom: 12,
+    marginTop: 4,
+    marginBottom: 6,
     fontWeight: '400',
   },
   row: {
@@ -78,11 +78,11 @@ const styles = StyleSheet.create({
     flexWrap: 'nowrap',
   },
   pillBtn: {
-    paddingVertical: 10,
+    paddingVertical: 7,
     paddingHorizontal: 12,
-    borderRadius: 24,
+    borderRadius: 20,
     marginRight: 8,
-    marginBottom: 8,
+    marginBottom: 4,
     justifyContent: 'center',
     alignItems: 'center',
   },

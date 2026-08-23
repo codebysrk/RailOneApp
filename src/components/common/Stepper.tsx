@@ -52,7 +52,7 @@ export const Stepper: React.FC<StepperProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 12,
+    marginTop: 8,
   },
   card: {
     flexDirection: 'row',
@@ -61,12 +61,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#d1d5db',
     borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     backgroundColor: colors.white,
   },
   label: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
     color: '#9ca3af',
   },
@@ -75,24 +75,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   badge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     backgroundColor: '#0066ff',
     justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: 16,
+    marginHorizontal: 12,
   },
   value: {
     color: colors.white,
-    fontSize: 15,
+    fontSize: 14.5,
     fontWeight: '700',
   },
   helperText: {
-    fontSize: 11,
+    fontSize: 10.5,
     color: '#6b7280',
-    marginTop: 6,
-    marginBottom: 6,
+    marginTop: 3,
+    marginBottom: 4,
   },
 });
 
