@@ -114,8 +114,10 @@ export const TicketScreen = () => {
   const userMobile = user?.mobile || '9584113861';
   const userName = user?.name || 'Passenger';
 
+  const TOTAL_DURATION = 300;
   const [timeLeft, setTimeLeft] = useState(268);
-  const progressAnim = useRef(new Animated.Value(268 / 300)).current;
+
+  const progressAnim = useRef(new Animated.Value((TOTAL_DURATION - 268) / TOTAL_DURATION)).current;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -125,9 +127,10 @@ export const TicketScreen = () => {
   }, []);
 
   useEffect(() => {
+    const currentProgress = Math.min(1, Math.max(0, (TOTAL_DURATION - timeLeft) / TOTAL_DURATION));
     Animated.timing(progressAnim, {
-      toValue: timeLeft / 300,
-      duration: 900,
+      toValue: currentProgress,
+      duration: 950,
       useNativeDriver: false,
     }).start();
   }, [timeLeft, progressAnim]);
@@ -270,8 +273,10 @@ export const TicketScreen = () => {
               </View>
             </View>
 
-            {/* Purple Accent Ribbon below Top Dark Section */}
-            <View style={styles.purpleRibbon} />
+            {/* Dynamic Timer Progress Bar Ribbon */}
+            <View style={styles.progressBarTrack}>
+              <Animated.View style={[styles.progressBarFill, { width: progressWidth }]} />
+            </View>
 
             {/* Ticket Body (Warm Off-White Cream Paper Section) */}
             <View style={styles.ticketBody}>
@@ -333,10 +338,8 @@ export const TicketScreen = () => {
               </Text>
             </View>
 
-            {/* Dynamic Animated Bottom Purple Ribbon Progress Bar */}
-            <View style={styles.progressBarContainer}>
-              <Animated.View style={[styles.purpleRibbonFill, { width: progressWidth }]} />
-            </View>
+            {/* Bottom Purple Accent Ribbon */}
+            <View style={styles.purpleRibbon} />
           </View>
 
           {/* Warning Note */}
@@ -484,13 +487,13 @@ const styles = StyleSheet.create({
     height: 7,
     backgroundColor: '#8378b8',
   },
-  progressBarContainer: {
+  progressBarTrack: {
     height: 7,
-    backgroundColor: 'rgba(131, 120, 184, 0.2)',
+    backgroundColor: '#1b2332',
     width: '100%',
     overflow: 'hidden',
   },
-  purpleRibbonFill: {
+  progressBarFill: {
     height: '100%',
     backgroundColor: '#8378b8',
   },
