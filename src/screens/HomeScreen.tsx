@@ -275,9 +275,9 @@ export const HomeScreen = () => {
 
                       <View style={styles.cardDivider} />
 
-                      {/* Bottom Row: Unreserved Badge & Action Pills */}
+                      {/* Bottom Row: Reserved Badge & Action Pills */}
                       <View style={styles.upcomingCardBottom}>
-                        <Text style={styles.reservedBadgeText}>Unreserved</Text>
+                        <Text style={styles.reservedBadgeText}>Reserved</Text>
                         <View style={styles.upcomingBtnsRow}>
                           <TouchableOpacity
                             style={styles.cardBtnPill}
