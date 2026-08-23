@@ -17,6 +17,7 @@ export interface TicketData {
   classType?: string;
   trainType?: string;
   status?: 'upcoming' | 'completed' | 'cancelled';
+  moduleType?: 'RESERVED' | 'UNRESERVED' | 'PLATFORM';
 }
 
 interface TicketCardProps {
@@ -35,6 +36,10 @@ export const TicketCard: React.FC<TicketCardProps> = ({
   const isUpcoming = status === 'upcoming';
   const borderColor = isUpcoming ? '#f59e0b' : status === 'completed' ? '#10b981' : '#ef4444';
 
+  const badgeText = ticket.moduleType === 'UNRESERVED' ? 'Unreserved' 
+                  : ticket.moduleType === 'PLATFORM' ? 'Platform' 
+                  : 'Reserved';
+
   return (
     <TouchableOpacity
       style={[styles.ticketCard, { borderColor }]}
@@ -45,7 +50,7 @@ export const TicketCard: React.FC<TicketCardProps> = ({
       <View style={styles.ticketTop}>
         <View style={styles.ticketHeaderRow}>
           <View style={styles.badgeReserved}>
-            <Text style={styles.badgeReservedText}>Reserved</Text>
+            <Text style={styles.badgeReservedText}>{badgeText}</Text>
           </View>
           <Text style={styles.pnrText}>
             <Text style={{ color: '#64748b' }}>PNR: </Text>
