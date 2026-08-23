@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,16 +8,24 @@ import {
   Image,
   Dimensions,
   ImageBackground,
-} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import Svg, { Defs, LinearGradient as SvgLinearGradient, Rect, Stop } from 'react-native-svg';
-import { colors } from '../../../theme/colors';
-import { spacing, elevation } from '../../../theme/spacing';
-import { FirebaseService } from '../../../services';
-import { useAuth } from '../../../context/AuthContext';
-import { APP_OFFERINGS as offerings, APP_FACTS as facts } from '../../../constants';
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import Svg, {
+  Defs,
+  LinearGradient as SvgLinearGradient,
+  Rect,
+  Stop,
+} from "react-native-svg";
+import { colors } from "../../../theme/colors";
+import { spacing, elevation } from "../../../theme/spacing";
+import { FirebaseService } from "../../../services";
+import { useAuth } from "../../../context/AuthContext";
+import {
+  APP_OFFERINGS as offerings,
+  APP_FACTS as facts,
+} from "../../../constants";
 import {
   SearchTrainsIcon,
   PNRStatusIcon,
@@ -27,9 +35,9 @@ import {
   FileRefundIcon,
   RailMadadIcon,
   GoToWavesIcon,
-} from '../components/OfferingIcons';
+} from "../components/OfferingIcons";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 const JP_CARD_WIDTH = (width - 32 - 20) / 3;
 const OFFERING_CARD_SIZE = (width - 32 - 36) / 4;
 
@@ -40,34 +48,37 @@ export const HomeScreen = () => {
 
   useEffect(() => {
     if (!user?.uid) return;
-    const unsubscribe = FirebaseService.listenToTickets(user.uid, (snapshot: any) => {
-      const tickets: any[] = [];
-      snapshot.forEach((doc: any) => {
-        const data = { id: doc.id, ...doc.data() };
-        if (data.status === 'upcoming') tickets.push(data);
-      });
-      setUpcomingList(tickets);
-    });
+    const unsubscribe = FirebaseService.listenToTickets(
+      user.uid,
+      (snapshot: any) => {
+        const tickets: any[] = [];
+        snapshot.forEach((doc: any) => {
+          const data = { id: doc.id, ...doc.data() };
+          if (data.status === "upcoming") tickets.push(data);
+        });
+        setUpcomingList(tickets);
+      },
+    );
     return () => unsubscribe();
   }, [user?.uid]);
 
   const renderOfferingIcon = (type: string, color: string) => {
     switch (type) {
-      case 'search':
+      case "search":
         return <SearchTrainsIcon color={color} size={30} />;
-      case 'pnr':
+      case "pnr":
         return <PNRStatusIcon color={color} size={30} />;
-      case 'coach':
+      case "coach":
         return <CoachPositionIcon color={color} size={30} />;
-      case 'track':
+      case "track":
         return <TrackYourTrainIcon color={color} size={30} />;
-      case 'food':
+      case "food":
         return <OrderFoodIcon color={color} size={30} />;
-      case 'refund':
+      case "refund":
         return <FileRefundIcon color={color} size={30} />;
-      case 'madad':
+      case "madad":
         return <RailMadadIcon color={color} size={30} />;
-      case 'waves':
+      case "waves":
         return <GoToWavesIcon color={color} size={30} />;
       default:
         return null;
@@ -75,7 +86,7 @@ export const HomeScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
       {/* ─── Top Header ────────────────────────────────────────────── */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.headerIconCircle} activeOpacity={0.7}>
@@ -84,15 +95,15 @@ export const HomeScreen = () => {
         </TouchableOpacity>
 
         <Image
-          source={require('../../../../assets/images/brand-logo.webp')}
+          source={require("../../../../assets/images/brand-logo.webp")}
           style={styles.logo}
           resizeMode="contain"
         />
 
         <TouchableOpacity
-          style={[styles.headerIconCircle, { borderColor: '#e2e8f0' }]}
+          style={[styles.headerIconCircle, { borderColor: "#e2e8f0" }]}
           activeOpacity={0.7}
-          onPress={() => navigation.navigate('Notification')}
+          onPress={() => navigation.navigate("Notification")}
         >
           <Ionicons name="notifications-outline" size={20} color="#475569" />
         </TouchableOpacity>
@@ -105,7 +116,7 @@ export const HomeScreen = () => {
       >
         {/* ─── User Greeting ───────────────────────────────────────── */}
         <Text style={styles.greeting}>
-          Hi, {user?.name ? user.name.split(' ')[0] : 'User'}!
+          Hi, {user?.name ? user.name.split(" ")[0] : "User"}!
         </Text>
 
         {/* ─── 1. Journey Planner ──────────────────────────────────── */}
@@ -114,7 +125,7 @@ export const HomeScreen = () => {
           <TouchableOpacity style={styles.jpItem} activeOpacity={0.85}>
             <View style={styles.jpImageWrapper}>
               <Image
-                source={require('../../../../assets/images/one.webp')}
+                source={require("../../../../assets/images/one.webp")}
                 style={styles.jpImage}
                 resizeMode="cover"
               />
@@ -125,11 +136,11 @@ export const HomeScreen = () => {
           <TouchableOpacity
             style={styles.jpItem}
             activeOpacity={0.85}
-            onPress={() => navigation.navigate('Unreserved')}
+            onPress={() => navigation.navigate("Unreserved")}
           >
             <View style={styles.jpImageWrapper}>
               <Image
-                source={require('../../../../assets/images/two.webp')}
+                source={require("../../../../assets/images/two.webp")}
                 style={styles.jpImage}
                 resizeMode="cover"
               />
@@ -140,7 +151,7 @@ export const HomeScreen = () => {
           <TouchableOpacity style={styles.jpItem} activeOpacity={0.85}>
             <View style={styles.jpImageWrapper}>
               <Image
-                source={require('../../../../assets/images/three.webp')}
+                source={require("../../../../assets/images/three.webp")}
                 style={styles.jpImage}
                 resizeMode="cover"
               />
@@ -153,7 +164,11 @@ export const HomeScreen = () => {
         <Text style={styles.sectionTitle}>More Offerings</Text>
         <View style={styles.grid}>
           {offerings.map((item) => (
-            <TouchableOpacity key={item.id} style={styles.gridItem} activeOpacity={0.75}>
+            <TouchableOpacity
+              key={item.id}
+              style={styles.gridItem}
+              activeOpacity={0.75}
+            >
               <View style={[styles.iconWrapper, { backgroundColor: item.bg }]}>
                 {renderOfferingIcon(item.type, item.color)}
               </View>
@@ -173,19 +188,33 @@ export const HomeScreen = () => {
               contentContainerStyle={styles.upcomingScrollContent}
             >
               {upcomingList.map((journey, idx) => {
-                const trainNum = journey.train ? journey.train.split(' ')[0] : '12279';
+                const trainNum = journey.train
+                  ? journey.train.split(" ")[0]
+                  : "";
                 const gradId = `ticketGrad-${journey.id}-${idx}`;
                 return (
                   <TouchableOpacity
                     key={`journey-${journey.id}-${idx}`}
                     style={styles.upcomingCardWrapper}
                     activeOpacity={0.9}
-                    onPress={() => navigation.navigate('Ticket', { ticket: journey })}
+                    onPress={() =>
+                      navigation.navigate("Ticket", { ticket: journey })
+                    }
                   >
                     {/* SVG Gradient Background */}
-                    <Svg height="100%" width="100%" style={StyleSheet.absoluteFill}>
+                    <Svg
+                      height="100%"
+                      width="100%"
+                      style={StyleSheet.absoluteFill}
+                    >
                       <Defs>
-                        <SvgLinearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
+                        <SvgLinearGradient
+                          id={gradId}
+                          x1="0%"
+                          y1="0%"
+                          x2="100%"
+                          y2="100%"
+                        >
                           <Stop offset="0%" stopColor="#3b2d71" />
                           <Stop offset="25%" stopColor="#543b8c" />
                           <Stop offset="50%" stopColor="#754da7" />
@@ -193,7 +222,13 @@ export const HomeScreen = () => {
                           <Stop offset="100%" stopColor="#aa6ccf" />
                         </SvgLinearGradient>
                       </Defs>
-                      <Rect width="100%" height="100%" fill={`url(#${gradId})`} rx={20} ry={20} />
+                      <Rect
+                        width="100%"
+                        height="100%"
+                        fill={`url(#${gradId})`}
+                        rx={20}
+                        ry={20}
+                      />
                     </Svg>
 
                     <View style={styles.upcomingCardInner}>
@@ -202,9 +237,14 @@ export const HomeScreen = () => {
 
                       {/* Top Row: Date & Train Number */}
                       <View style={styles.upcomingCardTop}>
-                        <Text style={styles.upcomingDate}>{journey.date || 'Sat, 29 Aug 26'}</Text>
+                        <Text style={styles.upcomingDate}>{journey.date}</Text>
                         <View style={styles.trainNumBadge}>
-                          <Ionicons name="ticket" size={18} color="#a8f3b0" style={{ marginBottom: 1 }} />
+                          <Ionicons
+                            name="ticket"
+                            size={16}
+                            color="#a8f3b0"
+                            style={{ marginBottom: 1 }}
+                          />
                           <Text style={styles.trainNumText}>{trainNum}</Text>
                         </View>
                       </View>
@@ -213,30 +253,43 @@ export const HomeScreen = () => {
 
                       {/* Middle Row: Stations */}
                       <View style={styles.upcomingRouteRow}>
-                        <Text style={styles.upcomingStationLeft} numberOfLines={1}>
-                          {journey.source || 'MORENA'}
+                        <Text
+                          style={styles.upcomingStationLeft}
+                          numberOfLines={1}
+                        >
+                          {journey.source}
                         </Text>
-                        <Ionicons name="arrow-forward" size={14} color="rgba(255,255,255,0.7)" style={{ marginHorizontal: 6 }} />
-                        <Text style={styles.upcomingStationRight} numberOfLines={1}>
-                          {journey.dest || 'HAZRAT NIZAMUDDIN JN'}
+                        <Ionicons
+                          name="arrow-forward"
+                          size={14}
+                          color="rgba(255,255,255,0.7)"
+                          style={{ marginHorizontal: 6 }}
+                        />
+                        <Text
+                          style={styles.upcomingStationRight}
+                          numberOfLines={1}
+                        >
+                          {journey.dest}
                         </Text>
                       </View>
 
                       <View style={styles.cardDivider} />
 
-                      {/* Bottom Row: Reserved Badge & Action Pills */}
+                      {/* Bottom Row: Unreserved Badge & Action Pills */}
                       <View style={styles.upcomingCardBottom}>
-                        <Text style={styles.reservedBadgeText}>Reserved</Text>
+                        <Text style={styles.reservedBadgeText}>Unreserved</Text>
                         <View style={styles.upcomingBtnsRow}>
                           <TouchableOpacity
                             style={styles.cardBtnPill}
-                            onPress={() => navigation.navigate('Unreserved')}
+                            onPress={() => navigation.navigate("Unreserved")}
                           >
                             <Text style={styles.cardBtnText}>Book Again</Text>
                           </TouchableOpacity>
                           <TouchableOpacity
                             style={styles.cardBtnPill}
-                            onPress={() => navigation.navigate('Ticket', { ticket: journey })}
+                            onPress={() =>
+                              navigation.navigate("Ticket", { ticket: journey })
+                            }
                           >
                             <Text style={styles.cardBtnText}>View Details</Text>
                           </TouchableOpacity>
@@ -244,7 +297,9 @@ export const HomeScreen = () => {
                       </View>
 
                       {/* Bottom Semicircle Cutout */}
-                      <View style={[styles.cardNotch, styles.cardNotchBottom]} />
+                      <View
+                        style={[styles.cardNotch, styles.cardNotchBottom]}
+                      />
                     </View>
                   </TouchableOpacity>
                 );
@@ -263,32 +318,48 @@ export const HomeScreen = () => {
         >
           {facts.map((fact) => (
             <View key={fact.id} style={styles.factCard}>
-              <Image source={fact.img} style={styles.factImg} resizeMode="cover" />
+              <Image
+                source={fact.img}
+                style={styles.factImg}
+                resizeMode="cover"
+              />
               <Text style={styles.factText}>{fact.text}</Text>
             </View>
           ))}
         </ScrollView>
 
         {/* ─── 5. Connect With Us ──────────────────────────────────── */}
-        <Text style={styles.sectionTitle}>Follow Us On Social Media Platforms</Text>
+        <Text style={styles.sectionTitle}>
+          Follow Us On Social Media Platforms
+        </Text>
         <View style={styles.socialSection}>
           <ImageBackground
-            source={{ uri: 'https://images.unsplash.com/photo-1474487548417-781cb71495f3?q=80&w=800&auto=format&fit=crop' }}
+            source={{
+              uri: "https://images.unsplash.com/photo-1474487548417-781cb71495f3?q=80&w=800&auto=format&fit=crop",
+            }}
             style={styles.socialBanner}
             imageStyle={styles.socialBannerImg}
           >
             <View style={styles.socialOverlay} />
             <View style={styles.socialIconsRow}>
-              <View style={[styles.socialIconBtn, { backgroundColor: '#000000' }]}>
+              <View
+                style={[styles.socialIconBtn, { backgroundColor: "#000000" }]}
+              >
                 <Ionicons name="close" size={16} color="#ffffff" />
               </View>
-              <View style={[styles.socialIconBtn, { backgroundColor: '#1877f2' }]}>
+              <View
+                style={[styles.socialIconBtn, { backgroundColor: "#1877f2" }]}
+              >
                 <Ionicons name="logo-facebook" size={18} color="#ffffff" />
               </View>
-              <View style={[styles.socialIconBtn, { backgroundColor: '#e1306c' }]}>
+              <View
+                style={[styles.socialIconBtn, { backgroundColor: "#e1306c" }]}
+              >
                 <Ionicons name="logo-instagram" size={18} color="#ffffff" />
               </View>
-              <View style={[styles.socialIconBtn, { backgroundColor: '#ff0000' }]}>
+              <View
+                style={[styles.socialIconBtn, { backgroundColor: "#ff0000" }]}
+              >
                 <Ionicons name="logo-youtube" size={18} color="#ffffff" />
               </View>
             </View>
@@ -305,36 +376,36 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
   },
   header: {
-    height: 58,
+    height: 68,
     backgroundColor: colors.white,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
   },
   headerIconCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     borderWidth: 1.2,
-    borderColor: '#bfdbfe',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f8fafc',
+    borderColor: "#e9e9e9",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#ffffff",
   },
   langTextTop: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#0066ff',
+    fontSize: 12,
+    fontWeight: "800",
+    color: "#0066ff",
     lineHeight: 12,
     marginRight: 6,
   },
   langTextBottom: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#0066ff',
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#0066ff",
     lineHeight: 14,
     marginLeft: 6,
     marginTop: -4,
@@ -349,80 +420,78 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 16,
-    paddingTop: 16,
     paddingBottom: 36,
   },
   greeting: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#0f172a',
-    marginBottom: 4,
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#0f172a",
     letterSpacing: -0.2,
   },
   sectionTitle: {
     fontSize: 19,
-    fontWeight: '700',
-    color: '#16274e',
-    marginTop: 22,
+    fontWeight: "700",
+    color: "#16274e",
+    marginTop: 14,
     marginBottom: 12,
     letterSpacing: -0.2,
   },
 
   // ─── Journey Planner ─────────────────────────────────────────
   journeyPlanner: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
   },
   jpItem: {
     width: JP_CARD_WIDTH,
-    alignItems: 'center',
+    alignItems: "center",
   },
   jpImageWrapper: {
     width: JP_CARD_WIDTH,
-    height: JP_CARD_WIDTH * 0.94,
-    borderRadius: 20,
-    overflow: 'hidden',
-    backgroundColor: '#f1f5f9',
+    height: JP_CARD_WIDTH * 0.78,
+    borderRadius: 16,
+    overflow: "hidden",
+    backgroundColor: "#f1f5f9",
     ...elevation.sm,
   },
   jpImage: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   jpText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1e3a8a',
-    textAlign: 'center',
-    marginTop: 7,
+    fontSize: 12.5,
+    fontWeight: "600",
+    color: "#1e3a8a",
+    textAlign: "center",
+    marginTop: 5,
     letterSpacing: 0.1,
   },
 
   // ─── More Offerings ──────────────────────────────────────────
   grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
   },
   gridItem: {
     width: OFFERING_CARD_SIZE,
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 14,
   },
   iconWrapper: {
     width: OFFERING_CARD_SIZE,
     height: OFFERING_CARD_SIZE,
     borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 6,
   },
   gridTitle: {
     fontSize: 12,
-    color: '#1e293b',
-    fontWeight: '600',
-    textAlign: 'center',
+    color: "#1e293b",
+    fontWeight: "600",
+    textAlign: "center",
     lineHeight: 15.5,
   },
 
@@ -440,96 +509,96 @@ const styles = StyleSheet.create({
     width: width * 0.82,
     borderRadius: 20,
     marginRight: 14,
-    overflow: 'hidden',
+    overflow: "hidden",
     ...elevation.sm,
   },
   upcomingCardInner: {
-    paddingHorizontal: 16,
-    paddingVertical: 13,
-    position: 'relative',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    position: "relative",
   },
   cardNotch: {
-    position: 'absolute',
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    position: "absolute",
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     backgroundColor: colors.white,
-    right: 58,
+    right: 54,
   },
-  cardNotchTop: { top: -11 },
-  cardNotchBottom: { bottom: -11 },
+  cardNotchTop: { top: -9 },
+  cardNotchBottom: { bottom: -9 },
   upcomingCardTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   upcomingDate: {
     color: colors.white,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 13.5,
+    fontWeight: "600",
   },
   trainNumBadge: {
-    alignItems: 'flex-end',
-    justifyContent: 'center',
+    alignItems: "flex-end",
+    justifyContent: "center",
   },
   trainNumText: {
     color: colors.white,
-    fontSize: 19,
-    fontWeight: '700',
+    fontSize: 17,
+    fontWeight: "700",
     letterSpacing: 0.5,
   },
   cardDivider: {
     height: 1,
-    backgroundColor: 'rgba(255,255,255,0.22)',
-    marginVertical: 7,
+    backgroundColor: "rgba(255,255,255,0.22)",
+    marginVertical: 5,
   },
   upcomingRouteRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   upcomingStationLeft: {
     color: colors.white,
-    fontSize: 13.5,
-    fontWeight: '600',
+    fontSize: 12.5,
+    fontWeight: "600",
     letterSpacing: 0.2,
     flex: 1,
   },
   upcomingStationRight: {
     color: colors.white,
-    fontSize: 13.5,
-    fontWeight: '600',
+    fontSize: 12.5,
+    fontWeight: "600",
     letterSpacing: 0.2,
     flex: 1,
-    textAlign: 'right',
+    textAlign: "right",
   },
   upcomingCardBottom: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   reservedBadgeText: {
-    color: '#a8f3b0',
-    fontSize: 14.5,
-    fontWeight: '700',
+    color: "#a8f3b0",
+    fontSize: 13,
+    fontWeight: "700",
   },
   upcomingBtnsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   cardBtnPill: {
     borderWidth: 1.2,
     borderColor: colors.white,
     borderRadius: 18,
-    paddingHorizontal: 12,
-    paddingVertical: 4.5,
+    paddingHorizontal: 10,
+    paddingVertical: 3.5,
     marginLeft: 6,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: "rgba(255,255,255,0.08)",
   },
   cardBtnText: {
     color: colors.white,
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: 11,
+    fontWeight: "600",
   },
 
   // ─── Do You Know ─────────────────────────────────────────────
@@ -548,50 +617,50 @@ const styles = StyleSheet.create({
     height: 110,
     borderRadius: 16,
     marginBottom: 6,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: "#f1f5f9",
   },
   factText: {
     fontSize: 11.5,
-    color: '#475569',
+    color: "#475569",
     lineHeight: 16,
-    fontWeight: '500',
+    fontWeight: "500",
   },
 
   // ─── Social Media Section ────────────────────────────────────
   socialSection: {
     height: 150,
     borderRadius: 18,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginTop: 4,
   },
   socialBanner: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
   },
   socialBannerImg: {
     borderRadius: 18,
   },
   socialOverlay: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.32)',
+    backgroundColor: "rgba(0,0,0,0.32)",
     borderRadius: 18,
   },
   socialIconsRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     zIndex: 1,
   },
   socialIconBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginHorizontal: 8,
   },
 });

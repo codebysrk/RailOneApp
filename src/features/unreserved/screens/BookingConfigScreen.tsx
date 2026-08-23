@@ -82,6 +82,10 @@ export const BookingConfigScreen = () => {
     const bookedOnStr = `${currentDay}/${currentMonth}/${currentYear} ${timeFormatted}`;
     const validTillStr = `${validDay}/${validMonth}/${validYear} ${timeFormatted}`;
 
+    const computedDistance = Math.floor(totalFare * 4.5) + ' km';
+    const computedRNumber = 'R' + Math.floor(10000 + Math.random() * 90000);
+    const computedIrCode = 'IR:' + Math.random().toString(36).substring(2, 10).toUpperCase() + 'C1ZR';
+
     const newTicket = {
       id: Date.now().toString(),
       pnr: '21' + Math.floor(10000000 + Math.random() * 90000000),
@@ -97,6 +101,9 @@ export const BookingConfigScreen = () => {
       destCode: dstCode,
       via: computedVia,
       duration: '4h:8m',
+      distance: computedDistance,
+      rNumber: computedRNumber,
+      irCode: computedIrCode,
       fare: totalFare.toFixed(2),
       passengers: `${adults} Adult, ${child} Child`,
       classType: classType,
