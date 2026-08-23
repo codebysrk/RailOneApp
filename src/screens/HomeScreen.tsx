@@ -232,21 +232,21 @@ export const HomeScreen = () => {
                     </Svg>
 
                     <View style={styles.upcomingCardInner}>
+                      {/* Ticket Icon absolute positioned at top right */}
+                      <Ionicons
+                        name="ticket"
+                        size={20}
+                        color="#a8f3b0"
+                        style={styles.cardTicketIcon}
+                      />
+
                       {/* Top Semicircle Cutout */}
                       <View style={[styles.cardNotch, styles.cardNotchTop]} />
 
                       {/* Top Row: Date & Train Number */}
                       <View style={styles.upcomingCardTop}>
                         <Text style={styles.upcomingDate}>{journey.date}</Text>
-                        <View style={styles.trainNumBadge}>
-                          <Ionicons
-                            name="ticket"
-                            size={16}
-                            color="#a8f3b0"
-                            style={{ marginBottom: 1 }}
-                          />
-                          <Text style={styles.trainNumText}>{trainNum}</Text>
-                        </View>
+                        <Text style={styles.trainNumText}>{trainNum}</Text>
                       </View>
 
                       <View style={styles.cardDivider} />
@@ -259,12 +259,6 @@ export const HomeScreen = () => {
                         >
                           {journey.source}
                         </Text>
-                        <Ionicons
-                          name="arrow-forward"
-                          size={14}
-                          color="rgba(255,255,255,0.7)"
-                          style={{ marginHorizontal: 6 }}
-                        />
                         <Text
                           style={styles.upcomingStationRight}
                           numberOfLines={1}
@@ -506,51 +500,54 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   upcomingCardWrapper: {
-    width: width * 0.82,
+    width: width * 0.88,
     borderRadius: 20,
     marginRight: 14,
     overflow: "hidden",
     ...elevation.sm,
   },
   upcomingCardInner: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     position: "relative",
+  },
+  cardTicketIcon: {
+    position: "absolute",
+    top: 14,
+    right: 16,
+    opacity: 0.9,
   },
   cardNotch: {
     position: "absolute",
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: colors.white,
-    right: 54,
+    right: 76,
   },
-  cardNotchTop: { top: -9 },
-  cardNotchBottom: { bottom: -9 },
+  cardNotchTop: { top: -12 },
+  cardNotchBottom: { bottom: -12 },
   upcomingCardTop: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    marginTop: 18,
   },
   upcomingDate: {
     color: colors.white,
-    fontSize: 13.5,
-    fontWeight: "600",
-  },
-  trainNumBadge: {
-    alignItems: "flex-end",
-    justifyContent: "center",
+    fontSize: 14,
+    fontWeight: "400",
   },
   trainNumText: {
     color: colors.white,
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: "700",
     letterSpacing: 0.5,
   },
   cardDivider: {
     height: 1,
-    backgroundColor: "rgba(255,255,255,0.22)",
-    marginVertical: 5,
+    backgroundColor: "rgba(255,255,255,0.15)",
+    marginVertical: 12,
   },
   upcomingRouteRow: {
     flexDirection: "row",
@@ -559,16 +556,18 @@ const styles = StyleSheet.create({
   },
   upcomingStationLeft: {
     color: colors.white,
-    fontSize: 12.5,
-    fontWeight: "600",
-    letterSpacing: 0.2,
+    fontSize: 13,
+    fontWeight: "400",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
     flex: 1,
   },
   upcomingStationRight: {
     color: colors.white,
-    fontSize: 12.5,
-    fontWeight: "600",
-    letterSpacing: 0.2,
+    fontSize: 13,
+    fontWeight: "400",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
     flex: 1,
     textAlign: "right",
   },
@@ -579,26 +578,26 @@ const styles = StyleSheet.create({
   },
   reservedBadgeText: {
     color: "#a8f3b0",
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "700",
   },
   upcomingBtnsRow: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 8,
   },
   cardBtnPill: {
     borderWidth: 1.2,
     borderColor: colors.white,
-    borderRadius: 18,
-    paddingHorizontal: 10,
-    paddingVertical: 3.5,
-    marginLeft: 6,
-    backgroundColor: "rgba(255,255,255,0.08)",
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: "transparent",
   },
   cardBtnText: {
     color: colors.white,
-    fontSize: 11,
-    fontWeight: "600",
+    fontSize: 12,
+    fontWeight: "500",
   },
 
   // ─── Do You Know ─────────────────────────────────────────────
