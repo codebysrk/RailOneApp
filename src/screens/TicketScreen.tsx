@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -106,23 +106,48 @@ export const TicketScreen = () => {
   const ticketData = route.params?.ticket;
   const fromBooking = route.params?.fromBooking;
 
-  const now = new Date();
-  const dateFormatted = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-  const timeFormatted = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
-  const currentDateTime = `${dateFormatted}, ${timeFormatted}`;
-
   const pnr = ticketData?.pnr || '---';
   const ticketId = ticketData?.ticketId || '---';
   const source = ticketData?.source || '---';
   const dest = ticketData?.dest || '---';
   const fare = ticketData?.fare || '0.00';
-  let bookingDate = ticketData?.bookingDateTime || ticketData?.date || currentDateTime;
-  if (bookingDate && !bookingDate.includes(":")) {
-    bookingDate = `${bookingDate}, ${timeFormatted}`;
-  }
-
+  const via = ticketData?.via || 'TKD';
+  const distance = ticketData?.distance || '---';
   const userMobile = user?.mobile || ticketData?.userMobile || '---';
   const userName = user?.name || ticketData?.userName || 'Passenger';
+
+  // Memoize random / default identifiers so they NEVER change across 1-sec timer ticks
+  const rNumber = useMemo(
+    () => ticketData?.rNumber || 'R' + Math.floor(10000 + Math.random() * 90000),
+    [ticketData?.rNumber]
+  );
+  const irCode = useMemo(
+    () =>
+      ticketData?.irCode ||
+      'IR:' + Math.random().toString(36).substring(2, 10).toUpperCase() + 'C1ZR',
+    [ticketData?.irCode]
+  );
+
+  const { bookedNumeric, validTillNumeric, bookingDate } = useMemo(() => {
+    const now = new Date();
+    const currentDay = now.getDate().toString().padStart(2, "0");
+    const currentMonth = (now.getMonth() + 1).toString().padStart(2, "0");
+    const currentYear = now.getFullYear();
+    const currentHour = now.getHours().toString().padStart(2, "0");
+    const currentMin = now.getMinutes().toString().padStart(2, "0");
+    const dateFormatted = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    const timeFormatted = `${currentHour}:${currentMin}`;
+
+    let bDate = ticketData?.bookingDateTime || ticketData?.date || `${dateFormatted}, ${timeFormatted}`;
+    if (bDate && !bDate.includes(":")) {
+      bDate = `${bDate}, ${timeFormatted}`;
+    }
+
+    const bNumeric = ticketData?.bookedOn || `${currentDay}/${currentMonth}/${currentYear} ${currentHour}:${currentMin}`;
+    const vNumeric = ticketData?.validTill || `${currentDay}/${currentMonth}/${currentYear} 23:59`;
+
+    return { bookedNumeric: bNumeric, validTillNumeric: vNumeric, bookingDate: bDate };
+  }, [ticketData]);
 
   const TOTAL_DURATION = 300; // 5 minutes window
   const [timeLeft, setTimeLeft] = useState(TOTAL_DURATION);
@@ -221,23 +246,6 @@ export const TicketScreen = () => {
     .padStart(2, "0");
   const seconds = (timeLeft % 60).toString().padStart(2, "0");
 
-  // Formatted timestamps & metadata (Valid till 23:59 of current day)
-  const currentDay = now.getDate().toString().padStart(2, "0");
-  const currentMonth = (now.getMonth() + 1).toString().padStart(2, "0");
-  const currentYear = now.getFullYear();
-  const currentHour = now.getHours().toString().padStart(2, "0");
-  const currentMin = now.getMinutes().toString().padStart(2, "0");
-
-  const defaultBookedNumeric = `${currentDay}/${currentMonth}/${currentYear} ${currentHour}:${currentMin}`;
-  const defaultValidTillNumeric = `${currentDay}/${currentMonth}/${currentYear} 23:59`;
-
-  const bookedNumeric = ticketData?.bookedOn || defaultBookedNumeric;
-  const validTillNumeric = ticketData?.validTill || defaultValidTillNumeric;
-  const rNumber = ticketData?.rNumber || ('R' + Math.floor(10000 + Math.random() * 90000));
-  const irCode = ticketData?.irCode || ('IR:' + Math.random().toString(36).substring(2, 10).toUpperCase() + 'C1ZR');
-  const via = ticketData?.via || 'TKD';
-  const distance = ticketData?.distance || '---';
-
   // Feedback State
   const [rating, setRating] = useState<number>(0);
   const [description, setDescription] = useState<string>("");
@@ -268,35 +276,38 @@ export const TicketScreen = () => {
     );
   };
 
-  const qrSecurityDigest = [
-    `CRIS//IR-UTS//V5.2.0//SECURE-QR`,
-    `PNR:${pnr}`,
-    `TID:${ticketId}`,
-    `TRN:${ticketData?.train || '12279-TAJ-EXP'}`,
-    `SRC:${source}`,
-    `DST:${dest}`,
-    `VIA:${via}`,
-    `DIST:${distance}`,
-    `DT:${bookingDate}`,
-    `EXP:${validTillNumeric}`,
-    `FARE:INR-${fare}`,
-    `RNUM:${rNumber}`,
-    `IRCD:${irCode}`,
-    `PAX:${ticketData?.passengers || '1-ADULT-0-CHILD'}`,
-    `CLS:${ticketData?.classType || 'SECOND-2S'}`,
-    `TYP:${ticketData?.trainType || 'MAIL-EXP'}`,
-    `USER:${userName}//MOB:${userMobile}`,
-    `UTS_TERMID:DEL-CRIS-WS-99214`,
-    `DEV_SIG:A8F932D1-7B32-4E90-B8A1-1928374650AC`,
-    `CRIS_SIGNATURE_RSA2048:MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1v5zL0Q7e9rT3v4U1x8yZ2kL4w9v7P0r6t2y4u8i0o1p3e5r7t9y1u3i5o7p9a1s3d5f7g9h1j3k5l7z9x1c3v5b7n9m1q3w5e7r9t1y3u5i7o9p1a3s5d7f9g1h3j5k7l9z1x3c5v7b9n1m3q5w7e9r1t3y5u7i9o1p3a5s7d9f1g3h5j7k9l1z3x5c7v9b1n3m5q7w9e1r3t5y7u9i1o3p5a7s9d1f3g5h7j9k1l3z5x7c9v1b3n5m7q9w1e3r5t7y9u1i3o5p7a9s1d3f5g7h9j1k3l5z7x9c1v3b5n7m9q1w3e5r7t9y1u3i5o7p9a1s3d5f7g9h1j3`,
-    `HASH_SHA512:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`,
-    `CERT_EXP:2028-12-31T23:59:59Z`,
-    `AUTH:CENTRE-FOR-RAILWAY-INFORMATION-SYSTEMS`,
-  ].join('//');
+  // Memoize QR URI so it NEVER regenerates or flickers on timer countdown ticks
+  const qrUri = useMemo(() => {
+    const qrSecurityDigest = [
+      `CRIS//IR-UTS//V5.2.0//SECURE-QR`,
+      `PNR:${pnr}`,
+      `TID:${ticketId}`,
+      `TRN:${ticketData?.train || '12279-TAJ-EXP'}`,
+      `SRC:${source}`,
+      `DST:${dest}`,
+      `VIA:${via}`,
+      `DIST:${distance}`,
+      `DT:${bookingDate}`,
+      `EXP:${validTillNumeric}`,
+      `FARE:INR-${fare}`,
+      `RNUM:${rNumber}`,
+      `IRCD:${irCode}`,
+      `PAX:${ticketData?.passengers || '1-ADULT-0-CHILD'}`,
+      `CLS:${ticketData?.classType || 'SECOND-2S'}`,
+      `TYP:${ticketData?.trainType || 'MAIL-EXP'}`,
+      `USER:${userName}//MOB:${userMobile}`,
+      `UTS_TERMID:DEL-CRIS-WS-99214`,
+      `DEV_SIG:A8F932D1-7B32-4E90-B8A1-1928374650AC`,
+      `CRIS_SIGNATURE_RSA2048:MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1v5zL0Q7e9rT3v4U1x8yZ2kL4w9v7P0r6t2y4u8i0o1p3e5r7t9y1u3i5o7p9a1s3d5f7g9h1j3k5l7z9x1c3v5b7n9m1q3w5e7r9t1y3u5i7o9p1a3s5d7f9g1h3j5k7l9z1x3c5v7b9n1m3q5w7e9r1t3y5u7i9o1p3a5s7d9f1g3h5j7k9l1z3x5c7v9b1n3m5q7w9e1r3t5y7u9i1o3p5a7s9d1f3g5h7j9k1l3z5x7c9v1b3n5m7q9w1e3r5t7y9u1i3o5p7a9s1d3f5g7h9j1k3l5z7x9c1v3b5n7m9q1w3e5r7t9y1u3i5o7p9a1s3d5f7g9h1j3`,
+      `HASH_SHA512:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`,
+      `CERT_EXP:2028-12-31T23:59:59Z`,
+      `AUTH:CENTRE-FOR-RAILWAY-INFORMATION-SYSTEMS`,
+    ].join('//');
 
-  const qrUri = `https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&data=${encodeURIComponent(
-    qrSecurityDigest
-  )}&ecc=H&margin=1`;
+    return `https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&data=${encodeURIComponent(
+      qrSecurityDigest
+    )}&ecc=H&margin=1`;
+  }, [pnr, ticketId, source, dest, via, distance, bookingDate, validTillNumeric, fare, rNumber, irCode, userName, userMobile, ticketData?.train, ticketData?.passengers, ticketData?.classType, ticketData?.trainType]);
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
