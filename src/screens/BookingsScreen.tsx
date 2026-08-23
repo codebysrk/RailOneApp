@@ -9,8 +9,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import { colors } from "@/theme/colors";
-import { spacing, elevation } from "@/theme/spacing";
+import Svg, { Path } from "react-native-svg";
 import { FirebaseService, StorageService } from "@/services";
 import { useAuth } from "@/context/AuthContext";
 import { AppHeader, TicketCard, TicketData } from "@/components/common";
@@ -65,6 +64,46 @@ const DEFAULT_COMPLETED: TicketData[] = [
   },
 ];
 
+// Exact Sort Descending Header Icon from screenshot
+const HeaderSortIcon = ({ color = "#ffffff", size = 22 }: { color?: string; size?: number }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path d="M4 6H13M4 12H11M4 18H8" stroke={color} strokeWidth={2.2} strokeLinecap="round" />
+    <Path d="M17 5V19M17 19L13.5 15.5M17 19L20.5 15.5" stroke={color} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>
+);
+
+// Exact Ticket Tab Icon from screenshot
+const TabTicketIcon = ({ color, isSelected, tab }: { color: string; isSelected: boolean; tab: string }) => {
+  if (tab === "All" && isSelected) {
+    return (
+      <Svg width={24} height={18} viewBox="0 0 24 18" fill="none">
+        <Path
+          d="M2 3.5C2 2.67 2.67 2 3.5 2H20.5C21.33 2 22 2.67 22 3.5V6.5C20.9 6.5 20 7.4 20 8.5C20 9.6 20.9 10.5 22 10.5V14.5C22 15.33 21.33 16 20.5 16H3.5C2.67 16 2 15.33 2 14.5V10.5C3.1 10.5 4 9.6 4 8.5C4 7.4 3.1 6.5 2 6.5V3.5Z"
+          fill="#1e293b"
+          stroke="#1e293b"
+          strokeWidth={1.5}
+        />
+        <Path d="M14 6H19M14 10H17" stroke="#0066ff" strokeWidth={1.8} strokeLinecap="round" />
+      </Svg>
+    );
+  }
+  return (
+    <Svg width={24} height={18} viewBox="0 0 24 18" fill="none">
+      <Path
+        d="M2 3.5C2 2.67 2.67 2 3.5 2H20.5C21.33 2 22 2.67 22 3.5V6.5C20.9 6.5 20 7.4 20 8.5C20 9.6 20.9 10.5 22 10.5V14.5C22 15.33 21.33 16 20.5 16H3.5C2.67 16 2 15.33 2 14.5V10.5C3.1 10.5 4 9.6 4 8.5C4 7.4 3.1 6.5 2 6.5V3.5Z"
+        fill={isSelected ? (tab === "Upcoming" ? "#f39c42" : tab === "Completed" ? "#2ea566" : tab === "Cancelled" ? "#ef4444" : "#1e293b") : "none"}
+        stroke={color}
+        strokeWidth={1.7}
+      />
+      {isSelected ? (
+        <Path d="M8 2V16" stroke="#ffffff" strokeWidth={1.2} strokeDasharray="2 2" />
+      ) : (
+        <Path d="M8 2V16M13 6H18M13 10H16" stroke={color} strokeWidth={1.3} strokeLinecap="round" />
+      )}
+    </Svg>
+  );
+};
+
 export const BookingsScreen = () => {
   const navigation = useNavigation<any>();
   const { user } = useAuth();
@@ -113,13 +152,13 @@ export const BookingsScreen = () => {
   const getFilterActiveColor = (tab: string) => {
     switch (tab) {
       case "Upcoming":
-        return "#d97706";
+        return "#e59344";
       case "Completed":
-        return "#16a34a";
+        return "#2ea566";
       case "Cancelled":
         return "#ef4444";
       default:
-        return "#0f172a";
+        return "#1e293b";
     }
   };
 
@@ -133,10 +172,11 @@ export const BookingsScreen = () => {
         title="My Bookings"
         variant="blue"
         onBack={() => navigation.navigate("HomeTab")}
-        rightAction={{
-          icon: "swap-vertical",
-          onPress: () => {},
-        }}
+        rightComponent={
+          <TouchableOpacity activeOpacity={0.8}>
+            <HeaderSortIcon color="#ffffff" size={22} />
+          </TouchableOpacity>
+        }
       />
 
       <ScrollView
@@ -147,11 +187,11 @@ export const BookingsScreen = () => {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <View style={styles.headerSpacer} />
-              <Text style={[styles.sectionTitle, { color: "#d97706" }]}>
+              <Text style={[styles.sectionTitle, { color: "#e59344" }]}>
                 Upcoming ({upcomingList.length})
               </Text>
               <TouchableOpacity style={styles.refreshBtn} activeOpacity={0.7}>
-                <Ionicons name="sync-outline" size={19} color="#64748b" />
+                <Ionicons name="sync-outline" size={19} color="#8da0b3" />
               </TouchableOpacity>
             </View>
             {upcomingList.length === 0 ? (
@@ -176,11 +216,11 @@ export const BookingsScreen = () => {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <View style={styles.headerSpacer} />
-              <Text style={[styles.sectionTitle, { color: "#16a34a" }]}>
+              <Text style={[styles.sectionTitle, { color: "#2ea566" }]}>
                 Completed ({completedList.length})
               </Text>
               <TouchableOpacity style={styles.refreshBtn} activeOpacity={0.7}>
-                <Ionicons name="sync-outline" size={19} color="#64748b" />
+                <Ionicons name="sync-outline" size={19} color="#8da0b3" />
               </TouchableOpacity>
             </View>
             {completedList.length === 0 ? (
@@ -209,7 +249,7 @@ export const BookingsScreen = () => {
                 Cancelled (0)
               </Text>
               <TouchableOpacity style={styles.refreshBtn} activeOpacity={0.7}>
-                <Ionicons name="sync-outline" size={19} color="#64748b" />
+                <Ionicons name="sync-outline" size={19} color="#8da0b3" />
               </TouchableOpacity>
             </View>
             <View style={styles.emptyContainer}>
@@ -237,16 +277,16 @@ export const BookingsScreen = () => {
                   onPress={() => setFilter(tab)}
                   activeOpacity={0.8}
                 >
-                  <Ionicons
-                    name="ticket"
-                    size={22}
-                    color={isSelected ? activeColor : "#94a3b8"}
+                  <TabTicketIcon
+                    tab={tab}
+                    isSelected={isSelected}
+                    color={isSelected ? activeColor : "#8da0b3"}
                   />
                   <Text
                     style={[
                       styles.filterTabText,
                       {
-                        color: isSelected ? activeColor : "#64748b",
+                        color: isSelected ? activeColor : "#8da0b3",
                         fontWeight: isSelected ? "700" : "500",
                       },
                     ]}
@@ -264,7 +304,7 @@ export const BookingsScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f8fafc" },
+  container: { flex: 1, backgroundColor: "#ffffff" },
   scroll: { paddingHorizontal: 16, paddingTop: 14, paddingBottom: 90 },
   section: { marginBottom: 16 },
   sectionHeader: {
@@ -278,7 +318,7 @@ const styles = StyleSheet.create({
     width: 24,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 15.5,
     fontWeight: "700",
     textAlign: "center",
   },
@@ -307,7 +347,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     borderWidth: 1,
-    borderColor: "#cde4f7",
+    borderColor: "#c5e1f7",
     borderBottomWidth: 0,
     paddingHorizontal: 8,
     paddingTop: 8,
@@ -323,7 +363,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 8,
-    borderRadius: 16,
+    borderRadius: 14,
     marginHorizontal: 3,
   },
   filterTabActive: {
@@ -336,6 +376,6 @@ const styles = StyleSheet.create({
   },
   filterTabText: {
     fontSize: 11.5,
-    marginTop: 3,
+    marginTop: 4,
   },
 });

@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { colors } from '@/theme/colors';
-import { spacing } from '@/theme/spacing';
 
 export interface TicketData {
   id: string;
@@ -35,8 +34,10 @@ export const TicketCard: React.FC<TicketCardProps> = ({
 }) => {
   const isUpcoming = status === 'upcoming';
   const isCompleted = status === 'completed';
-  const borderColor = isUpcoming ? '#f59e0b' : isCompleted ? '#16a34a' : '#ef4444';
-  const dashedColor = isUpcoming ? '#f59e0b' : isCompleted ? '#16a34a' : '#ef4444';
+  
+  // Exact color calibration from screenshots
+  const borderColor = isUpcoming ? '#f39c42' : isCompleted ? '#2ea566' : '#ef4444';
+  const dashedColor = isUpcoming ? '#f39c42' : isCompleted ? '#2ea566' : '#ef4444';
 
   const badgeText = ticket.moduleType === 'UNRESERVED' ? 'Unreserved' 
                   : ticket.moduleType === 'PLATFORM' ? 'Platform' 
@@ -46,6 +47,7 @@ export const TicketCard: React.FC<TicketCardProps> = ({
     <View style={[styles.ticketCard, { borderColor }]}>
       {/* Top Section */}
       <TouchableOpacity activeOpacity={0.9} onPress={onOpen} style={styles.ticketTop}>
+        {/* Row 1: Badge & PNR */}
         <View style={styles.ticketHeaderRow}>
           <View style={styles.badgeReserved}>
             <Text style={styles.badgeReservedText}>{badgeText}</Text>
@@ -56,6 +58,7 @@ export const TicketCard: React.FC<TicketCardProps> = ({
           </Text>
         </View>
 
+        {/* Row 2: Train No & Journey Date */}
         <View style={styles.infoRow}>
           <View style={styles.infoCol}>
             <Text style={styles.infoLabel}>Train No.</Text>
@@ -67,6 +70,7 @@ export const TicketCard: React.FC<TicketCardProps> = ({
           </View>
         </View>
 
+        {/* Row 3: Route & Duration */}
         <View style={styles.routeRow}>
           <Text style={styles.routeStationLeft} numberOfLines={1}>
             {ticket.source}
@@ -109,7 +113,7 @@ export const TicketCard: React.FC<TicketCardProps> = ({
 const styles = StyleSheet.create({
   ticketCard: {
     backgroundColor: '#ffffff',
-    borderRadius: 18,
+    borderRadius: 16,
     borderWidth: 1.2,
     marginBottom: 16,
     overflow: 'hidden',
@@ -118,6 +122,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 14,
+    backgroundColor: '#ffffff',
   },
   ticketHeaderRow: {
     flexDirection: 'row',
@@ -126,13 +131,13 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   badgeReserved: {
-    backgroundColor: '#cffafe',
+    backgroundColor: '#c7f1f6',
     paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 8,
+    paddingVertical: 4.5,
+    borderRadius: 7,
   },
   badgeReservedText: {
-    color: '#0891b2',
+    color: '#0097a7',
     fontSize: 13,
     fontWeight: '700',
   },
@@ -156,7 +161,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   infoLabel: {
-    fontSize: 12,
+    fontSize: 12.5,
     color: '#94a3b8',
     fontWeight: '400',
     marginBottom: 3,
@@ -203,6 +208,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     position: 'relative',
     marginVertical: -12,
+    zIndex: 5,
   },
   dashedLine: {
     flex: 1,
@@ -218,13 +224,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     position: 'absolute',
     borderWidth: 1.2,
-    zIndex: 2,
+    zIndex: 6,
   },
   cutoutLeft: {
-    left: -12,
+    left: -13,
   },
   cutoutRight: {
-    right: -12,
+    right: -13,
   },
   ticketBottom: {
     flexDirection: 'row',

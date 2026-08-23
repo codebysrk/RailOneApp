@@ -14,6 +14,7 @@ interface AppHeaderProps {
     icon: keyof typeof Ionicons.glyphMap;
     onPress: () => void;
   };
+  rightComponent?: React.ReactNode;
 }
 
 export const AppHeader: React.FC<AppHeaderProps> = ({
@@ -23,6 +24,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   onBack,
   onClose,
   rightAction,
+  rightComponent,
 }) => {
   const isBlue = variant === 'blue';
   const textColor = isBlue ? colors.white : colors.textHeading;
@@ -56,7 +58,13 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         </TouchableOpacity>
       )}
 
-      {!onClose && !rightAction && (onBack ? <View style={{ width: 38 }} /> : null)}
+      {rightComponent && (
+        <View style={styles.rightActionBtn}>
+          {rightComponent}
+        </View>
+      )}
+
+      {!onClose && !rightAction && !rightComponent && (onBack ? <View style={{ width: 38 }} /> : null)}
     </View>
   );
 };
