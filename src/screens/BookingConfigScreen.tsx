@@ -47,25 +47,40 @@ export const BookingConfigScreen = () => {
   const [classType, setClassType] = useState('SECOND');
   const [concession, setConcession] = useState(false);
 
-  // Manual fare override via double tap
-  const [customFare, setCustomFare] = useState<string | null>(null);
+  // Manual base fare override via double tap
+  const [customBaseFare, setCustomBaseFare] = useState<number | null>(null);
+  const [typedFareInput, setTypedFareInput] = useState<string>('');
   const [isEditingFare, setIsEditingFare] = useState(false);
   const [lastTap, setLastTap] = useState<number>(0);
 
   const trainKey: TrainType = trainType === 'SUPERFAST' ? 'SUPERFAST' : 'MAIL_EXP';
-  const calculatedFare = calculateFare(trainKey, adults, child) * (concession ? 0.5 : 1);
-  const totalFare = customFare !== null && !isNaN(Number(customFare)) && customFare.trim() !== ''
-    ? Number(customFare)
-    : calculatedFare;
+  const defaultSingleAdultFare = calculateFare(trainKey, 1, 0);
+  const activeBaseFare = customBaseFare !== null ? customBaseFare : defaultSingleAdultFare;
+
+  // Dynamically calculate total fare based on active base fare, adults, and children
+  const rawPassengerFare = (adults * activeBaseFare) + Math.round(child * 0.5 * activeBaseFare);
+  const totalFare = concession ? Math.round(rawPassengerFare * 0.5) : rawPassengerFare;
 
   const handleFareDoubleTap = () => {
     const now = Date.now();
     const DOUBLE_PRESS_DELAY = 350;
     if (now - lastTap < DOUBLE_PRESS_DELAY) {
-      setCustomFare(totalFare.toFixed(0));
+      setTypedFareInput(totalFare.toFixed(0));
       setIsEditingFare(true);
     } else {
       setLastTap(now);
+    }
+  };
+
+  const handleSaveCustomFare = (inputVal: string) => {
+    setIsEditingFare(false);
+    const num = parseFloat(inputVal);
+    if (!isNaN(num) && num > 0) {
+      const passengerMultiplier = (adults + (child * 0.5)) * (concession ? 0.5 : 1);
+      const derivedBaseFare = passengerMultiplier > 0 ? num / passengerMultiplier : num;
+      setCustomBaseFare(derivedBaseFare);
+    } else if (inputVal.trim() === '') {
+      setCustomBaseFare(null); // reset to default engine calculation
     }
   };
 
@@ -239,12 +254,12 @@ export const BookingConfigScreen = () => {
                 <Text style={styles.fareAmount}>₹ </Text>
                 <TextInput
                   style={styles.fareInput}
-                  value={customFare ?? ''}
-                  onChangeText={setCustomFare}
+                  value={typedFareInput}
+                  onChangeText={setTypedFareInput}
                   keyboardType="numeric"
                   autoFocus
-                  onBlur={() => setIsEditingFare(false)}
-                  onSubmitEditing={() => setIsEditingFare(false)}
+                  onBlur={() => handleSaveCustomFare(typedFareInput)}
+                  onSubmitEditing={() => handleSaveCustomFare(typedFareInput)}
                   selectTextOnFocus
                 />
               </View>
