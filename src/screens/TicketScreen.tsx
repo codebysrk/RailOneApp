@@ -877,13 +877,22 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   connectingBtnText: { color: "#0066ff", fontSize: 14, fontWeight: "600" },
-  qrSection: { paddingVertical: 16, alignItems: "center" },
-  qrImage: { width: 230, height: 230 },
+  qrSection: {
+    backgroundColor: "#ffffff",
+    marginHorizontal: -12,
+    paddingVertical: 22,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  qrImage: {
+    width: 250,
+    height: 250,
+    backgroundColor: "#ffffff",
+  },
   sectionDivider: {
     height: 1,
-    backgroundColor: "#e2e8f0",
+    backgroundColor: "#e5e7eb",
     marginHorizontal: -12,
-    marginVertical: 6,
   },
   infoSection: { paddingVertical: 16 },
   infoTitle: {
