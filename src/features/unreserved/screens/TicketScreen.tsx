@@ -173,16 +173,23 @@ export const TicketScreen = () => {
   const minutes = Math.floor(timeLeft / 60).toString().padStart(2, '0');
   const seconds = (timeLeft % 60).toString().padStart(2, '0');
 
-  // Formatted timestamps & metadata
+  // Formatted timestamps & metadata (24 Hours Ticket Validity)
+  const validDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  
   const currentDay = now.getDate().toString().padStart(2, '0');
   const currentMonth = (now.getMonth() + 1).toString().padStart(2, '0');
   const currentYear = now.getFullYear();
   const currentHour = now.getHours().toString().padStart(2, '0');
   const currentMin = now.getMinutes().toString().padStart(2, '0');
-  const validHour = ((now.getHours() + 3) % 24).toString().padStart(2, '0');
+
+  const validDay = validDate.getDate().toString().padStart(2, '0');
+  const validMonth = (validDate.getMonth() + 1).toString().padStart(2, '0');
+  const validYear = validDate.getFullYear();
+  const validHour = validDate.getHours().toString().padStart(2, '0');
+  const validMin = validDate.getMinutes().toString().padStart(2, '0');
 
   const defaultBookedNumeric = `${currentDay}/${currentMonth}/${currentYear} ${currentHour}:${currentMin}`;
-  const defaultValidTillNumeric = `${currentDay}/${currentMonth}/${currentYear} ${validHour}:${currentMin}`;
+  const defaultValidTillNumeric = `${validDay}/${validMonth}/${validYear} ${validHour}:${validMin}`;
 
   const bookedNumeric = ticketData?.bookedOn || defaultBookedNumeric;
   const validTillNumeric = ticketData?.validTill || defaultValidTillNumeric;
@@ -347,7 +354,7 @@ export const TicketScreen = () => {
 
               {/* Row 6: Validity Disclaimer */}
               <Text style={styles.validityNote}>
-                *Valid for start of journey within 3 hour or until departure of the first train.
+                *Valid for start of journey within 24 hours or until departure of the first train.
               </Text>
             </View>
 
