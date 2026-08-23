@@ -888,13 +888,13 @@ const styles = StyleSheet.create({
   qrSection: {
     backgroundColor: "#ffffff",
     marginHorizontal: -12,
-    paddingVertical: 22,
+    paddingVertical: 18,
     alignItems: "center",
     justifyContent: "center",
   },
   qrImage: {
-    width: 250,
-    height: 250,
+    width: 200,
+    height: 200,
     backgroundColor: "#ffffff",
   },
   sectionDivider: {
