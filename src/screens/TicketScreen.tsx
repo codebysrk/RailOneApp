@@ -563,7 +563,15 @@ export const TicketScreen = () => {
                   onPress={handleSubmitFeedback}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.submitBtnText}>Submit</Text>
+                  <Text
+                    style={[
+                      styles.submitBtnText,
+                      (rating > 0 || description.length > 0) &&
+                        styles.submitBtnTextActive,
+                    ]}
+                  >
+                    Submit
+                  </Text>
                 </TouchableOpacity>
               </View>
             </>
@@ -890,53 +898,78 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
   },
   sectionDivider: {
-    height: 1,
+    height: 8,
     backgroundColor: "#e5e7eb",
     marginHorizontal: -12,
   },
-  infoSection: { paddingVertical: 16 },
-  infoTitle: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#222222",
-    marginBottom: 8,
+  infoSection: {
+    backgroundColor: "#ffffff",
+    marginHorizontal: -12,
+    paddingHorizontal: 16,
+    paddingVertical: 18,
   },
-  infoParagraph: {
-    fontSize: 13,
-    color: "#4a4742",
-    lineHeight: 18,
+  infoTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1e293b",
     marginBottom: 10,
   },
-  ratingSection: { paddingVertical: 16 },
-  experienceTitle: { fontSize: 14, fontWeight: "700", color: "#222222" },
-  ratingLabel: { fontSize: 13, color: "#4a4742", marginVertical: 8 },
-  starsRow: { flexDirection: "row", alignItems: "center" },
-  starBtn: { marginRight: 12, padding: 2 },
+  infoParagraph: {
+    fontSize: 13.5,
+    color: "#475569",
+    lineHeight: 20,
+    marginBottom: 14,
+  },
+  ratingSection: {
+    backgroundColor: "#ffffff",
+    marginHorizontal: -12,
+    paddingHorizontal: 16,
+    paddingVertical: 18,
+    paddingBottom: 24,
+  },
+  experienceTitle: {
+    fontSize: 15.5,
+    fontWeight: "700",
+    color: "#1e293b",
+    marginBottom: 4,
+  },
+  ratingLabel: {
+    fontSize: 13.5,
+    color: "#64748b",
+    marginVertical: 8,
+    fontWeight: "500",
+  },
+  starsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  starBtn: { marginRight: 10 },
   textareaContainer: {
-    marginTop: 12,
     borderWidth: 1,
-    borderColor: "#9e968a",
+    borderColor: "#cbd5e1",
     borderRadius: 8,
-    height: 100,
-    padding: 8,
-    backgroundColor: "transparent",
+    height: 110,
+    padding: 12,
+    backgroundColor: "#ffffff",
     justifyContent: "space-between",
+    marginBottom: 18,
   },
   textareaInput: {
     flex: 1,
-    fontSize: 13,
-    color: "#222222",
+    fontSize: 13.5,
+    color: "#1e293b",
     textAlignVertical: "top",
   },
-  charCounter: { fontSize: 11, color: "#6e685f", textAlign: "right" },
+  charCounter: { fontSize: 11, color: "#94a3b8", textAlign: "right" },
   submitBtn: {
-    marginTop: 12,
-    backgroundColor: "#e4e4e4",
-    borderRadius: 20,
-    height: 40,
+    backgroundColor: "#e2e8f0",
+    borderRadius: 24,
+    height: 44,
     alignItems: "center",
     justifyContent: "center",
   },
-  submitBtnActive: { backgroundColor: "#aba192" },
-  submitBtnText: { fontSize: 14, fontWeight: "600", color: "#524b43" },
+  submitBtnActive: { backgroundColor: "#0066ff" },
+  submitBtnText: { fontSize: 15, fontWeight: "600", color: "#64748b" },
+  submitBtnTextActive: { color: "#ffffff" },
 });
