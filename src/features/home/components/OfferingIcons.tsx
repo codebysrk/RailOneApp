@@ -161,3 +161,4 @@ export const GoToWavesIcon = ({ color = '#ffffff', size = 32 }: { color?: string
     <Path d="M25 13L21.5 27H25L29 17.5L25 13Z" fill={color} />
   </Svg>
 );
+
