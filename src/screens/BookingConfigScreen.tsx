@@ -100,7 +100,6 @@ export const BookingConfigScreen = () => {
     }
 
     const now = new Date();
-    const validTillDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
     const dateFormatted = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
     const timeFormatted = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
     const fullDateTime = `${dateFormatted}, ${timeFormatted}`;
@@ -109,12 +108,8 @@ export const BookingConfigScreen = () => {
     const currentMonth = (now.getMonth() + 1).toString().padStart(2, '0');
     const currentYear = now.getFullYear();
 
-    const validDay = validTillDate.getDate().toString().padStart(2, '0');
-    const validMonth = (validTillDate.getMonth() + 1).toString().padStart(2, '0');
-    const validYear = validTillDate.getFullYear();
-
     const bookedOnStr = `${currentDay}/${currentMonth}/${currentYear} ${timeFormatted}`;
-    const validTillStr = `${validDay}/${validMonth}/${validYear} ${timeFormatted}`;
+    const validTillStr = `${currentDay}/${currentMonth}/${currentYear} 23:59`;
 
     const computedDistance = Math.floor(totalFare * 4.5) + ' km';
     const computedRNumber = 'R' + Math.floor(10000 + Math.random() * 90000);

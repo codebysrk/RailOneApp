@@ -221,23 +221,15 @@ export const TicketScreen = () => {
     .padStart(2, "0");
   const seconds = (timeLeft % 60).toString().padStart(2, "0");
 
-  // Formatted timestamps & metadata (24 Hours Ticket Validity)
-  const validDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-
+  // Formatted timestamps & metadata (Valid till 23:59 of current day)
   const currentDay = now.getDate().toString().padStart(2, "0");
   const currentMonth = (now.getMonth() + 1).toString().padStart(2, "0");
   const currentYear = now.getFullYear();
   const currentHour = now.getHours().toString().padStart(2, "0");
   const currentMin = now.getMinutes().toString().padStart(2, "0");
 
-  const validDay = validDate.getDate().toString().padStart(2, "0");
-  const validMonth = (validDate.getMonth() + 1).toString().padStart(2, "0");
-  const validYear = validDate.getFullYear();
-  const validHour = validDate.getHours().toString().padStart(2, "0");
-  const validMin = validDate.getMinutes().toString().padStart(2, "0");
-
   const defaultBookedNumeric = `${currentDay}/${currentMonth}/${currentYear} ${currentHour}:${currentMin}`;
-  const defaultValidTillNumeric = `${validDay}/${validMonth}/${validYear} ${validHour}:${validMin}`;
+  const defaultValidTillNumeric = `${currentDay}/${currentMonth}/${currentYear} 23:59`;
 
   const bookedNumeric = ticketData?.bookedOn || defaultBookedNumeric;
   const validTillNumeric = ticketData?.validTill || defaultValidTillNumeric;
@@ -450,8 +442,7 @@ export const TicketScreen = () => {
 
                 {/* Row 6: Validity Disclaimer */}
                 <Text style={styles.validityNote}>
-                  *Valid for start of journey within 24 hours or until departure
-                  of the first train.
+                  *Valid for start of journey till 23:59 hrs of the booking date.
                 </Text>
               </View>
 
@@ -882,25 +873,8 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   connectingBtnText: { color: "#0066ff", fontSize: 14, fontWeight: "600" },
-  qrSection: {
-    backgroundColor: "#ffffff",
-    borderRadius: 16,
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    marginVertical: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  qrImage: {
-    width: 220,
-    height: 220,
-    backgroundColor: "#ffffff",
-  },
+  qrSection: { paddingVertical: 16, alignItems: "center" },
+  qrImage: { width: 230, height: 230 },
   sectionDivider: {
     height: 1,
     backgroundColor: "#e2e8f0",
