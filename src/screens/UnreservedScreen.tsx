@@ -20,8 +20,8 @@ export const UnreservedScreen = () => {
   const navigation = useNavigation<any>();
   const [tab, setTab] = useState<'normal' | 'season'>('normal');
   const [location, setLocation] = useState<'outside' | 'at'>('outside');
-  const [source, setSource] = useState('MRA - MORENA');
-  const [dest, setDest] = useState('NDLS - NEW DELHI');
+  const [source, setSource] = useState('');
+  const [dest, setDest] = useState('');
 
   // Station Picker Modal State
   const [pickerVisible, setPickerVisible] = useState(false);
@@ -41,9 +41,9 @@ export const UnreservedScreen = () => {
   const handleSelectStation = (stn: StationModel) => {
     const label = `${stn.code} - ${stn.name}`;
     const opposing = pickingTarget === 'source' ? dest : source;
-    const opposingCode = opposing.split(' - ')[0]?.trim();
+    const opposingCode = opposing ? opposing.split(' - ')[0]?.trim() : '';
 
-    if (stn.code === opposingCode || label.toUpperCase() === opposing.toUpperCase()) {
+    if (opposing && (stn.code === opposingCode || label.toUpperCase() === opposing.toUpperCase())) {
       Alert.alert(
         'Same Station Selected',
         `Source and Destination cannot be the same station (${stn.code} - ${stn.name}). Please select a different station.`
@@ -61,6 +61,10 @@ export const UnreservedScreen = () => {
   };
 
   const handleProceedToBook = () => {
+    if (!source.trim() || !dest.trim()) {
+      Alert.alert('Selection Required', 'Please select both Source and Destination stations to proceed.');
+      return;
+    }
     const srcCode = source.split(' - ')[0]?.trim();
     const dstCode = dest.split(' - ')[0]?.trim();
     if (srcCode === dstCode || source.trim().toUpperCase() === dest.trim().toUpperCase()) {
@@ -133,8 +137,10 @@ export const UnreservedScreen = () => {
                 <TouchableOpacity style={styles.inputRow} onPress={() => openPicker('source')} activeOpacity={0.7}>
                   <Text style={styles.inputLabel}>From</Text>
                   <View style={styles.inputField}>
-                    <Ionicons name="train-outline" size={20} color="#64748b" />
-                    <Text style={styles.inputText}>{source}</Text>
+                    <Ionicons name="train-outline" size={20} color={source ? "#0066ff" : "#94a3b8"} />
+                    <Text style={[styles.inputText, !source && styles.inputPlaceholder]}>
+                      {source || 'Select Source Station'}
+                    </Text>
                   </View>
                 </TouchableOpacity>
 
@@ -143,9 +149,11 @@ export const UnreservedScreen = () => {
                   <TouchableOpacity
                     style={styles.swapBtn}
                     onPress={() => {
-                      const temp = source;
-                      setSource(dest);
-                      setDest(temp);
+                      if (source || dest) {
+                        const temp = source;
+                        setSource(dest);
+                        setDest(temp);
+                      }
                     }}
                     activeOpacity={0.7}
                   >
@@ -156,8 +164,10 @@ export const UnreservedScreen = () => {
                 <TouchableOpacity style={styles.inputRow} onPress={() => openPicker('dest')} activeOpacity={0.7}>
                   <Text style={styles.inputLabel}>To</Text>
                   <View style={styles.inputField}>
-                    <Ionicons name="train-outline" size={20} color="#64748b" />
-                    <Text style={styles.inputText}>{dest}</Text>
+                    <Ionicons name="train-outline" size={20} color={dest ? "#0066ff" : "#94a3b8"} />
+                    <Text style={[styles.inputText, !dest && styles.inputPlaceholder]}>
+                      {dest || 'Select Destination Station'}
+                    </Text>
                   </View>
                 </TouchableOpacity>
               </View>
@@ -271,6 +281,7 @@ const styles = StyleSheet.create({
   inputLabel: { fontSize: 15, color: '#0ea5e9', fontWeight: '500', marginBottom: 6 },
   inputField: { flexDirection: 'row', alignItems: 'center', height: 32 },
   inputText: { marginLeft: 10, fontSize: 15, color: '#111827', fontWeight: '600', letterSpacing: 0.2 },
+  inputPlaceholder: { color: '#9ca3af', fontWeight: '400' },
   
   dividerWrapper: { height: 28, justifyContent: 'center', position: 'relative' },
   divider: { height: 1, backgroundColor: '#e5e7eb', marginRight: 40 },
