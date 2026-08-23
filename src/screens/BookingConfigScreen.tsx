@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -47,8 +47,27 @@ export const BookingConfigScreen = () => {
   const [classType, setClassType] = useState('SECOND');
   const [concession, setConcession] = useState(false);
 
+  // Manual fare override via double tap
+  const [customFare, setCustomFare] = useState<string | null>(null);
+  const [isEditingFare, setIsEditingFare] = useState(false);
+  const [lastTap, setLastTap] = useState<number>(0);
+
   const trainKey: TrainType = trainType === 'SUPERFAST' ? 'SUPERFAST' : 'MAIL_EXP';
-  const totalFare = calculateFare(trainKey, adults, child) * (concession ? 0.5 : 1);
+  const calculatedFare = calculateFare(trainKey, adults, child) * (concession ? 0.5 : 1);
+  const totalFare = customFare !== null && !isNaN(Number(customFare)) && customFare.trim() !== ''
+    ? Number(customFare)
+    : calculatedFare;
+
+  const handleFareDoubleTap = () => {
+    const now = Date.now();
+    const DOUBLE_PRESS_DELAY = 350;
+    if (now - lastTap < DOUBLE_PRESS_DELAY) {
+      setCustomFare(totalFare.toFixed(0));
+      setIsEditingFare(true);
+    } else {
+      setLastTap(now);
+    }
+  };
 
   const handleBookNow = async () => {
     // Calculate route via junctions
@@ -210,12 +229,32 @@ export const BookingConfigScreen = () => {
             <Ionicons name="ticket" size={26} color="#0066ff" />
             <Text style={styles.fareLabel}>Fare</Text>
           </View>
-          <View style={styles.fareRight}>
-            <Text style={styles.fareAmount}>₹ {totalFare.toFixed(0)}</Text>
+          <TouchableOpacity
+            style={styles.fareRight}
+            onPress={handleFareDoubleTap}
+            activeOpacity={0.8}
+          >
+            {isEditingFare ? (
+              <View style={styles.fareEditRow}>
+                <Text style={styles.fareAmount}>₹ </Text>
+                <TextInput
+                  style={styles.fareInput}
+                  value={customFare ?? ''}
+                  onChangeText={setCustomFare}
+                  keyboardType="numeric"
+                  autoFocus
+                  onBlur={() => setIsEditingFare(false)}
+                  onSubmitEditing={() => setIsEditingFare(false)}
+                  selectTextOnFocus
+                />
+              </View>
+            ) : (
+              <Text style={styles.fareAmount}>₹ {totalFare.toFixed(0)}</Text>
+            )}
             <View style={styles.fareBadge}>
               <Text style={styles.fareBadgeText}>Fare Breakup</Text>
             </View>
-          </View>
+          </TouchableOpacity>
         </View>
         <View style={styles.bookBtnContainer}>
           <TouchableOpacity style={styles.bookBtn} onPress={handleBookNow} activeOpacity={0.8}>
@@ -262,6 +301,21 @@ const styles = StyleSheet.create({
   fareLabel: { fontSize: 17, fontWeight: '700', color: '#1e293b', marginLeft: 10 },
   fareRight: { alignItems: 'flex-end' },
   fareAmount: { fontSize: 15.5, fontWeight: '700', color: '#1e293b' },
+  fareEditRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#0066ff',
+    paddingBottom: 1,
+  },
+  fareInput: {
+    fontSize: 15.5,
+    fontWeight: '700',
+    color: '#1e293b',
+    padding: 0,
+    minWidth: 36,
+    textAlign: 'center',
+  },
   fareBadge: { borderWidth: 1, borderColor: '#64748b', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 2, marginTop: 3 },
   fareBadgeText: { fontSize: 9, color: '#64748b', fontWeight: '500' },
   bookBtnContainer: {
