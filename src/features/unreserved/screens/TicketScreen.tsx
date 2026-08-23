@@ -115,20 +115,20 @@ export const TicketScreen = () => {
   const userMobile = user?.mobile || '9584113861';
   const userName = user?.name || 'Passenger';
 
-  const TOTAL_DURATION = 300;
-  const [timeLeft, setTimeLeft] = useState(268);
-  const progressAnim = useRef(new Animated.Value((TOTAL_DURATION - 268) / TOTAL_DURATION)).current;
+  const TOTAL_DURATION = 300; // 5 minutes window
+  const [timeLeft, setTimeLeft] = useState(TOTAL_DURATION);
+  const progressAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.timing(progressAnim, {
       toValue: 1,
-      duration: timeLeft * 1000,
+      duration: TOTAL_DURATION * 1000,
       easing: Easing.linear,
       useNativeDriver: false,
     }).start();
 
     const timer = setInterval(() => {
-      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 300));
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : TOTAL_DURATION));
     }, 1000);
     return () => clearInterval(timer);
   }, []);
