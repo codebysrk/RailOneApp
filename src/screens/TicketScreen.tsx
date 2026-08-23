@@ -585,7 +585,7 @@ export const TicketScreen = () => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#0066ff" },
   scrollView: { flex: 1, backgroundColor: "#f2f2f2" },
-  scrollContent: { paddingHorizontal: 12, paddingTop: 6, paddingBottom: 24 },
+  scrollContent: { paddingHorizontal: 12, paddingTop: 6, paddingBottom: 0 },
   greetingContainer: {
     backgroundColor: "#ffffff",
     marginHorizontal: -12,
@@ -925,7 +925,7 @@ const styles = StyleSheet.create({
     marginHorizontal: -12,
     paddingHorizontal: 16,
     paddingVertical: 18,
-    paddingBottom: 24,
+    paddingBottom: 28,
   },
   experienceTitle: {
     fontSize: 15.5,
