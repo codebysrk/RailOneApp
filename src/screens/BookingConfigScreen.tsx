@@ -210,7 +210,7 @@ export const BookingConfigScreen = () => {
             <Text style={styles.fareLabel}>Fare</Text>
           </View>
           <View style={styles.fareRight}>
-            <Text style={styles.fareAmount}>₹ {totalFare.toFixed(2)}</Text>
+            <Text style={styles.fareAmount}>₹ {totalFare.toFixed(0)}</Text>
             <View style={styles.fareBadge}>
               <Text style={styles.fareBadgeText}>Fare Breakup</Text>
             </View>

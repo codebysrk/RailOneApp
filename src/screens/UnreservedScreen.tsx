@@ -131,11 +131,10 @@ export const UnreservedScreen = () => {
 
               <View style={styles.inputSection}>
                 <TouchableOpacity style={styles.inputRow} onPress={() => openPicker('source')} activeOpacity={0.7}>
-                  <Text style={styles.inputLabel}>From (Tap to change)</Text>
+                  <Text style={styles.inputLabel}>From</Text>
                   <View style={styles.inputField}>
-                    <Ionicons name="train-outline" size={20} color="#0066ff" />
+                    <Ionicons name="train-outline" size={20} color="#64748b" />
                     <Text style={styles.inputText}>{source}</Text>
-                    <Ionicons name="chevron-forward" size={16} color="#94a3b8" style={{ marginLeft: 'auto' }} />
                   </View>
                 </TouchableOpacity>
 
@@ -150,16 +149,15 @@ export const UnreservedScreen = () => {
                     }}
                     activeOpacity={0.7}
                   >
-                    <Ionicons name="swap-vertical" size={18} color={colors.brandBlue} />
+                    <Ionicons name="swap-vertical" size={16} color="#0066ff" />
                   </TouchableOpacity>
                 </View>
 
                 <TouchableOpacity style={styles.inputRow} onPress={() => openPicker('dest')} activeOpacity={0.7}>
-                  <Text style={styles.inputLabel}>To (Tap to change)</Text>
+                  <Text style={styles.inputLabel}>To</Text>
                   <View style={styles.inputField}>
-                    <Ionicons name="train-outline" size={20} color="#0066ff" />
+                    <Ionicons name="train-outline" size={20} color="#64748b" />
                     <Text style={styles.inputText}>{dest}</Text>
-                    <Ionicons name="chevron-forward" size={16} color="#94a3b8" style={{ marginLeft: 'auto' }} />
                   </View>
                 </TouchableOpacity>
               </View>
@@ -256,37 +254,37 @@ export const UnreservedScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
-  content: { padding: spacing.md },
-  card: { backgroundColor: colors.white, borderRadius: 24, padding: spacing.md, ...elevation.sm, marginBottom: spacing.lg },
+  container: { flex: 1, backgroundColor: '#f4f4f4' },
+  content: { padding: spacing.lg, paddingBottom: 40 },
+  card: { backgroundColor: colors.white, borderRadius: 28, padding: 20, ...elevation.sm, marginBottom: spacing.xl },
   
-  subTabsRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.lg },
+  subTabsRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 28 },
   subTabBtn: { flex: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', paddingVertical: 12, borderRadius: 24, marginHorizontal: 4 },
   subTabActive: { backgroundColor: '#0066ff' },
-  subTabInactive: { backgroundColor: colors.white, borderWidth: 1, borderColor: '#e2e8f0' },
-  subTabText: { fontSize: 13, fontWeight: '600' },
+  subTabInactive: { backgroundColor: colors.white, borderWidth: 1, borderColor: '#e5e7eb' },
+  subTabText: { fontSize: 13.5, fontWeight: '600' },
   subTabTextActive: { color: colors.white },
-  subTabTextInactive: { color: '#94a3b8' },
+  subTabTextInactive: { color: '#9ca3af' },
   
-  inputSection: { marginBottom: spacing.lg },
-  inputRow: { marginVertical: spacing.xs },
-  inputLabel: { fontSize: 13, color: '#0ea5e9', fontWeight: '600', marginBottom: 4 },
-  inputField: { flexDirection: 'row', alignItems: 'center', height: 44, backgroundColor: '#f8fafc', paddingHorizontal: 12, borderRadius: 12, borderWidth: 1, borderColor: '#e2e8f0' },
-  inputText: { marginLeft: 10, fontSize: 15, color: colors.textHeading, fontWeight: '600' },
+  inputSection: { marginBottom: 32 },
+  inputRow: { marginVertical: 4 },
+  inputLabel: { fontSize: 15, color: '#0ea5e9', fontWeight: '500', marginBottom: 6 },
+  inputField: { flexDirection: 'row', alignItems: 'center', height: 32 },
+  inputText: { marginLeft: 10, fontSize: 15, color: '#111827', fontWeight: '600', letterSpacing: 0.2 },
   
-  dividerWrapper: { height: 20, justifyContent: 'center', position: 'relative' },
-  divider: { height: 1, backgroundColor: '#e2e8f0', marginHorizontal: 4 },
-  swapBtn: { position: 'absolute', right: 10, backgroundColor: '#bfdbfe', width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
+  dividerWrapper: { height: 28, justifyContent: 'center', position: 'relative' },
+  divider: { height: 1, backgroundColor: '#e5e7eb', marginRight: 40 },
+  swapBtn: { position: 'absolute', right: 0, backgroundColor: '#bfdbfe', width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center' },
   
-  primaryBtn: { backgroundColor: '#0066ff', paddingVertical: 14, borderRadius: 24, alignItems: 'center', marginBottom: spacing.md },
-  primaryBtnText: { color: colors.white, fontSize: 16, fontWeight: 'bold' },
-  secondaryBtn: { backgroundColor: colors.white, paddingVertical: 14, borderRadius: 24, alignItems: 'center', borderWidth: 1, borderColor: '#0066ff' },
-  secondaryBtnText: { color: '#0066ff', fontSize: 16, fontWeight: 'bold' },
+  primaryBtn: { backgroundColor: '#0066ff', paddingVertical: 15, borderRadius: 28, alignItems: 'center', marginBottom: 12 },
+  primaryBtnText: { color: colors.white, fontSize: 15, fontWeight: '600', letterSpacing: 0.3 },
+  secondaryBtn: { backgroundColor: colors.white, paddingVertical: 15, borderRadius: 28, alignItems: 'center', borderWidth: 1, borderColor: '#0066ff' },
+  secondaryBtnText: { color: '#0066ff', fontSize: 15, fontWeight: '600', letterSpacing: 0.3 },
 
-  recentTitle: { fontSize: 15, fontWeight: 'bold', color: colors.textHeading, marginBottom: spacing.md, marginLeft: spacing.xs },
-  recentScroll: { marginHorizontal: -spacing.md, paddingHorizontal: spacing.md },
-  recentCard: { backgroundColor: '#e0f2fe', width: 160, paddingVertical: spacing.md, paddingHorizontal: spacing.sm, borderRadius: 12, alignItems: 'center', marginRight: spacing.md },
-  recentText: { fontSize: 12, color: colors.textMain, fontWeight: '500' },
+  recentTitle: { fontSize: 14, fontWeight: '700', color: '#1e293b', marginBottom: 16, marginLeft: 4 },
+  recentScroll: { marginHorizontal: -spacing.lg, paddingHorizontal: spacing.lg },
+  recentCard: { backgroundColor: '#e0f2fe', width: 160, paddingVertical: 20, paddingHorizontal: 12, borderRadius: 8, alignItems: 'center', marginRight: 12 },
+  recentText: { fontSize: 11, color: '#475569', fontWeight: '500', letterSpacing: 0.2 },
 
   // Modal Styles
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.md, borderBottomWidth: 1, borderBottomColor: '#e2e8f0', backgroundColor: colors.white },

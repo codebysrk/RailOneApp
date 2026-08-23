@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0066ff',
   },
   lightHeader: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#ffffff',
   },
   circleBtn: {
     width: 36,
