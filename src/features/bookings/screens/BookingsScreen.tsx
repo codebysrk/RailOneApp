@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../../theme/colors';
 import { spacing, elevation } from '../../../theme/spacing';
-import { FirebaseService } from '../../../services/FirebaseService';
+import { FirebaseService } from '../../../services';
 import { useAuth } from '../../../context/AuthContext';
 import { AppHeader, TicketCard, TicketData } from '../../../components/common';
 

@@ -6,29 +6,11 @@ import { Ionicons } from '@expo/vector-icons';
 import Svg, { Defs, LinearGradient as SvgLinearGradient, Rect, Stop } from 'react-native-svg';
 import { colors } from '../../../theme/colors';
 import { spacing, radius, elevation } from '../../../theme/spacing';
-import { FirebaseService } from '../../../services/FirebaseService';
+import { FirebaseService } from '../../../services';
 import { useAuth } from '../../../context/AuthContext';
+import { APP_OFFERINGS as offerings, APP_FACTS as facts } from '../../../constants';
 
 const { width } = Dimensions.get('window');
-
-const offerings = [
-  { id: '1', title: 'Search\nTrains', icon: 'search', bg: '#ffe4ed', color: '#ff66a3' },
-  { id: '2', title: 'PNR\nStatus', icon: 'ticket', bg: '#e0ffe0', color: '#22a042' },
-  { id: '3', title: 'Coach\nPosition', icon: 'train', bg: '#e0f2fe', color: '#2563eb' },
-  { id: '4', title: 'Track Your\nTrain', icon: 'location', bg: '#fffbeb', color: '#d97706' },
-  { id: '5', title: 'Order\nFood', icon: 'fast-food', bg: '#e0e7ff', color: '#4f46e5' },
-  { id: '6', title: 'File\nRefund', icon: 'cash', bg: '#f1f5f9', color: '#475569' },
-  { id: '7', title: 'Rail\nMadad', icon: 'help-buoy', bg: '#ffe4e6', color: '#e11d48' },
-  { id: '8', title: 'Go To\nWAVES', icon: 'radio', bg: '#64748b', color: colors.white },
-];
-
-const facts = [
-  { id: '1', img: require('../../../../assets/images/old-train.webp'), text: 'First ever passenger train was run between Bori Bandar to Thane on April 16, 1853.' },
-  { id: '2', img: require('../../../../assets/images/chenab-bridge.webp'), text: 'Chenab Railway Bridge in Dharot, Jammu & Kashmir is the World\'s highest Railway Bridge.' },
-  { id: '3', img: require('../../../../assets/images/high-bridge.webp'), text: 'Noney Bridge is going to be world\'s tallest railway bridge pier at a height of 141 meters.' },
-  { id: '4', img: require('../../../../assets/images/electrified.webp'), text: 'Indian Railways is on track to achieve 100% electrification of Broad Gauge network.' },
-  { id: '5', img: require('../../../../assets/images/rail-platform.webp'), text: 'Gorakhpur Railway Station in Uttar Pradesh has one of the world\'s longest platforms at 1,366 meters.' },
-];
 
 export const HomeScreen = () => {
   const navigation = useNavigation<any>();

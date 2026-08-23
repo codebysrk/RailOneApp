@@ -9,8 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../../theme/colors';
 import { spacing, elevation } from '../../../theme/spacing';
 import { AppHeader, SegmentedControl } from '../../../components/common';
-import { FirebaseService } from '../../../services/FirebaseService';
-import { StationModel } from '../../../services/DatabaseSeedService';
+import { FirebaseService, StationModel } from '../../../services';
 
 const mainTabs = [
   { id: 'normal', label: 'Normal' },

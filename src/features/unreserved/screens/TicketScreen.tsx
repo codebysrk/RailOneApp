@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#ded5c7',
   },
   scrollContent: {
     padding: spacing.md,
