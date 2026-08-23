@@ -115,6 +115,7 @@ export const TicketScreen = () => {
   const userName = user?.name || 'Passenger';
 
   const [timeLeft, setTimeLeft] = useState(268);
+  const progressAnim = useRef(new Animated.Value(268 / 300)).current;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -122,6 +123,19 @@ export const TicketScreen = () => {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    Animated.timing(progressAnim, {
+      toValue: timeLeft / 300,
+      duration: 900,
+      useNativeDriver: false,
+    }).start();
+  }, [timeLeft, progressAnim]);
+
+  const progressWidth = progressAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0%', '100%'],
+  });
 
   // Back Navigation Handler
   const handleBack = () => {
@@ -319,8 +333,10 @@ export const TicketScreen = () => {
               </Text>
             </View>
 
-            {/* Bottom Purple Accent Ribbon */}
-            <View style={styles.purpleRibbon} />
+            {/* Dynamic Animated Bottom Purple Ribbon Progress Bar */}
+            <View style={styles.progressBarContainer}>
+              <Animated.View style={[styles.purpleRibbonFill, { width: progressWidth }]} />
+            </View>
           </View>
 
           {/* Warning Note */}
@@ -466,6 +482,16 @@ const styles = StyleSheet.create({
   },
   purpleRibbon: {
     height: 7,
+    backgroundColor: '#8378b8',
+  },
+  progressBarContainer: {
+    height: 7,
+    backgroundColor: 'rgba(131, 120, 184, 0.2)',
+    width: '100%',
+    overflow: 'hidden',
+  },
+  purpleRibbonFill: {
+    height: '100%',
     backgroundColor: '#8378b8',
   },
 
