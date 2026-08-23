@@ -251,7 +251,7 @@ export const HomeScreen = () => {
                       {/* Ticket Icon absolute positioned at top right */}
                       <Ionicons
                         name="ticket"
-                        size={20}
+                        size={16}
                         color="#a8f3b0"
                         style={styles.cardTicketIcon}
                       />
@@ -518,7 +518,7 @@ const styles = StyleSheet.create({
 
   // ─── Upcoming Journey ────────────────────────────────────────
   upcomingSection: {
-    marginTop: 4,
+    marginTop: 2,
   },
   upcomingScroll: {
     marginHorizontal: -16,
@@ -527,54 +527,54 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   upcomingCardWrapper: {
-    width: width * 0.88,
-    borderRadius: 20,
-    marginRight: 14,
+    width: width * 0.82,
+    borderRadius: 16,
+    marginRight: 12,
     overflow: "hidden",
     ...elevation.sm,
   },
   upcomingCardInner: {
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     position: "relative",
   },
   cardTicketIcon: {
     position: "absolute",
-    top: 14,
-    right: 16,
+    top: 10,
+    right: 14,
     opacity: 0.9,
   },
   cardNotch: {
     position: "absolute",
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     backgroundColor: colors.white,
-    right: 76,
+    right: 68,
   },
-  cardNotchTop: { top: -12 },
-  cardNotchBottom: { bottom: -12 },
+  cardNotchTop: { top: -9 },
+  cardNotchBottom: { bottom: -9 },
   upcomingCardTop: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 18,
+    marginTop: 8,
   },
   upcomingDate: {
-    color: colors.white,
-    fontSize: 14,
-    fontWeight: "400",
+    color: "rgba(255,255,255,0.9)",
+    fontSize: 12.5,
+    fontWeight: "500",
   },
   trainNumText: {
     color: colors.white,
-    fontSize: 18,
+    fontSize: 15.5,
     fontWeight: "700",
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
   cardDivider: {
     height: 1,
-    backgroundColor: "rgba(255,255,255,0.15)",
-    marginVertical: 12,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    marginVertical: 7,
   },
   upcomingRouteRow: {
     flexDirection: "row",
@@ -583,17 +583,17 @@ const styles = StyleSheet.create({
   },
   upcomingStationLeft: {
     color: colors.white,
-    fontSize: 13,
-    fontWeight: "400",
-    letterSpacing: 0.5,
+    fontSize: 12.5,
+    fontWeight: "600",
+    letterSpacing: 0.3,
     textTransform: "uppercase",
     flex: 1,
   },
   upcomingStationRight: {
     color: colors.white,
-    fontSize: 13,
-    fontWeight: "400",
-    letterSpacing: 0.5,
+    fontSize: 12.5,
+    fontWeight: "600",
+    letterSpacing: 0.3,
     textTransform: "uppercase",
     flex: 1,
     textAlign: "right",
@@ -605,26 +605,26 @@ const styles = StyleSheet.create({
   },
   reservedBadgeText: {
     color: "#a8f3b0",
-    fontSize: 14,
+    fontSize: 12.5,
     fontWeight: "700",
   },
   upcomingBtnsRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 6,
   },
   cardBtnPill: {
-    borderWidth: 1.2,
-    borderColor: colors.white,
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.85)",
+    borderRadius: 14,
+    paddingHorizontal: 10,
+    paddingVertical: 3.5,
     backgroundColor: "transparent",
   },
   cardBtnText: {
     color: colors.white,
-    fontSize: 12,
-    fontWeight: "500",
+    fontSize: 11,
+    fontWeight: "600",
   },
 
   // ─── Do You Know ─────────────────────────────────────────────
