@@ -20,8 +20,9 @@ import Svg, {
 } from "react-native-svg";
 import { colors } from '@/theme/colors';
 import { spacing, elevation } from '@/theme/spacing';
-import { FirebaseService } from '@/services';
+import { FirebaseService, UpdateService, ReleaseInfo } from '@/services';
 import { useAuth } from '@/context/AuthContext';
+import { UpdateModal } from '@/components/common';
 import {
   APP_OFFERINGS as offerings,
   APP_FACTS as facts,
@@ -45,6 +46,18 @@ export const HomeScreen = () => {
   const navigation = useNavigation<any>();
   const { user } = useAuth();
   const [upcomingList, setUpcomingList] = useState<any[]>([]);
+  const [updateInfo, setUpdateInfo] = useState<ReleaseInfo | null>(null);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+
+  useEffect(() => {
+    // Check for GitHub Release OTA update on launch
+    UpdateService.checkForUpdate().then((info) => {
+      if (info && info.updateAvailable) {
+        setUpdateInfo(info);
+        setShowUpdateModal(true);
+      }
+    });
+  }, []);
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -367,6 +380,13 @@ export const HomeScreen = () => {
           </ImageBackground>
         </View>
       </ScrollView>
+
+      {/* OTA In-App Update Modal */}
+      <UpdateModal
+        visible={showUpdateModal}
+        releaseInfo={updateInfo}
+        onClose={() => setShowUpdateModal(false)}
+      />
     </SafeAreaView>
   );
 };

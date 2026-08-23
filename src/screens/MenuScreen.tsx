@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -7,10 +7,13 @@ import {
   ScrollView,
   Share,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/context/AuthContext";
+import { UpdateService, ReleaseInfo } from "@/services";
+import { UpdateModal } from "@/components/common";
 
 type MenuItem = {
   id: string;
@@ -21,6 +24,9 @@ type MenuItem = {
 
 export const MenuScreen = () => {
   const { user, logout } = useAuth();
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [updateInfo, setUpdateInfo] = useState<ReleaseInfo | null>(null);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
 
   const handleShare = async () => {
     try {
@@ -28,6 +34,22 @@ export const MenuScreen = () => {
         message: "Check out RailOne – Indian Railways Unreserved Ticket Booking! 🚂",
       });
     } catch {}
+  };
+
+  const handleCheckForUpdates = async () => {
+    setCheckingUpdate(true);
+    const info = await UpdateService.checkForUpdate();
+    setCheckingUpdate(false);
+
+    if (info && info.updateAvailable) {
+      setUpdateInfo(info);
+      setShowUpdateModal(true);
+    } else {
+      Alert.alert(
+        "You're Up to Date! ✨",
+        `You are running the latest version of RailOne (v${UpdateService.getCurrentVersion()}).`
+      );
+    }
   };
 
   const handleLogout = () => {
@@ -39,12 +61,13 @@ export const MenuScreen = () => {
 
   const menuItems: MenuItem[] = [
     { id: "1", label: "Show/Hide Services", icon: "bookmark" },
-    { id: "2", label: "FAQs", icon: "chatbubble-ellipses" },
-    { id: "3", label: "Help & Support", icon: "headset" },
-    { id: "4", label: "About", icon: "information-circle" },
-    { id: "5", label: "Rate Us", icon: "thumbs-up" },
-    { id: "6", label: "Share", icon: "share-social", onPress: handleShare },
-    { id: "7", label: "Log Out", icon: "log-out", onPress: handleLogout },
+    { id: "2", label: "Check for Updates", icon: "cloud-download", onPress: handleCheckForUpdates },
+    { id: "3", label: "FAQs", icon: "chatbubble-ellipses" },
+    { id: "4", label: "Help & Support", icon: "headset" },
+    { id: "5", label: "About", icon: "information-circle" },
+    { id: "6", label: "Rate Us", icon: "thumbs-up" },
+    { id: "7", label: "Share", icon: "share-social", onPress: handleShare },
+    { id: "8", label: "Log Out", icon: "log-out", onPress: handleLogout },
   ];
 
   const userName = user?.name || "Passenger";
@@ -101,8 +124,15 @@ export const MenuScreen = () => {
         </View>
 
         {/* ─── 4. Footer Version ──────────────────────────────────── */}
-        <Text style={styles.version}>V-2.1.62-231</Text>
+        <Text style={styles.version}>V-{UpdateService.getCurrentVersion()}</Text>
       </ScrollView>
+
+      {/* OTA In-App Update Modal */}
+      <UpdateModal
+        visible={showUpdateModal}
+        releaseInfo={updateInfo}
+        onClose={() => setShowUpdateModal(false)}
+      />
     </SafeAreaView>
   );
 };
