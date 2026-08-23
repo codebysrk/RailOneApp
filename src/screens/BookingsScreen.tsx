@@ -15,14 +15,64 @@ import { FirebaseService, StorageService } from "@/services";
 import { useAuth } from "@/context/AuthContext";
 import { AppHeader, TicketCard, TicketData } from "@/components/common";
 
+const DEFAULT_UPCOMING: TicketData[] = [
+  {
+    id: "up-1",
+    pnr: "2160978001",
+    train: "12279 (TAJ EXPRESS)",
+    date: "Sat, 29 Aug 26",
+    source: "MORENA",
+    dest: "HAZRAT NIZAMUDDIN JN",
+    duration: "4h:8m",
+    status: "upcoming",
+    moduleType: "RESERVED",
+  },
+  {
+    id: "up-2",
+    pnr: "2261626145",
+    train: "12279 (TAJ EXPRESS)",
+    date: "Sat, 29 Aug 26",
+    source: "MORENA",
+    dest: "HAZRAT NIZAMUDDIN JN",
+    duration: "4h:7m",
+    status: "upcoming",
+    moduleType: "RESERVED",
+  },
+];
+
+const DEFAULT_COMPLETED: TicketData[] = [
+  {
+    id: "comp-1",
+    pnr: "6835493350",
+    train: "20423 (PATALKOT SF EXP)",
+    date: "Thu, 30 Jul 26",
+    source: "CHHINDWARA JN.",
+    dest: "GWALIOR JN.",
+    duration: "12h:41m",
+    status: "completed",
+    moduleType: "RESERVED",
+  },
+  {
+    id: "comp-2",
+    pnr: "2841446468",
+    train: "12280 (TAJ EXPRESS)",
+    date: "Sun, 9 Aug 26",
+    source: "HAZRAT NIZAMUDDIN JN",
+    dest: "MORENA",
+    duration: "4h:10m",
+    status: "completed",
+    moduleType: "RESERVED",
+  },
+];
+
 export const BookingsScreen = () => {
   const navigation = useNavigation<any>();
   const { user } = useAuth();
   const [filter, setFilter] = useState<
     "Upcoming" | "Completed" | "Cancelled" | "All"
   >("Upcoming");
-  const [upcomingList, setUpcomingList] = useState<TicketData[]>([]);
-  const [completedList, setCompletedList] = useState<TicketData[]>([]);
+  const [upcomingList, setUpcomingList] = useState<TicketData[]>(DEFAULT_UPCOMING);
+  const [completedList, setCompletedList] = useState<TicketData[]>(DEFAULT_COMPLETED);
 
   useEffect(() => {
     if (user?.uid) {
@@ -40,35 +90,36 @@ export const BookingsScreen = () => {
               completed.push(data);
             }
           });
-          setUpcomingList(upcoming);
-          setCompletedList(completed);
+          if (upcoming.length > 0) setUpcomingList(upcoming);
+          if (completed.length > 0) setCompletedList(completed);
         },
       );
       return () => unsubscribe();
     } else {
-      // Local storage fallback for unauthenticated users
+      // Local storage fallback
       StorageService.getBookedTickets().then((tickets: TicketData[]) => {
-        const upcoming = tickets.filter((t) => t.status === "upcoming");
-        const completed = tickets.filter(
-          (t) => t.status === "completed" || t.status === "cancelled",
-        );
-        setUpcomingList(upcoming);
-        setCompletedList(completed);
+        if (tickets && tickets.length > 0) {
+          const upcoming = tickets.filter((t) => t.status === "upcoming");
+          const completed = tickets.filter(
+            (t) => t.status === "completed" || t.status === "cancelled",
+          );
+          if (upcoming.length > 0) setUpcomingList(upcoming);
+          if (completed.length > 0) setCompletedList(completed);
+        }
       });
     }
   }, [user?.uid]);
 
-  const getFilterColor = (tab: string) => {
-    if (filter !== tab) return "#94a3b8";
+  const getFilterActiveColor = (tab: string) => {
     switch (tab) {
       case "Upcoming":
-        return "#f59e0b";
+        return "#d97706";
       case "Completed":
-        return "#10b981";
+        return "#16a34a";
       case "Cancelled":
         return "#ef4444";
       default:
-        return "#0066ff";
+        return "#0f172a";
     }
   };
 
@@ -95,10 +146,13 @@ export const BookingsScreen = () => {
         {(filter === "Upcoming" || filter === "All") && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { color: "#f59e0b" }]}>
+              <View style={styles.headerSpacer} />
+              <Text style={[styles.sectionTitle, { color: "#d97706" }]}>
                 Upcoming ({upcomingList.length})
               </Text>
-              <Ionicons name="sync-outline" size={20} color="#64748b" />
+              <TouchableOpacity style={styles.refreshBtn} activeOpacity={0.7}>
+                <Ionicons name="sync-outline" size={19} color="#64748b" />
+              </TouchableOpacity>
             </View>
             {upcomingList.length === 0 ? (
               <View style={styles.emptyContainer}>
@@ -121,10 +175,13 @@ export const BookingsScreen = () => {
         {(filter === "Completed" || filter === "All") && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { color: "#10b981" }]}>
+              <View style={styles.headerSpacer} />
+              <Text style={[styles.sectionTitle, { color: "#16a34a" }]}>
                 Completed ({completedList.length})
               </Text>
-              <Ionicons name="sync-outline" size={20} color="#64748b" />
+              <TouchableOpacity style={styles.refreshBtn} activeOpacity={0.7}>
+                <Ionicons name="sync-outline" size={19} color="#64748b" />
+              </TouchableOpacity>
             </View>
             {completedList.length === 0 ? (
               <View style={styles.emptyContainer}>
@@ -143,15 +200,33 @@ export const BookingsScreen = () => {
             )}
           </View>
         )}
+
+        {filter === "Cancelled" && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.headerSpacer} />
+              <Text style={[styles.sectionTitle, { color: "#ef4444" }]}>
+                Cancelled (0)
+              </Text>
+              <TouchableOpacity style={styles.refreshBtn} activeOpacity={0.7}>
+                <Ionicons name="sync-outline" size={19} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.emptyContainer}>
+              <Ionicons name="close-circle-outline" size={44} color="#cbd5e1" />
+              <Text style={styles.emptyText}>No cancelled bookings found</Text>
+            </View>
+          </View>
+        )}
       </ScrollView>
 
-      {/* Bottom Filter Bar */}
+      {/* Bottom Filter Navigation Bar */}
       <View style={styles.filterBarWrapper}>
         <View style={styles.filterBar}>
           {(["Upcoming", "Completed", "Cancelled", "All"] as const).map(
             (tab) => {
               const isSelected = filter === tab;
-              const activeColor = getFilterColor(tab);
+              const activeColor = getFilterActiveColor(tab);
               return (
                 <TouchableOpacity
                   key={tab}
@@ -163,9 +238,9 @@ export const BookingsScreen = () => {
                   activeOpacity={0.8}
                 >
                   <Ionicons
-                    name={isSelected ? "ticket" : "ticket-outline"}
+                    name="ticket"
                     size={22}
-                    color={isSelected ? activeColor : "#64748b"}
+                    color={isSelected ? activeColor : "#94a3b8"}
                   />
                   <Text
                     style={[
@@ -190,24 +265,35 @@ export const BookingsScreen = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f8fafc" },
-  scroll: { padding: spacing.md, paddingBottom: 90 },
-  section: { marginBottom: spacing.lg },
+  scroll: { paddingHorizontal: 16, paddingTop: 14, paddingBottom: 90 },
+  section: { marginBottom: 16 },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: spacing.md,
+    marginBottom: 16,
     paddingHorizontal: 4,
   },
-  sectionTitle: { fontSize: 16, fontWeight: "bold" },
+  headerSpacer: {
+    width: 24,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  refreshBtn: {
+    width: 24,
+    alignItems: "flex-end",
+  },
   emptyContainer: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 32,
+    paddingVertical: 36,
     backgroundColor: "#ffffff",
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#f1f5f9",
+    borderColor: "#e2e8f0",
   },
   emptyText: {
     color: "#94a3b8",
@@ -217,38 +303,39 @@ const styles = StyleSheet.create({
   },
 
   filterBarWrapper: {
-    backgroundColor: "#e6f3fd",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: "#e8f4fd",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     borderWidth: 1,
-    borderColor: "#d0e7fb",
+    borderColor: "#cde4f7",
     borderBottomWidth: 0,
     paddingHorizontal: 8,
     paddingTop: 8,
     paddingBottom: 8,
-    ...elevation.sm,
   },
   filterBar: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
   },
   filterTab: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 8,
-    borderRadius: 14,
+    borderRadius: 16,
+    marginHorizontal: 3,
   },
   filterTabActive: {
-    backgroundColor: colors.white,
+    backgroundColor: "#ffffff",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 3,
   },
   filterTabText: {
-    fontSize: 11,
-    marginTop: 4,
+    fontSize: 11.5,
+    marginTop: 3,
   },
 });

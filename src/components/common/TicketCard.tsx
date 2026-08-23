@@ -34,34 +34,32 @@ export const TicketCard: React.FC<TicketCardProps> = ({
   onBookAgain,
 }) => {
   const isUpcoming = status === 'upcoming';
-  const borderColor = isUpcoming ? '#f59e0b' : status === 'completed' ? '#10b981' : '#ef4444';
+  const isCompleted = status === 'completed';
+  const borderColor = isUpcoming ? '#f59e0b' : isCompleted ? '#16a34a' : '#ef4444';
+  const dashedColor = isUpcoming ? '#f59e0b' : isCompleted ? '#16a34a' : '#ef4444';
 
   const badgeText = ticket.moduleType === 'UNRESERVED' ? 'Unreserved' 
                   : ticket.moduleType === 'PLATFORM' ? 'Platform' 
                   : 'Reserved';
 
   return (
-    <TouchableOpacity
-      style={[styles.ticketCard, { borderColor }]}
-      activeOpacity={0.9}
-      onPress={onOpen}
-    >
+    <View style={[styles.ticketCard, { borderColor }]}>
       {/* Top Section */}
-      <View style={styles.ticketTop}>
+      <TouchableOpacity activeOpacity={0.9} onPress={onOpen} style={styles.ticketTop}>
         <View style={styles.ticketHeaderRow}>
           <View style={styles.badgeReserved}>
             <Text style={styles.badgeReservedText}>{badgeText}</Text>
           </View>
-          <Text style={styles.pnrText}>
-            <Text style={{ color: '#64748b' }}>PNR: </Text>
-            {ticket.pnr}
+          <Text style={styles.pnrContainer}>
+            <Text style={styles.pnrLabel}>PNR: </Text>
+            <Text style={styles.pnrValue}>{ticket.pnr}</Text>
           </Text>
         </View>
 
         <View style={styles.infoRow}>
           <View style={styles.infoCol}>
             <Text style={styles.infoLabel}>Train No.</Text>
-            <Text style={styles.infoValue}>{ticket.train}</Text>
+            <Text style={styles.infoValue} numberOfLines={1}>{ticket.train}</Text>
           </View>
           <View style={[styles.infoCol, { alignItems: 'flex-end' }]}>
             <Text style={styles.infoLabel}>Journey Date</Text>
@@ -70,74 +68,89 @@ export const TicketCard: React.FC<TicketCardProps> = ({
         </View>
 
         <View style={styles.routeRow}>
-          <Text style={[styles.routeStation, { flex: 1 }]}>{ticket.source}</Text>
+          <Text style={styles.routeStationLeft} numberOfLines={1}>
+            {ticket.source}
+          </Text>
           <View style={styles.routeDuration}>
-            <View style={styles.lineHalf} />
-            <Text style={styles.durationText}>{ticket.duration || '4h:8m'}</Text>
-            <View style={styles.lineHalf} />
+            <Text style={styles.durationText}>
+              {ticket.duration ? `—${ticket.duration}—` : '—4h:8m—'}
+            </Text>
           </View>
-          <Text style={[styles.routeStation, { flex: 1, textAlign: 'right' }]}>{ticket.dest}</Text>
+          <Text style={styles.routeStationRight} numberOfLines={2}>
+            {ticket.dest}
+          </Text>
         </View>
-      </View>
+      </TouchableOpacity>
 
-      {/* Divider */}
+      {/* Perforation / Notched Divider */}
       <View style={styles.dividerContainer}>
+        {/* Left Cutout */}
         <View style={[styles.cutout, styles.cutoutLeft, { borderColor }]} />
-        <View style={[styles.dashedLine, { borderColor }]} />
+        {/* Dashed Line */}
+        <View style={[styles.dashedLine, { borderColor: dashedColor }]} />
+        {/* Right Cutout */}
         <View style={[styles.cutout, styles.cutoutRight, { borderColor }]} />
       </View>
 
-      {/* Bottom Section */}
+      {/* Bottom Actions Section */}
       <View style={styles.ticketBottom}>
-        <TouchableOpacity style={styles.actionBtn} onPress={onBookAgain || onOpen}>
+        <TouchableOpacity style={styles.actionBtn} onPress={onBookAgain || onOpen} activeOpacity={0.7}>
           <Text style={styles.actionBtnText}>Book Again</Text>
         </TouchableOpacity>
         <View style={styles.verticalDivider} />
-        <TouchableOpacity style={styles.actionBtn} onPress={onOpen}>
+        <TouchableOpacity style={styles.actionBtn} onPress={onOpen} activeOpacity={0.7}>
           <Text style={styles.actionBtnText}>View Details</Text>
         </TouchableOpacity>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   ticketCard: {
-    backgroundColor: colors.white,
-    borderRadius: 16,
-    borderWidth: 1,
-    marginBottom: spacing.md,
+    backgroundColor: '#ffffff',
+    borderRadius: 18,
+    borderWidth: 1.2,
+    marginBottom: 16,
     overflow: 'hidden',
   },
   ticketTop: {
-    padding: spacing.md,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 14,
   },
   ticketHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.md,
+    marginBottom: 14,
   },
   badgeReserved: {
     backgroundColor: '#cffafe',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
     borderRadius: 8,
   },
   badgeReservedText: {
     color: '#0891b2',
-    fontSize: 12,
-    fontWeight: 'bold',
+    fontSize: 13,
+    fontWeight: '700',
   },
-  pnrText: {
+  pnrContainer: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#0f172a',
+  },
+  pnrLabel: {
+    color: '#64748b',
+    fontWeight: '700',
+  },
+  pnrValue: {
+    color: '#1e293b',
+    fontWeight: '800',
   },
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: spacing.md,
+    marginBottom: 14,
   },
   infoCol: {
     flex: 1,
@@ -145,77 +158,79 @@ const styles = StyleSheet.create({
   infoLabel: {
     fontSize: 12,
     color: '#94a3b8',
-    marginBottom: 2,
+    fontWeight: '400',
+    marginBottom: 3,
   },
   infoValue: {
-    fontSize: 13,
+    fontSize: 13.5,
     color: '#1e293b',
-    fontWeight: '500',
+    fontWeight: '700',
   },
   routeRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginTop: 2,
   },
-  routeStation: {
-    fontSize: 12,
-    fontWeight: '600',
+  routeStationLeft: {
+    fontSize: 13,
+    fontWeight: '700',
     color: '#1e293b',
+    flex: 1,
+    textTransform: 'uppercase',
   },
   routeDuration: {
-    flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-  },
-  lineHalf: {
-    width: 20,
-    height: 1,
-    backgroundColor: '#cbd5e1',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
   },
   durationText: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#94a3b8',
-    marginHorizontal: 4,
+    fontWeight: '500',
+  },
+  routeStationRight: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#1e293b',
+    flex: 1,
+    textAlign: 'right',
+    textTransform: 'uppercase',
   },
   dividerContainer: {
-    height: 1,
+    height: 24,
     flexDirection: 'row',
     alignItems: 'center',
     position: 'relative',
-    zIndex: 1,
+    marginVertical: -12,
   },
   dashedLine: {
     flex: 1,
-    height: 1,
-    borderWidth: 1,
+    height: 0,
+    borderWidth: 0.8,
     borderStyle: 'dashed',
+    marginHorizontal: 12,
   },
   cutout: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#f8fafc',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#ffffff',
     position: 'absolute',
-    top: -10,
-    borderWidth: 1,
+    borderWidth: 1.2,
+    zIndex: 2,
   },
   cutoutLeft: {
-    left: -11,
-    borderRightColor: 'transparent',
-    borderTopColor: 'transparent',
-    borderBottomColor: 'transparent',
-    transform: [{ rotate: '45deg' }],
+    left: -12,
   },
   cutoutRight: {
-    right: -11,
-    borderLeftColor: 'transparent',
-    borderTopColor: 'transparent',
-    borderBottomColor: 'transparent',
-    transform: [{ rotate: '-45deg' }],
+    right: -12,
   },
   ticketBottom: {
     flexDirection: 'row',
-    paddingVertical: 12,
+    alignItems: 'center',
+    paddingVertical: 14,
+    backgroundColor: '#ffffff',
   },
   actionBtn: {
     flex: 1,
@@ -229,6 +244,7 @@ const styles = StyleSheet.create({
   },
   verticalDivider: {
     width: 1,
+    height: 18,
     backgroundColor: '#e2e8f0',
   },
 });
