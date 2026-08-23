@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,7 @@ import {
   Animated,
   BackHandler,
 } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AppHeader } from '../../../components/common';
@@ -116,21 +116,26 @@ export const TicketScreen = () => {
 
   const TOTAL_DURATION = 300;
   const [timeLeft, setTimeLeft] = useState(268);
-
   const progressAnim = useRef(new Animated.Value((TOTAL_DURATION - 268) / TOTAL_DURATION)).current;
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 300));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
+  // Timer only runs when ticket screen is active/focused and stops cleanly on close/unfocus
+  useFocusEffect(
+    useCallback(() => {
+      const timer = setInterval(() => {
+        setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+
+      return () => {
+        clearInterval(timer);
+      };
+    }, [])
+  );
 
   useEffect(() => {
     const currentProgress = Math.min(1, Math.max(0, (TOTAL_DURATION - timeLeft) / TOTAL_DURATION));
     Animated.timing(progressAnim, {
       toValue: currentProgress,
-      duration: 950,
+      duration: 900,
       useNativeDriver: false,
     }).start();
   }, [timeLeft, progressAnim]);
@@ -273,10 +278,8 @@ export const TicketScreen = () => {
               </View>
             </View>
 
-            {/* Dynamic Timer Progress Bar Ribbon */}
-            <View style={styles.progressBarTrack}>
-              <Animated.View style={[styles.progressBarFill, { width: progressWidth }]} />
-            </View>
+            {/* Purple Accent Ribbon below Top Dark Section */}
+            <View style={styles.purpleRibbon} />
 
             {/* Ticket Body (Warm Off-White Cream Paper Section) */}
             <View style={styles.ticketBody}>
@@ -338,8 +341,10 @@ export const TicketScreen = () => {
               </Text>
             </View>
 
-            {/* Bottom Purple Accent Ribbon */}
-            <View style={styles.purpleRibbon} />
+            {/* Dynamic Animated Bottom Purple Ribbon Progress Bar */}
+            <View style={styles.progressBarContainer}>
+              <Animated.View style={[styles.purpleRibbonFill, { width: progressWidth }]} />
+            </View>
           </View>
 
           {/* Warning Note */}
@@ -487,13 +492,13 @@ const styles = StyleSheet.create({
     height: 7,
     backgroundColor: '#8378b8',
   },
-  progressBarTrack: {
+  progressBarContainer: {
     height: 7,
-    backgroundColor: '#1b2332',
+    backgroundColor: 'rgb(255, 255, 255)',
     width: '100%',
     overflow: 'hidden',
   },
-  progressBarFill: {
+  purpleRibbonFill: {
     height: '100%',
     backgroundColor: '#8378b8',
   },
