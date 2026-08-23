@@ -63,18 +63,24 @@ export const HomeScreen = () => {
         
         <Text style={styles.sectionTitle}>Journey Planner</Text>
         <View style={styles.journeyPlanner}>
-          <TouchableOpacity style={styles.jpCard}>
-            <Image source={require('../../../../assets/images/one.webp')} style={styles.jpImage} resizeMode="cover" />
+          <TouchableOpacity style={styles.jpItem} activeOpacity={0.8}>
+            <View style={styles.jpImageWrapper}>
+              <Image source={require('../../../../assets/images/one.webp')} style={styles.jpImage} resizeMode="cover" />
+            </View>
             <Text style={styles.jpText}>Reserved</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.jpCard} onPress={() => navigation.navigate('Unreserved')}>
-            <Image source={require('../../../../assets/images/two.webp')} style={styles.jpImage} resizeMode="cover" />
+          <TouchableOpacity style={styles.jpItem} activeOpacity={0.8} onPress={() => navigation.navigate('Unreserved')}>
+            <View style={styles.jpImageWrapper}>
+              <Image source={require('../../../../assets/images/two.webp')} style={styles.jpImage} resizeMode="cover" />
+            </View>
             <Text style={styles.jpText}>Unreserved</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.jpCard}>
-            <Image source={require('../../../../assets/images/three.webp')} style={styles.jpImage} resizeMode="cover" />
+          <TouchableOpacity style={styles.jpItem} activeOpacity={0.8}>
+            <View style={styles.jpImageWrapper}>
+              <Image source={require('../../../../assets/images/three.webp')} style={styles.jpImage} resizeMode="cover" />
+            </View>
             <Text style={styles.jpText}>Platform</Text>
           </TouchableOpacity>
         </View>
@@ -219,13 +225,17 @@ const styles = StyleSheet.create({
   scroll: { padding: spacing.md, paddingBottom: 40 },
   greeting: { fontSize: 16, fontWeight: '700', color: colors.textHeading, marginBottom: spacing.md },
   sectionTitle: { fontSize: 18, fontWeight: 'bold', color: colors.textHeading, marginBottom: spacing.md, marginTop: spacing.lg },
-  journeyPlanner: { flexDirection: 'row', justifyContent: 'space-between' },
-  jpCard: {
-    width: (width - spacing.md * 2 - spacing.sm * 2) / 3,
-    backgroundColor: colors.white, borderRadius: 16, overflow: 'hidden', ...elevation.sm, paddingBottom: spacing.sm, borderWidth: 1, borderColor: '#f1f5f9'
+  journeyPlanner: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  jpItem: { width: (width - spacing.md * 2 - 24) / 3, alignItems: 'center' },
+  jpImageWrapper: {
+    width: (width - spacing.md * 2 - 24) / 3,
+    height: ((width - spacing.md * 2 - 24) / 3) * 0.94,
+    borderRadius: 22,
+    overflow: 'hidden',
+    backgroundColor: '#f1f5f9',
   },
-  jpImage: { width: '100%', height: 70, backgroundColor: '#f8fafc' },
-  jpText: { fontSize: 13, fontWeight: '500', color: colors.textMain, textAlign: 'center', marginTop: spacing.sm },
+  jpImage: { width: '100%', height: '100%' },
+  jpText: { fontSize: 14.5, fontWeight: '500', color: '#243b6b', textAlign: 'center', marginTop: 8 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
   gridItem: { width: (width - spacing.md * 2) / 4, alignItems: 'center', marginBottom: spacing.lg },
   iconWrapper: { width: 65, height: 65, borderRadius: 18, justifyContent: 'center', alignItems: 'center', marginBottom: spacing.sm },
