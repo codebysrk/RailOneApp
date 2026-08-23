@@ -51,6 +51,20 @@ export const BookingConfigScreen = () => {
   const totalFare = calculateFare(trainKey, adults, child) * (concession ? 0.5 : 1);
 
   const handleBookNow = async () => {
+    // Calculate route via junctions
+    let computedVia = '---';
+    if ((srcCode === 'MRA' || srcCode === 'GWL') && (dstCode === 'NDLS' || dstCode === 'NZM' || dstCode === 'DLI')) {
+      computedVia = 'AGC, MTJ';
+    } else if ((srcCode === 'NDLS' || srcCode === 'NZM') && (dstCode === 'MRA' || dstCode === 'GWL')) {
+      computedVia = 'MTJ, AGC';
+    } else if (srcCode === 'NDLS' && (dstCode === 'BPL' || dstCode === 'RKMP')) {
+      computedVia = 'GWL, JHS';
+    } else if (srcCode === 'NDLS' && dstCode === 'HWH') {
+      computedVia = 'CNB, PRYJ';
+    } else if (srcCode === 'NDLS' && dstCode === 'MMCT') {
+      computedVia = 'KOTA, BRC';
+    }
+
     const newTicket = {
       id: Date.now().toString(),
       pnr: '21' + Math.floor(10000000 + Math.random() * 90000000),
@@ -61,6 +75,7 @@ export const BookingConfigScreen = () => {
       dest: dstName,
       sourceCode: srcCode,
       destCode: dstCode,
+      via: computedVia,
       duration: '4h:8m',
       fare: totalFare.toFixed(2),
       passengers: `${adults} Adult, ${child} Child`,
