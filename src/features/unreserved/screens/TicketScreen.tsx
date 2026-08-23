@@ -256,6 +256,9 @@ export const TicketScreen = () => {
               </View>
             </View>
 
+            {/* Purple Accent Ribbon below Top Dark Section */}
+            <View style={styles.purpleRibbon} />
+
             {/* Ticket Body (Warm Off-White Cream Paper Section) */}
             <View style={styles.ticketBody}>
               {/* Row 1: Journey Ticket & Reference ID */}
@@ -449,18 +452,16 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#555555',
     marginBottom: 10,
-    textAlign: 'center',
     fontWeight: '500',
   },
 
   // ─── Ticket Card Wrapper ─────────────────────────────────────
   ticketCardWrapper: {
-    backgroundColor: '#f5f4f0',
+    backgroundColor: '#ffffff',
     borderRadius: 16,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#cfc9be',
-    ...elevation.sm,
+    borderColor: '#ffffff',
     marginBottom: spacing.sm,
   },
   purpleRibbon: {
@@ -484,7 +485,7 @@ const styles = StyleSheet.create({
   },
   verticalTextEnglish: {
     color: '#707f93',
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     letterSpacing: 2,
     transform: [{ rotate: '-90deg' }],
@@ -498,7 +499,7 @@ const styles = StyleSheet.create({
   },
   verticalTextHindi: {
     color: '#707f93',
-    fontSize: 14,
+    fontSize: 18,
     fontWeight: '700',
     letterSpacing: 2,
     transform: [{ rotate: '-90deg' }],
