@@ -4,4 +4,5 @@ export * from './unreserved';
 export * from './bookings';
 export * from './profile';
 export * from './menu';
+export * from './notifications';
 

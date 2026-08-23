@@ -46,7 +46,11 @@ export const HomeScreen = () => {
           resizeMode="contain" 
         />
         
-        <TouchableOpacity style={[styles.headerIconCircle, { borderColor: '#e2e8f0' }]}>
+        <TouchableOpacity 
+          style={[styles.headerIconCircle, { borderColor: '#e2e8f0' }]}
+          activeOpacity={0.7}
+          onPress={() => navigation.navigate('Notification')}
+        >
           <Ionicons name="notifications-outline" size={20} color={colors.textLight} />
         </TouchableOpacity>
       </View>

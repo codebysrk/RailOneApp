@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from '../context/AuthContext';
 import { LoginScreen } from '../features/auth';
 import { UnreservedScreen, BookingConfigScreen, TicketScreen } from '../features/unreserved';
+import { NotificationScreen } from '../features/notifications';
 import { MenuDrawer } from '../components/common/MenuDrawer';
 import { BottomTabNavigator } from './BottomTabNavigator';
 import { RootStackParamList } from '../types/navigation';
@@ -42,6 +43,13 @@ export const AppNavigator: React.FC = () => {
         <Stack.Screen name="Unreserved" component={UnreservedScreen} />
         <Stack.Screen name="BookingConfig" component={BookingConfigScreen} />
         <Stack.Screen name="Ticket" component={TicketScreen} />
+        <Stack.Screen
+          name="Notification"
+          component={NotificationScreen}
+          options={{
+            animation: 'slide_from_right',
+          }}
+        />
       </Stack.Navigator>
       <MenuDrawer visible={menuVisible} onClose={() => setMenuVisible(false)} />
     </NavigationContainer>

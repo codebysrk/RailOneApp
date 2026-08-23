@@ -13,6 +13,7 @@ export type RootStackParamList = {
     ticket: Ticket;
     fromBooking?: boolean;
   };
+  Notification: undefined;
 };
 
 export type BottomTabParamList = {
