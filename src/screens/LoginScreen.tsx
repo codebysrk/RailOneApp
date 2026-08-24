@@ -4,8 +4,10 @@ import {
   ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { StatusBar } from "expo-status-bar";
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
+import { FocusAwareStatusBar } from '@/components/common';
 
 type Tab = "login" | "register";
 
@@ -59,8 +61,9 @@ export const LoginScreen = () => {
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
+      <FocusAwareStatusBar backgroundColor="#f8faff" barStyle="dark-content" />
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
+        style={styles.keyboardContainer}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
@@ -177,7 +180,8 @@ export const LoginScreen = () => {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#f8faff" },
-  scroll: { flexGrow: 1, paddingHorizontal: 24, paddingBottom: 40 },
+  keyboardContainer: { flex: 1 },
+  scroll: { flexGrow: 1, paddingHorizontal: 10, paddingBottom: 40 },
 
   logoArea: { alignItems: "center", paddingTop: 48, marginBottom: 32 },
   logoCircle: {

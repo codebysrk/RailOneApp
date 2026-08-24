@@ -16,19 +16,26 @@ import {
   BackHandler,
   AppState,
 } from "react-native";
-import { useNavigation, useRoute, useIsFocused } from "@react-navigation/native";
+import {
+  useNavigation,
+  useRoute,
+  useIsFocused,
+} from "@react-navigation/native";
+import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { AppHeader } from '@/components/common';
-import { colors } from '@/theme/colors';
-import { spacing, elevation } from '@/theme/spacing';
-import { useAuth } from '@/context/AuthContext';
+import { AppHeader } from "@/components/common";
+import { colors } from "@/theme/colors";
+import { spacing, elevation } from "@/theme/spacing";
+import { useAuth } from "@/context/AuthContext";
+import { RailwayDistanceEngine } from "@/services/RailwayDistanceEngine";
 
-// ─── Reverse Sliding Counter (Odometer Block) ───────────────────
-const ReverseSlidingBlock = ({ value }: { value: string }) => {
+// ─── Dual Mechanical Rolling Reel (Jata Hua & Aata Hua Digits) ───────────────────
+const CELL_HEIGHT = 46;
+
+const ReverseSlidingBlock = React.memo(({ value }: { value: string }) => {
   const [currentVal, setCurrentVal] = useState(value);
   const [prevVal, setPrevVal] = useState<string | null>(null);
-
   const anim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -39,7 +46,8 @@ const ReverseSlidingBlock = ({ value }: { value: string }) => {
 
       Animated.timing(anim, {
         toValue: 1,
-        duration: 380,
+        duration: 520,
+        easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }).start(() => {
         setPrevVal(null);
@@ -47,57 +55,52 @@ const ReverseSlidingBlock = ({ value }: { value: string }) => {
     }
   }, [value, currentVal, anim]);
 
-  // Outgoing number: slides down from 0 to +50 and fades out
+  // Jata hua digit: moves down from 0 to +46 (exits at bottom)
   const outgoingTranslateY = anim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, 50],
-  });
-  const outgoingOpacity = anim.interpolate({
-    inputRange: [0, 0.7, 1],
-    outputRange: [1, 0.3, 0],
+    outputRange: [0, CELL_HEIGHT],
   });
 
-  // Incoming number: slides from top -50 to 0 and fades in
+  // Aata hua digit: moves down from -46 to 0 (enters from top)
   const incomingTranslateY = anim.interpolate({
     inputRange: [0, 1],
-    outputRange: [-50, 0],
-  });
-  const incomingOpacity = anim.interpolate({
-    inputRange: [0, 0.4, 1],
-    outputRange: [0, 0.8, 1],
+    outputRange: [-CELL_HEIGHT, 0],
   });
 
   return (
     <View style={styles.odometerBlock}>
+      {/* 1. Jata Hua Number (Outgoing) */}
       {prevVal !== null && (
-        <Animated.Text
+        <Animated.View
           style={[
-            styles.timerDigital,
-            styles.odometerAbsolute,
+            styles.reelSlotAbsolute,
             {
               transform: [{ translateY: outgoingTranslateY }],
-              opacity: outgoingOpacity,
             },
           ]}
         >
-          {prevVal}
-        </Animated.Text>
+          <Text numberOfLines={1} style={styles.timerDigital}>
+            {prevVal}
+          </Text>
+        </Animated.View>
       )}
-      <Animated.Text
+
+      {/* 2. Aata Hua Number (Incoming) */}
+      <Animated.View
         style={[
-          styles.timerDigital,
-          prevVal !== null && styles.odometerAbsolute,
+          styles.reelSlotAbsolute,
           prevVal !== null && {
             transform: [{ translateY: incomingTranslateY }],
-            opacity: incomingOpacity,
           },
         ]}
       >
-        {currentVal}
-      </Animated.Text>
+        <Text numberOfLines={1} style={styles.timerDigital}>
+          {currentVal}
+        </Text>
+      </Animated.View>
     </View>
   );
-};
+});
 
 export const TicketScreen = () => {
   const navigation = useNavigation<any>();
@@ -106,48 +109,92 @@ export const TicketScreen = () => {
   const ticketData = route.params?.ticket;
   const fromBooking = route.params?.fromBooking;
 
-  const pnr = ticketData?.pnr || '---';
-  const ticketId = ticketData?.ticketId || '---';
-  const source = ticketData?.source || '---';
-  const dest = ticketData?.dest || '---';
-  const fare = ticketData?.fare || '0.00';
-  const via = ticketData?.via || 'TKD';
-  const distance = ticketData?.distance || '---';
-  const userMobile = user?.mobile || ticketData?.userMobile || '---';
-  const userName = user?.name || ticketData?.userName || 'Passenger';
+  const pnr = ticketData?.pnr || "---";
+  const ticketId = ticketData?.ticketId || "---";
+  const source = ticketData?.source || "---";
+  const dest = ticketData?.dest || "---";
+  const fare = ticketData?.fare || "0.00";
+  const via = ticketData?.via || "TKD";
+  const distance = useMemo(() => {
+    if (ticketData?.distance && ticketData.distance !== "---") {
+      const distStr = String(ticketData.distance).trim();
+      return distStr.toLowerCase().includes("km") ? distStr : `${distStr} km`;
+    }
+    const srcCode = ticketData?.sourceCode || source;
+    const dstCode = ticketData?.destCode || dest;
+    if (srcCode && dstCode && srcCode !== "---" && dstCode !== "---") {
+      const res = RailwayDistanceEngine.getRailwayDistance(
+        srcCode,
+        dstCode,
+        via,
+      );
+      if (res && res.distance && res.distance.value > 0) {
+        return res.distance.formatted;
+      }
+    }
+    if (ticketData?.fare && parseFloat(ticketData.fare) > 0) {
+      return `${Math.floor(parseFloat(ticketData.fare) * 4.5)} km`;
+    }
+    return "238 km";
+  }, [ticketData, source, dest, via]);
+  const userMobile = user?.mobile || ticketData?.userMobile || "---";
+  const userName = user?.name || ticketData?.userName || "Passenger";
 
   // Memoize random / default identifiers so they NEVER change across 1-sec timer ticks
   const rNumber = useMemo(
-    () => ticketData?.rNumber || 'R' + Math.floor(10000 + Math.random() * 90000),
-    [ticketData?.rNumber]
+    () =>
+      ticketData?.rNumber || "R" + Math.floor(10000 + Math.random() * 90000),
+    [ticketData?.rNumber],
   );
   const irCode = useMemo(
     () =>
       ticketData?.irCode ||
-      'IR:' + Math.random().toString(36).substring(2, 10).toUpperCase() + 'C1ZR',
-    [ticketData?.irCode]
+      "IR:" +
+        Math.random().toString(36).substring(2, 10).toUpperCase() +
+        "C1ZR",
+    [ticketData?.irCode],
   );
 
-  const { bookedNumeric, validTillNumeric, bookingDate } = useMemo(() => {
-    const now = new Date();
-    const currentDay = now.getDate().toString().padStart(2, "0");
-    const currentMonth = (now.getMonth() + 1).toString().padStart(2, "0");
-    const currentYear = now.getFullYear();
-    const currentHour = now.getHours().toString().padStart(2, "0");
-    const currentMin = now.getMinutes().toString().padStart(2, "0");
-    const dateFormatted = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-    const timeFormatted = `${currentHour}:${currentMin}`;
+  const { bookedNumeric, validTillNumeric, validTillDate, bookingDate } =
+    useMemo(() => {
+      const now = new Date();
+      const currentDay = now.getDate().toString().padStart(2, "0");
+      const currentMonth = (now.getMonth() + 1).toString().padStart(2, "0");
+      const currentYear = now.getFullYear();
+      const currentHour = now.getHours().toString().padStart(2, "0");
+      const currentMin = now.getMinutes().toString().padStart(2, "0");
+      const dateFormatted = now.toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
+      const timeFormatted = `${currentHour}:${currentMin}`;
 
-    let bDate = ticketData?.bookingDateTime || ticketData?.date || `${dateFormatted}, ${timeFormatted}`;
-    if (bDate && !bDate.includes(":")) {
-      bDate = `${bDate}, ${timeFormatted}`;
-    }
+      let bDate =
+        ticketData?.bookingDateTime ||
+        ticketData?.date ||
+        `${dateFormatted}, ${timeFormatted}`;
+      if (bDate && !bDate.includes(":")) {
+        bDate = `${bDate}, ${timeFormatted}`;
+      }
 
-    const bNumeric = ticketData?.bookedOn || `${currentDay}/${currentMonth}/${currentYear} ${currentHour}:${currentMin}`;
-    const vNumeric = ticketData?.validTill || `${currentDay}/${currentMonth}/${currentYear} 23:59`;
+      const bNumeric =
+        ticketData?.bookedOn ||
+        `${currentDay}/${currentMonth}/${currentYear} ${currentHour}:${currentMin}`;
+      const vNumeric =
+        ticketData?.validTill ||
+        `${currentDay}/${currentMonth}/${currentYear} 23:59`;
+      const vDate =
+        vNumeric.split(" ")[0] ||
+        `${currentDay}/${currentMonth}/${currentYear}`;
 
-    return { bookedNumeric: bNumeric, validTillNumeric: vNumeric, bookingDate: bDate };
-  }, [ticketData]);
+      return {
+        bookedNumeric: bNumeric,
+        validTillNumeric: vNumeric,
+        validTillDate: vDate,
+        bookingDate: bDate,
+      };
+    }, [ticketData]);
 
   const TOTAL_DURATION = 300; // 5 minutes window
   const [timeLeft, setTimeLeft] = useState(TOTAL_DURATION);
@@ -155,18 +202,20 @@ export const TicketScreen = () => {
 
   const isFocused = useIsFocused();
   const appState = useRef(AppState.currentState);
-  const [isActive, setIsActive] = useState(isFocused && appState.current === 'active');
+  const [isActive, setIsActive] = useState(
+    isFocused && appState.current === "active",
+  );
 
   useEffect(() => {
-    const subscription = AppState.addEventListener('change', (nextAppState) => {
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
       appState.current = nextAppState;
-      setIsActive(isFocused && appState.current === 'active');
+      setIsActive(isFocused && appState.current === "active");
     });
     return () => subscription.remove();
   }, [isFocused]);
 
   useEffect(() => {
-    setIsActive(isFocused && appState.current === 'active');
+    setIsActive(isFocused && appState.current === "active");
   }, [isFocused]);
 
   useEffect(() => {
@@ -282,7 +331,7 @@ export const TicketScreen = () => {
       `CRIS//IR-UTS//V5.2.0//SECURE-QR`,
       `PNR:${pnr}`,
       `TID:${ticketId}`,
-      `TRN:${ticketData?.train || '12279-TAJ-EXP'}`,
+      `TRN:${ticketData?.train || "12279-TAJ-EXP"}`,
       `SRC:${source}`,
       `DST:${dest}`,
       `VIA:${via}`,
@@ -292,22 +341,40 @@ export const TicketScreen = () => {
       `FARE:INR-${fare}`,
       `RNUM:${rNumber}`,
       `IRCD:${irCode}`,
-      `PAX:${ticketData?.passengers || '1-ADULT-0-CHILD'}`,
-      `CLS:${ticketData?.classType || 'SECOND-2S'}`,
-      `TYP:${ticketData?.trainType || 'MAIL-EXP'}`,
+      `PAX:${ticketData?.passengers || "1-ADULT-0-CHILD"}`,
+      `CLS:${ticketData?.classType || "SECOND-2S"}`,
+      `TYP:${ticketData?.trainType || "MAIL-EXP"}`,
       `USER:${userName}//MOB:${userMobile}`,
       `UTS_TERMID:DEL-CRIS-WS-99214`,
       `DEV_SIG:A8F932D1-7B32-4E90-B8A1-1928374650AC`,
-      `CRIS_SIGNATURE_RSA2048:MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1v5zL0Q7e9rT3v4U1x8yZ2kL4w9v7P0r6t2y4u8i0o1p3e5r7t9y1u3i5o7p9a1s3d5f7g9h1j3k5l7z9x1c3v5b7n9m1q3w5e7r9t1y3u5i7o9p1a3s5d7f9g1h3j5k7l9z1x3c5v7b9n1m3q5w7e9r1t3y5u7i9o1p3a5s7d9f1g3h5j7k9l1z3x5c7v9b1n3m5q7w9e1r3t5y7u9i1o3p5a7s9d1f3g5h7j9k1l3z5x7c9v1b3n5m7q9w1e3r5t7y9u1i3o5p7a9s1d3f5g7h9j1k3l5z7x9c1v3b5n7m9q1w3e5r7t9y1u3i5o7p9a1s3d5f7g9h1j3`,
-      `HASH_SHA512:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`,
+      `CRIS_SIG:MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1v5zL0Q7e9rT3v4U1x8yZ2kL4w9v7P0r6t2y4u8i0o1p3e5r7t9y1u3i5o7p9a1s3d5f7g9h1j3k5l7z9x1c3v5b7n9m1q3w5e7r9t1y3u5i7o9p1a3s5d7f9g1h3j5k7l9`,
+      `HASH_SHA256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`,
       `CERT_EXP:2028-12-31T23:59:59Z`,
       `AUTH:CENTRE-FOR-RAILWAY-INFORMATION-SYSTEMS`,
-    ].join('//');
+    ].join("//");
 
     return `https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&data=${encodeURIComponent(
-      qrSecurityDigest
-    )}&ecc=H&margin=1`;
-  }, [pnr, ticketId, source, dest, via, distance, bookingDate, validTillNumeric, fare, rNumber, irCode, userName, userMobile, ticketData?.train, ticketData?.passengers, ticketData?.classType, ticketData?.trainType]);
+      qrSecurityDigest,
+    )}&ecc=M&margin=1`;
+  }, [
+    pnr,
+    ticketId,
+    source,
+    dest,
+    via,
+    distance,
+    bookingDate,
+    validTillNumeric,
+    fare,
+    rNumber,
+    irCode,
+    userName,
+    userMobile,
+    ticketData?.train,
+    ticketData?.passengers,
+    ticketData?.classType,
+    ticketData?.trainType,
+  ]);
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
@@ -325,7 +392,7 @@ export const TicketScreen = () => {
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={{ flex: 1 }}
+        style={styles.keyboardContainer}
       >
         <ScrollView
           style={styles.scrollView}
@@ -333,6 +400,7 @@ export const TicketScreen = () => {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
+          {/* ─── Top Greeting ────────────────────────────────────────── */}
           <View style={styles.greetingContainer}>
             <Text style={styles.greetingText}>
               Thank You {userName}, Happy Journey !
@@ -457,7 +525,8 @@ export const TicketScreen = () => {
 
                 {/* Row 6: Validity Disclaimer */}
                 <Text style={styles.validityNote}>
-                  *Valid for start of journey till 23:59 hrs of the booking date.
+                  *Valid for start of journey by {validTillDate} or until
+                  departure of first train
                 </Text>
               </View>
 
@@ -519,7 +588,7 @@ export const TicketScreen = () => {
 
           {/* ─── 4. Rating & Experience Section (Disappears once submitted) ── */}
           {!feedbackSubmitted && (
-            <>
+            <View>
               {/* Full-width Divider */}
               <View style={styles.sectionDivider} />
 
@@ -585,7 +654,7 @@ export const TicketScreen = () => {
                   </Text>
                 </TouchableOpacity>
               </View>
-            </>
+            </View>
           )}
         </ScrollView>
       </KeyboardAvoidingView>
@@ -595,30 +664,31 @@ export const TicketScreen = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#0066ff" },
+  keyboardContainer: { flex: 1 },
   scrollView: { flex: 1, backgroundColor: "#f2f2f2" },
-  scrollContent: { paddingHorizontal: 12, paddingTop: 6, paddingBottom: 0 },
+  scrollContent: { paddingHorizontal: 10, paddingTop: 4, paddingBottom: 0 },
   greetingContainer: {
     backgroundColor: "#ffffff",
-    marginHorizontal: -12,
-    marginTop: -6,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    marginBottom: 12,
+    marginHorizontal: -10,
+    marginTop: -4,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    marginBottom: 6,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 2,
     elevation: 1,
     zIndex: 10,
   },
   greetingText: {
+    fontFamily: "Montserrat_400Regular",
     fontSize: 12,
     color: "#404040",
     textAlign: "left",
-    fontWeight: "400",
   },
   ticketShadow: {
-    marginBottom: 5,
+    marginBottom: 4,
     borderRadius: 12,
     backgroundColor: "#ffffff",
     shadowColor: "#000",
@@ -648,9 +718,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   verticalTextEnglish: {
+    fontFamily: "Montserrat_700Bold",
     color: "#a0aab8",
-    fontSize: 14,
-    fontWeight: "700",
+    fontSize: 12,
     letterSpacing: 1.5,
     transform: [{ rotate: "-90deg" }],
     width: 140,
@@ -662,9 +732,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   verticalTextHindi: {
+    fontFamily: "Montserrat_700Bold",
     color: "#a0aab8",
     fontSize: 18,
-    fontWeight: "700",
     letterSpacing: 1.5,
     transform: [{ rotate: "-90deg" }],
     width: 140,
@@ -672,16 +742,17 @@ const styles = StyleSheet.create({
   },
   verticalDashedSeparator: {
     width: 1,
-    height: "88%",
-    borderWidth: 0.5,
-    borderColor: "#334155",
+    alignSelf: "stretch",
+    marginVertical: -8,
+    borderLeftWidth: 1.5,
+    borderColor: "#bdc5d0",
     borderStyle: "dashed",
   },
   centerBannerContent: { flex: 1, alignItems: "center", paddingHorizontal: 2 },
   previewCloseText: {
+    fontFamily: "Montserrat_600SemiBold",
     color: "#ffffff",
     fontSize: 14.5,
-    fontWeight: "600",
     letterSpacing: 0.2,
   },
   timerRow: {
@@ -691,62 +762,71 @@ const styles = StyleSheet.create({
     marginVertical: 2,
   },
   odometerBlock: {
-    width: 58,
+    width: 65,
     height: 46,
     overflow: "hidden",
     justifyContent: "center",
     alignItems: "center",
     position: "relative",
   },
-  odometerAbsolute: {
+  reelSlotAbsolute: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    textAlign: "center",
+    height: 46,
+    width: 65,
+    justifyContent: "center",
+    alignItems: "center",
   },
   timerColon: {
+    fontFamily: "Montserrat_600SemiBold",
     color: "#ff2020",
-    fontSize: 38,
-    fontWeight: "900",
-    lineHeight: 42,
+    fontSize: 34,
+    height: 46,
+    lineHeight: 46,
     marginHorizontal: 2,
     textAlign: "center",
+    textAlignVertical: "center",
+    includeFontPadding: false,
   },
   timerDigital: {
+    fontFamily: "Montserrat_700Bold",
     color: "#ff2020",
-    fontSize: 42,
-    fontWeight: "900",
-    letterSpacing: 1,
-    lineHeight: 48,
+    fontSize: 38,
+    letterSpacing: 0.5,
+    height: 46,
+    lineHeight: 46,
     textAlign: "center",
+    textAlignVertical: "center",
+    includeFontPadding: false,
   },
   bookingDateLabel: {
+    fontFamily: "Montserrat_500Medium",
     color: "#a0aab8",
     fontSize: 12,
-    fontWeight: "500",
     marginTop: 2,
   },
   bookingDateValue: {
+    fontFamily: "Montserrat_600SemiBold",
     color: "#ff9800",
-    fontSize: 20,
-    fontWeight: "800",
+    fontSize: 24,
     letterSpacing: 0.2,
-    lineHeight: 24,
+    lineHeight: 30,
     marginTop: 2,
   },
   rNumberText: {
-    color: "#a0aab8",
+    fontFamily: "Montserrat_600SemiBold",
+    color: "#f9f9f9",
     fontSize: 11,
-    fontWeight: "600",
     letterSpacing: 0.5,
     marginTop: 2,
   },
   nonTransferableText: {
-    color: "#ffffff",
+    fontFamily: "Montserrat_500Medium",
+    color: "#f9f9f9",
     fontSize: 11,
-    fontWeight: "500",
     marginTop: 2,
   },
   ticketBody: {
@@ -761,14 +841,14 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   ticketTypeTitle: {
+    fontFamily: "Montserrat_600SemiBold",
     fontSize: 14,
-    fontWeight: "600",
     color: "#555555",
     letterSpacing: 0.2,
   },
   ticketIdText: {
+    fontFamily: "Montserrat_700Bold",
     fontSize: 14,
-    fontWeight: "700",
     color: "#333333",
     letterSpacing: 0.5,
   },
@@ -780,25 +860,30 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   stnNameLeft: {
+    fontFamily: "Montserrat_700Bold",
     fontSize: 13,
-    fontWeight: "700",
     color: "#222222",
     flex: 1,
     letterSpacing: 0.2,
+    lineHeight: 18,
   },
   distanceText: {
-    fontSize: 11,
+    fontFamily: "Montserrat_600SemiBold",
+    fontSize: 11.5,
     color: "#555555",
-    marginHorizontal: 2,
-    fontWeight: "500",
+    marginHorizontal: 4,
+    flexShrink: 0,
+    textAlign: "center",
+    letterSpacing: 0.1,
   },
   stnNameRight: {
+    fontFamily: "Montserrat_700Bold",
     fontSize: 13,
-    fontWeight: "700",
     color: "#222222",
     flex: 1,
     textAlign: "right",
     letterSpacing: 0.2,
+    lineHeight: 18,
   },
   detailsGrid: {
     flexDirection: "row",
@@ -807,36 +892,40 @@ const styles = StyleSheet.create({
   },
   gridColLeft: { flex: 1 },
   gridColRight: { flex: 1, alignItems: "flex-end" },
-  gridLabel: { fontSize: 11, color: "#666666", fontWeight: "500" },
-  gridLabelRight: {
+  gridLabel: {
+    fontFamily: "Montserrat_500Medium",
     fontSize: 11,
     color: "#666666",
-    fontWeight: "500",
+  },
+  gridLabelRight: {
+    fontFamily: "Montserrat_500Medium",
+    fontSize: 11,
+    color: "#666666",
     textAlign: "right",
   },
   gridValue: {
+    fontFamily: "Montserrat_700Bold",
     fontSize: 12.5,
-    fontWeight: "700",
     color: "#333333",
     marginTop: 1,
   },
   gridValueRight: {
+    fontFamily: "Montserrat_700Bold",
     fontSize: 12.5,
-    fontWeight: "700",
     color: "#333333",
     textAlign: "right",
     marginTop: 1,
   },
   fareInfoBlock: { marginVertical: 3, marginTop: 6 },
   fareSummaryText: {
+    fontFamily: "Montserrat_600SemiBold",
     fontSize: 12.5,
-    fontWeight: "600",
     color: "#555555",
     letterSpacing: 0.2,
   },
   irCodeText: {
+    fontFamily: "Montserrat_500Medium",
     fontSize: 11.5,
-    fontWeight: "500",
     color: "#555555",
     marginTop: 2,
   },
@@ -864,22 +953,21 @@ const styles = StyleSheet.create({
   tearCutoutLeft: { left: -27 },
   tearCutoutRight: { right: -27 },
   validityNote: {
-    fontSize: 10,
+    fontFamily: "Montserrat_500Medium",
+    fontSize: 10.5,
     color: "#555555",
     lineHeight: 14,
-    fontWeight: "500",
     marginTop: 4,
   },
   warningCard: {
-    backgroundColor: "#fef2f2",
+    backgroundColor: "#f9e6e6",
     borderRadius: 6,
-    paddingVertical: 6,
+    paddingVertical: 5,
     paddingHorizontal: 8,
-    borderWidth: 1,
-    borderColor: "#fecaca",
-    marginVertical: 6,
+    marginVertical: 4,
   },
   warningText: {
+    fontFamily: "Montserrat_500Medium",
     color: "#ef4444",
     fontSize: 10.5,
     lineHeight: 14,
@@ -887,100 +975,116 @@ const styles = StyleSheet.create({
   },
   connectingBtn: {
     backgroundColor: "#ffffff",
-    paddingVertical: 10,
+    paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: "#0066ff",
     alignItems: "center",
-    marginBottom: 8,
-    marginTop: 4,
+    marginBottom: 6,
+    marginTop: 2,
   },
-  connectingBtnText: { color: "#0066ff", fontSize: 14, fontWeight: "600" },
+  connectingBtnText: {
+    fontFamily: "Montserrat_600SemiBold",
+    color: "#0066ff",
+    fontSize: 13.5,
+  },
   qrSection: {
     backgroundColor: "#ffffff",
-    marginHorizontal: -12,
-    paddingVertical: 18,
+    marginHorizontal: -10,
+    paddingVertical: 14,
     alignItems: "center",
     justifyContent: "center",
   },
   qrImage: {
-    width: 200,
-    height: 200,
+    width: 170,
+    height: 170,
     backgroundColor: "#ffffff",
   },
   sectionDivider: {
-    height: 8,
+    height: 6,
     backgroundColor: "#e5e7eb",
-    marginHorizontal: -12,
+    marginHorizontal: -10,
   },
   infoSection: {
     backgroundColor: "#ffffff",
-    marginHorizontal: -12,
-    paddingHorizontal: 16,
-    paddingVertical: 18,
+    marginHorizontal: -10,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
   },
   infoTitle: {
-    fontSize: 16,
-    fontWeight: "700",
+    fontFamily: "Montserrat_700Bold",
+    fontSize: 15,
     color: "#1e293b",
-    marginBottom: 10,
+    marginBottom: 8,
   },
   infoParagraph: {
-    fontSize: 13.5,
+    fontFamily: "Montserrat_400Regular",
+    fontSize: 13,
     color: "#475569",
-    lineHeight: 20,
-    marginBottom: 14,
+    lineHeight: 18,
+    marginBottom: 8,
   },
   ratingSection: {
     backgroundColor: "#ffffff",
-    marginHorizontal: -12,
-    paddingHorizontal: 16,
-    paddingVertical: 18,
-    paddingBottom: 28,
+    marginHorizontal: -10,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    paddingBottom: 20,
   },
   experienceTitle: {
-    fontSize: 15.5,
-    fontWeight: "700",
+    fontFamily: "Montserrat_700Bold",
+    fontSize: 15,
     color: "#1e293b",
     marginBottom: 4,
   },
   ratingLabel: {
-    fontSize: 13.5,
+    fontFamily: "Montserrat_500Medium",
+    fontSize: 13,
     color: "#64748b",
-    marginVertical: 8,
-    fontWeight: "500",
+    marginTop: 4,
+    marginBottom: 4,
   },
   starsRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 8,
   },
-  starBtn: { marginRight: 10 },
+  starBtn: { marginRight: 8 },
   textareaContainer: {
     borderWidth: 1,
     borderColor: "#cbd5e1",
     borderRadius: 8,
     height: 110,
-    padding: 12,
+    padding: 10,
     backgroundColor: "#ffffff",
     justifyContent: "space-between",
-    marginBottom: 18,
+    marginBottom: 12,
   },
   textareaInput: {
+    fontFamily: "Montserrat_400Regular",
     flex: 1,
-    fontSize: 13.5,
+    fontSize: 13,
     color: "#1e293b",
     textAlignVertical: "top",
   },
-  charCounter: { fontSize: 11, color: "#94a3b8", textAlign: "right" },
+  charCounter: {
+    fontFamily: "Montserrat_400Regular",
+    fontSize: 11,
+    color: "#94a3b8",
+    textAlign: "right",
+  },
   submitBtn: {
     backgroundColor: "#e2e8f0",
-    borderRadius: 24,
-    height: 44,
+    borderRadius: 20,
+    height: 40,
     alignItems: "center",
     justifyContent: "center",
   },
   submitBtnActive: { backgroundColor: "#0066ff" },
-  submitBtnText: { fontSize: 15, fontWeight: "600", color: "#64748b" },
+  submitBtnText: {
+    fontFamily: "Montserrat_600SemiBold",
+    fontSize: 14,
+    color: "#64748b",
+  },
   submitBtnTextActive: { color: "#ffffff" },
 });

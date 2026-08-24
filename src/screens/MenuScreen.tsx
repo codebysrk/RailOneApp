@@ -10,10 +10,11 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { StatusBar } from "expo-status-bar";
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from "@/context/AuthContext";
 import { UpdateService, ReleaseInfo } from "@/services";
-import { UpdateModal } from "@/components/common";
+import { UpdateModal, FocusAwareStatusBar } from "@/components/common";
 
 type MenuItem = {
   id: string;
@@ -75,6 +76,7 @@ export const MenuScreen = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
+      <FocusAwareStatusBar backgroundColor="#ffffff" barStyle="dark-content" />
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
@@ -107,7 +109,7 @@ export const MenuScreen = () => {
         <View style={styles.menuList}>
           {menuItems.map((item) => (
             <TouchableOpacity
-              key={item.id}
+              key={`menu-screen-${item.id}`}
               style={styles.menuRow}
               activeOpacity={0.65}
               onPress={item.onPress}
@@ -143,7 +145,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
   },
   scroll: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 10,
     paddingTop: 12,
     paddingBottom: 28,
   },

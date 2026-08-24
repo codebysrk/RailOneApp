@@ -54,7 +54,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
             <View style={styles.versionBadgeOld}>
               <Text style={styles.versionTextOld}>v{releaseInfo.currentVersion}</Text>
             </View>
-            <Ionicons name="arrow-forward" size={16} color="#94a3b8" style={{ marginHorizontal: 8 }} />
+            <Ionicons name="arrow-forward" size={16} color="#94a3b8" style={styles.arrowIcon} />
             <View style={styles.versionBadgeNew}>
               <Text style={styles.versionTextNew}>v{releaseInfo.latestVersion}</Text>
             </View>
@@ -76,7 +76,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
             onPress={handleUpdateNow}
             activeOpacity={0.85}
           >
-            <Ionicons name="download-outline" size={20} color="#ffffff" style={{ marginRight: 6 }} />
+            <Ionicons name="download-outline" size={20} color="#ffffff" style={styles.downloadIcon} />
             <Text style={styles.updateBtnText}>Download & Update</Text>
           </TouchableOpacity>
 
@@ -218,6 +218,12 @@ const styles = StyleSheet.create({
     color: '#94a3b8',
     fontSize: 13.5,
     fontWeight: '600',
+  },
+  arrowIcon: {
+    marginHorizontal: 8,
+  },
+  downloadIcon: {
+    marginRight: 6,
   },
 });
 

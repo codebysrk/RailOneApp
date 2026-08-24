@@ -1,6 +1,12 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { colors } from '@/theme/colors';
+import React from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Platform,
+} from "react-native";
+import Svg, { Line } from "react-native-svg";
 
 export interface TicketData {
   id: string;
@@ -11,17 +17,18 @@ export interface TicketData {
   source: string;
   dest: string;
   duration?: string;
+  distance?: string;
   fare?: string;
   passengers?: string;
   classType?: string;
   trainType?: string;
-  status?: 'upcoming' | 'completed' | 'cancelled';
-  moduleType?: 'RESERVED' | 'UNRESERVED' | 'PLATFORM';
+  status?: "upcoming" | "completed" | "cancelled";
+  moduleType?: "RESERVED" | "UNRESERVED" | "PLATFORM";
 }
 
 interface TicketCardProps {
   ticket: TicketData;
-  status: 'upcoming' | 'completed' | 'cancelled';
+  status: "upcoming" | "completed" | "cancelled";
   onOpen?: () => void;
   onBookAgain?: () => void;
 }
@@ -32,25 +39,47 @@ export const TicketCard: React.FC<TicketCardProps> = ({
   onOpen,
   onBookAgain,
 }) => {
-  const isUpcoming = status === 'upcoming';
-  const isCompleted = status === 'completed';
-  
-  // Exact color calibration from screenshots
-  const borderColor = isUpcoming ? '#f39c42' : isCompleted ? '#2ea566' : '#ef4444';
-  const dashedColor = isUpcoming ? '#f39c42' : isCompleted ? '#2ea566' : '#ef4444';
+  const isUpcoming = status === "upcoming";
+  const isCompleted = status === "completed";
 
-  const badgeText = ticket.moduleType === 'UNRESERVED' ? 'Unreserved' 
-                  : ticket.moduleType === 'PLATFORM' ? 'Platform' 
-                  : 'Reserved';
+  const badgeText =
+    ticket.moduleType === "UNRESERVED"
+      ? "Unreserved"
+      : ticket.moduleType === "PLATFORM"
+        ? "Platform"
+        : "Reserved";
+
+  const borderColor = isUpcoming
+    ? "#eda36b"
+    : isCompleted
+      ? "#6ae7ab"
+      : "#f4c2c2";
+  const dashedColor = isUpcoming
+    ? "rgb(244, 195, 157)"
+    : isCompleted
+      ? "rgb(197, 224, 211)"
+      : "rgb(244, 194, 194)";
+
+  const trainSpaceIndex = ticket.train.indexOf(" ");
+  const trainNo =
+    trainSpaceIndex !== -1
+      ? ticket.train.substring(0, trainSpaceIndex)
+      : ticket.train;
+  const trainName =
+    trainSpaceIndex !== -1 ? ticket.train.substring(trainSpaceIndex) : "";
 
   return (
-    <View style={[styles.ticketCard, { borderColor }]}>
+    <View style={[styles.card, { borderColor }]}>
       {/* Top Section */}
-      <TouchableOpacity activeOpacity={0.9} onPress={onOpen} style={styles.ticketTop}>
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={onOpen}
+        style={styles.topSection}
+      >
         {/* Row 1: Badge & PNR */}
-        <View style={styles.ticketHeaderRow}>
-          <View style={styles.badgeReserved}>
-            <Text style={styles.badgeReservedText}>{badgeText}</Text>
+        <View style={styles.row1}>
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{badgeText}</Text>
           </View>
           <Text style={styles.pnrContainer}>
             <Text style={styles.pnrLabel}>PNR: </Text>
@@ -59,50 +88,89 @@ export const TicketCard: React.FC<TicketCardProps> = ({
         </View>
 
         {/* Row 2: Train No & Journey Date */}
-        <View style={styles.infoRow}>
-          <View style={styles.infoCol}>
+        <View style={styles.row2}>
+          <View>
             <Text style={styles.infoLabel}>Train No.</Text>
-            <Text style={styles.infoValue} numberOfLines={1}>{ticket.train}</Text>
+            <Text style={styles.infoValue}>
+              {trainNo}
+              <Text style={styles.trainName}>{trainName}</Text>
+            </Text>
           </View>
-          <View style={[styles.infoCol, { alignItems: 'flex-end' }]}>
+          <View style={styles.rightAlign}>
             <Text style={styles.infoLabel}>Journey Date</Text>
             <Text style={styles.infoValue}>{ticket.date}</Text>
           </View>
         </View>
 
         {/* Row 3: Route & Duration */}
-        <View style={styles.routeRow}>
-          <Text style={styles.routeStationLeft} numberOfLines={1}>
-            {ticket.source}
-          </Text>
-          <View style={styles.routeDuration}>
+        <View style={styles.row3}>
+          <View style={styles.flex1}>
+            <Text style={styles.stationText}>{ticket.source}</Text>
+          </View>
+          <View style={styles.durationContainer}>
+            <View style={styles.durationLine} />
             <Text style={styles.durationText}>
-              {ticket.duration ? `—${ticket.duration}—` : '—4h:8m—'}
+              {ticket.duration || "4h:8m"}
+            </Text>
+            <View style={styles.durationLine} />
+          </View>
+          <View style={[styles.flex1, styles.rightAlign]}>
+            <Text style={[styles.stationText, styles.stationTextRight]}>
+              {ticket.dest}
             </Text>
           </View>
-          <Text style={styles.routeStationRight} numberOfLines={2}>
-            {ticket.dest}
-          </Text>
         </View>
       </TouchableOpacity>
 
-      {/* Perforation / Notched Divider */}
-      <View style={styles.dividerContainer}>
+      {/* Divider Section */}
+      <View style={styles.dividerSection}>
+        {/* Dashed line using SVG to guarantee it renders perfectly on Android */}
+        <View style={styles.dashedSvgContainer}>
+          <Svg height="2" width="100%">
+            <Line
+              x1="0"
+              y1="1"
+              x2="100%"
+              y2="1"
+              stroke={dashedColor}
+              strokeWidth="1.4"
+              strokeDasharray="2, 2"
+            />
+          </Svg>
+        </View>
+
         {/* Left Cutout */}
-        <View style={[styles.cutout, styles.cutoutLeft, { borderColor }]} />
-        {/* Dashed Line */}
-        <View style={[styles.dashedLine, { borderColor: dashedColor }]} />
+        <View style={styles.cutoutLeftContainer}>
+          <View
+            style={[
+              styles.cutoutCircle,
+              styles.cutoutCircleLeft,
+              { borderColor },
+            ]}
+          />
+        </View>
+
         {/* Right Cutout */}
-        <View style={[styles.cutout, styles.cutoutRight, { borderColor }]} />
+        <View style={styles.cutoutRightContainer}>
+          <View style={[styles.cutoutCircle, { borderColor }]} />
+        </View>
       </View>
 
-      {/* Bottom Actions Section */}
-      <View style={styles.ticketBottom}>
-        <TouchableOpacity style={styles.actionBtn} onPress={onBookAgain || onOpen} activeOpacity={0.7}>
+      {/* Bottom Section */}
+      <View style={styles.bottomSection}>
+        <TouchableOpacity
+          style={styles.actionBtn}
+          onPress={onBookAgain || onOpen}
+          activeOpacity={0.7}
+        >
           <Text style={styles.actionBtnText}>Book Again</Text>
         </TouchableOpacity>
         <View style={styles.verticalDivider} />
-        <TouchableOpacity style={styles.actionBtn} onPress={onOpen} activeOpacity={0.7}>
+        <TouchableOpacity
+          style={styles.actionBtn}
+          onPress={onOpen}
+          activeOpacity={0.7}
+        >
           <Text style={styles.actionBtnText}>View Details</Text>
         </TouchableOpacity>
       </View>
@@ -111,147 +179,165 @@ export const TicketCard: React.FC<TicketCardProps> = ({
 };
 
 const styles = StyleSheet.create({
-  ticketCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    borderWidth: 1.2,
-    marginBottom: 16,
-    overflow: 'hidden',
+  card: {
+    backgroundColor: "#f7f8f9",
+    borderWidth: 1,
+    borderRadius: 13,
+    marginBottom: 12,
   },
-  ticketTop: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 14,
-    backgroundColor: '#ffffff',
+  topSection: {
+    padding: 14,
+    paddingBottom: 16,
   },
-  ticketHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 14,
+  row1: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
   },
-  badgeReserved: {
-    backgroundColor: '#c7f1f6',
-    paddingHorizontal: 12,
-    paddingVertical: 4.5,
-    borderRadius: 7,
+  badge: {
+    backgroundColor: "#dcf4f8",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 5,
   },
-  badgeReservedText: {
-    color: '#0097a7',
-    fontSize: 13,
-    fontWeight: '700',
+  badgeText: {
+    color: "#0f8c9e",
+    fontSize: 11,
+    fontFamily: "Montserrat_700Bold",
+    letterSpacing: 0.2,
   },
   pnrContainer: {
-    fontSize: 14,
+    fontSize: 12,
   },
   pnrLabel: {
-    color: '#64748b',
-    fontWeight: '700',
+    color: "#8e8e8e",
+    fontFamily: "Montserrat_400Regular",
+    letterSpacing: 0.2,
   },
   pnrValue: {
-    color: '#1e293b',
-    fontWeight: '800',
+    color: "#1a1a1a",
+    fontFamily: "Montserrat_700Bold",
   },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 14,
+  row2: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 12,
   },
-  infoCol: {
-    flex: 1,
+  rightAlign: {
+    alignItems: "flex-end",
   },
   infoLabel: {
-    fontSize: 12.5,
-    color: '#94a3b8',
-    fontWeight: '400',
-    marginBottom: 3,
+    fontSize: 10.5,
+    color: "#a0a0a0",
+    marginBottom: 2,
+    fontFamily: "Montserrat_400Regular",
   },
   infoValue: {
-    fontSize: 13.5,
-    color: '#1e293b',
-    fontWeight: '700',
+    fontSize: 12,
+    color: "#2a2a2a",
+    fontFamily: "Montserrat_700Bold",
   },
-  routeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 2,
+  trainName: {
+    fontFamily: "Montserrat_400Regular",
   },
-  routeStationLeft: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#1e293b',
+  row3: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  flex1: {
     flex: 1,
-    textTransform: 'uppercase',
   },
-  routeDuration: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 6,
+  stationText: {
+    fontSize: 12,
+    fontFamily: "Montserrat_400Regular",
+    color: "#2a2a2a",
+    textTransform: "uppercase",
+    letterSpacing: 0.2,
+  },
+  stationTextRight: {
+    textAlign: "right",
+    maxWidth: 100,
+    lineHeight: 15,
+  },
+  durationContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 4,
+    flexShrink: 0,
+  },
+  durationLine: {
+    width: 22,
+    height: 1,
+    backgroundColor: "#d5d5d5",
+    marginHorizontal: 4,
   },
   durationText: {
-    fontSize: 12,
-    color: '#94a3b8',
-    fontWeight: '500',
+    fontSize: 10.5,
+    color: "#b5b5b5",
+    fontFamily: "Montserrat_400Regular",
   },
-  routeStationRight: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#1e293b',
-    flex: 1,
-    textAlign: 'right',
-    textTransform: 'uppercase',
-  },
-  dividerContainer: {
-    height: 24,
-    flexDirection: 'row',
-    alignItems: 'center',
-    position: 'relative',
-    marginVertical: -12,
-    zIndex: 5,
-  },
-  dashedLine: {
-    flex: 1,
+  dividerSection: {
+    position: "relative",
+    width: "100%",
     height: 0,
-    borderWidth: 0.8,
-    borderStyle: 'dashed',
-    marginHorizontal: 12,
+    zIndex: 10,
   },
-  cutout: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#ffffff',
-    position: 'absolute',
-    borderWidth: 1.2,
-    zIndex: 6,
+  dashedSvgContainer: {
+    position: "absolute",
+    top: -1,
+    left: 17, // Adjusted for 30px cutouts
+    right: 17,
   },
-  cutoutLeft: {
-    left: -13,
+  cutoutLeftContainer: {
+    position: "absolute",
+    left: -1.5,
+    top: -15,
+    width: 15,
+    height: 30,
+    overflow: "hidden",
   },
-  cutoutRight: {
-    right: -13,
+  cutoutRightContainer: {
+    position: "absolute",
+    right: -1.5,
+    top: -15,
+    width: 15,
+    height: 30,
+    overflow: "hidden",
   },
-  ticketBottom: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 14,
-    backgroundColor: '#ffffff',
+  cutoutCircle: {
+    width: 30,
+    height: 30,
+    backgroundColor: "#ffffff",
+    borderRadius: 15,
+    borderWidth: 1,
+  },
+  cutoutCircleLeft: {
+    marginLeft: -15,
+  },
+  bottomSection: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 4,
+    marginTop: 2,
   },
   actionBtn: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
   },
   actionBtnText: {
-    color: '#0066ff',
-    fontSize: 15,
-    fontWeight: '600',
+    color: "#1b62cc",
+    fontSize: 13,
+    fontFamily: "Montserrat_400Regular",
   },
   verticalDivider: {
-    width: 1,
-    height: 18,
-    backgroundColor: '#e2e8f0',
+    width: 1.5,
+    height: 15,
+    backgroundColor: "#d0d0d0",
   },
 });
-

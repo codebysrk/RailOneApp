@@ -7,12 +7,12 @@ export interface OfferingItem {
 }
 
 export const APP_OFFERINGS: OfferingItem[] = [
-  { id: '1', title: 'Search\nTrains', type: 'search', bg: '#fdf0f4', color: '#f472b6' },
-  { id: '2', title: 'PNR\nStatus', type: 'pnr', bg: '#f0fdf4', color: '#22c55e' },
-  { id: '3', title: 'Coach\nPosition', type: 'coach', bg: '#f0f9ff', color: '#3b82f6' },
-  { id: '4', title: 'Track Your\nTrain', type: 'track', bg: '#fefce8', color: '#eab308' },
-  { id: '5', title: 'Order\nFood', type: 'food', bg: '#eef2ff', color: '#5b5ea6' },
-  { id: '6', title: 'File\nRefund', type: 'refund', bg: '#f1f5f9', color: '#374151' },
-  { id: '7', title: 'Rail\nMadad', type: 'madad', bg: '#fff1f2', color: '#f43f5e' },
-  { id: '8', title: 'Go To\nWAVES', type: 'waves', bg: '#5e6178', color: '#ffffff' },
+  { id: '1', title: 'Search\nTrains', type: 'search', bg: '#fef0f2', color: '#ec4899' },
+  { id: '2', title: 'PNR\nStatus', type: 'pnr', bg: '#ebfae9', color: '#16a34a' },
+  { id: '3', title: 'Coach\nPosition', type: 'coach', bg: '#e8f7ff', color: '#2563eb' },
+  { id: '4', title: 'Track Your\nTrain', type: 'track', bg: '#fef7e1', color: '#f59e0b' },
+  { id: '5', title: 'Order\nFood', type: 'food', bg: '#e0e5fe', color: '#4338ca' },
+  { id: '6', title: 'File\nRefund', type: 'refund', bg: '#ebeef2', color: '#334155' },
+  { id: '7', title: 'Rail\nMadad', type: 'madad', bg: '#fde9ea', color: '#ef4444' },
+  { id: '8', title: 'Go To\nWAVES', type: 'waves', bg: '#5d5f78', color: '#ffffff' },
 ];

@@ -2,10 +2,12 @@ import { Platform } from 'react-native';
 
 export const typography = {
   family: {
-    regular: Platform.select({ ios: 'Roboto-Regular', android: 'Roboto_400Regular', default: 'sans-serif' }),
-    medium: Platform.select({ ios: 'Roboto-Medium', android: 'Roboto_500Medium', default: 'sans-serif-medium' }),
-    bold: Platform.select({ ios: 'Roboto-Bold', android: 'Roboto_700Bold', default: 'sans-serif' }),
-    black: Platform.select({ ios: 'Roboto-Black', android: 'Roboto_900Black', default: 'sans-serif' }),
+    regular: 'Montserrat_400Regular',
+    medium: 'Montserrat_500Medium',
+    semibold: 'Montserrat_600SemiBold',
+    bold: 'Montserrat_700Bold',
+    extrabold: 'Montserrat_800ExtraBold',
+    black: 'Montserrat_900Black',
   },
   sizes: {
     xs: 10,

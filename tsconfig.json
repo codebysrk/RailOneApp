@@ -8,5 +8,6 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true
   },
+  "exclude": ["node_modules", "homescreen", "dist", "dist-test"],
   "extends": "expo/tsconfig.base"
 }

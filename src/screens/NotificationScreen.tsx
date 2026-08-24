@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppHeader } from '@/components/common';
@@ -49,7 +50,7 @@ export const NotificationScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
       >
         {mockNotifications.map((item) => (
-          <View key={item.id} style={styles.notificationItem}>
+          <View key={`notif-${item.id}`} style={styles.notificationItem}>
             {/* Header Row */}
             <View style={styles.itemHeaderRow}>
               <Text style={styles.itemTitle}>{item.title}</Text>
@@ -80,7 +81,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
   },
   scrollContent: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 10,
     paddingTop: 16,
     paddingBottom: 24,
   },

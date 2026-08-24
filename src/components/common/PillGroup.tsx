@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    flexWrap: 'nowrap',
+    flexWrap: 'wrap',
   },
   pillBtn: {
     paddingVertical: 7,

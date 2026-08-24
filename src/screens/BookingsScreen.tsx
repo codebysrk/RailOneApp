@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  ScrollView,
+  SectionList,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
 import { useNavigation } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import Svg, { Path } from "react-native-svg";
 import { FirebaseService, StorageService } from "@/services";
 import { useAuth } from "@/context/AuthContext";
@@ -19,10 +21,11 @@ const DEFAULT_UPCOMING: TicketData[] = [
     id: "up-1",
     pnr: "2160978001",
     train: "12279 (TAJ EXPRESS)",
-    date: "Sat, 29 Aug 26",
+    date: "Sat, 29 Aug 2026",
     source: "MORENA",
     dest: "HAZRAT NIZAMUDDIN JN",
     duration: "4h:8m",
+    distance: "238 km",
     status: "upcoming",
     moduleType: "RESERVED",
   },
@@ -30,10 +33,11 @@ const DEFAULT_UPCOMING: TicketData[] = [
     id: "up-2",
     pnr: "2261626145",
     train: "12279 (TAJ EXPRESS)",
-    date: "Sat, 29 Aug 26",
+    date: "Sat, 29 Aug 2026",
     source: "MORENA",
     dest: "HAZRAT NIZAMUDDIN JN",
     duration: "4h:7m",
+    distance: "238 km",
     status: "upcoming",
     moduleType: "RESERVED",
   },
@@ -44,10 +48,11 @@ const DEFAULT_COMPLETED: TicketData[] = [
     id: "comp-1",
     pnr: "6835493350",
     train: "20423 (PATALKOT SF EXP)",
-    date: "Thu, 30 Jul 26",
+    date: "Thu, 30 Jul 2026",
     source: "CHHINDWARA JN.",
     dest: "GWALIOR JN.",
     duration: "12h:41m",
+    distance: "647 km",
     status: "completed",
     moduleType: "RESERVED",
   },
@@ -55,10 +60,11 @@ const DEFAULT_COMPLETED: TicketData[] = [
     id: "comp-2",
     pnr: "2841446468",
     train: "12280 (TAJ EXPRESS)",
-    date: "Sun, 9 Aug 26",
+    date: "Sun, 09 Aug 2026",
     source: "HAZRAT NIZAMUDDIN JN",
     dest: "MORENA",
     duration: "4h:10m",
+    distance: "238 km",
     status: "completed",
     moduleType: "RESERVED",
   },
@@ -66,40 +72,50 @@ const DEFAULT_COMPLETED: TicketData[] = [
 
 // Exact Sort Descending Header Icon from screenshot
 const HeaderSortIcon = ({ color = "#ffffff", size = 22 }: { color?: string; size?: number }) => (
-  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-    <Path d="M4 6H13M4 12H11M4 18H8" stroke={color} strokeWidth={2.2} strokeLinecap="round" />
-    <Path d="M17 5V19M17 19L13.5 15.5M17 19L20.5 15.5" stroke={color} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
-  </Svg>
+  <FontAwesome5 name="sort-amount-down-alt" size={size} color={color} />
 );
 
-// Exact Ticket Tab Icon from screenshot
 const TabTicketIcon = ({ color, isSelected, tab }: { color: string; isSelected: boolean; tab: string }) => {
-  if (tab === "All" && isSelected) {
-    return (
-      <Svg width={24} height={18} viewBox="0 0 24 18" fill="none">
-        <Path
-          d="M2 3.5C2 2.67 2.67 2 3.5 2H20.5C21.33 2 22 2.67 22 3.5V6.5C20.9 6.5 20 7.4 20 8.5C20 9.6 20.9 10.5 22 10.5V14.5C22 15.33 21.33 16 20.5 16H3.5C2.67 16 2 15.33 2 14.5V10.5C3.1 10.5 4 9.6 4 8.5C4 7.4 3.1 6.5 2 6.5V3.5Z"
-          fill="#1e293b"
-          stroke="#1e293b"
-          strokeWidth={1.5}
-        />
-        <Path d="M14 6H19M14 10H17" stroke="#0066ff" strokeWidth={1.8} strokeLinecap="round" />
-      </Svg>
-    );
-  }
+  // Define fill colors based on tab
+  const getFillColor = () => {
+    if (!isSelected) return 'none';
+    switch (tab) {
+      case "Upcoming": return "#fcb76d";
+      case "Completed": return "#68cf96";
+      case "Cancelled": return "#f98383";
+      default: return "#69a5ff";
+    }
+  };
+
+  const outlineColor = isSelected ? "#1a1a1a" : "#8da0b3";
+  const backOutlineColor = "#8da0b3"; // Always grey for the back ticket
+
   return (
-    <Svg width={24} height={18} viewBox="0 0 24 18" fill="none">
+    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+      {/* Back Ticket */}
       <Path
-        d="M2 3.5C2 2.67 2.67 2 3.5 2H20.5C21.33 2 22 2.67 22 3.5V6.5C20.9 6.5 20 7.4 20 8.5C20 9.6 20.9 10.5 22 10.5V14.5C22 15.33 21.33 16 20.5 16H3.5C2.67 16 2 15.33 2 14.5V10.5C3.1 10.5 4 9.6 4 8.5C4 7.4 3.1 6.5 2 6.5V3.5Z"
-        fill={isSelected ? (tab === "Upcoming" ? "#f39c42" : tab === "Completed" ? "#2ea566" : tab === "Cancelled" ? "#ef4444" : "#1e293b") : "none"}
-        stroke={color}
-        strokeWidth={1.7}
+        d="M 8.5 5 H 19.5 A 1.5 1.5 0 0 1 21 6.5 V 8 A 2 2 0 0 0 21 12 V 13.5 A 1.5 1.5 0 0 1 19.5 15 H 8.5 A 1.5 1.5 0 0 1 7 13.5 V 6.5 A 1.5 1.5 0 0 1 8.5 5 Z"
+        stroke={backOutlineColor}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
-      {isSelected ? (
-        <Path d="M8 2V16" stroke="#ffffff" strokeWidth={1.2} strokeDasharray="2 2" />
-      ) : (
-        <Path d="M8 2V16M13 6H18M13 10H16" stroke={color} strokeWidth={1.3} strokeLinecap="round" />
-      )}
+      {/* Front Ticket */}
+      <Path
+        d="M 4.5 9 H 15.5 A 1.5 1.5 0 0 1 17 10.5 V 12 A 2 2 0 0 0 17 16 V 17.5 A 1.5 1.5 0 0 1 15.5 19 H 4.5 A 1.5 1.5 0 0 1 3 17.5 V 10.5 A 1.5 1.5 0 0 1 4.5 9 Z"
+        fill={getFillColor()}
+        stroke={outlineColor}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Inner Lines (Only Front Ticket) */}
+      <Path
+        d="M 6.5 12.5 H 9.5 M 6.5 15.5 H 12.5"
+        stroke={outlineColor}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+      />
     </Svg>
   );
 };
@@ -152,13 +168,13 @@ export const BookingsScreen = () => {
   const getFilterActiveColor = (tab: string) => {
     switch (tab) {
       case "Upcoming":
-        return "#e59344";
+        return "#fa9846";
       case "Completed":
         return "#2ea566";
       case "Cancelled":
         return "#ef4444";
       default:
-        return "#1e293b";
+        return "#0066ff";
     }
   };
 
@@ -167,98 +183,95 @@ export const BookingsScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
       <AppHeader
         title="My Bookings"
         variant="blue"
         onBack={() => navigation.navigate("HomeTab")}
         rightComponent={
           <TouchableOpacity activeOpacity={0.8}>
-            <HeaderSortIcon color="#ffffff" size={22} />
+            <HeaderSortIcon color="#ffffff" size={24} />
           </TouchableOpacity>
         }
       />
 
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
-      >
-        {(filter === "Upcoming" || filter === "All") && (
-          <View style={styles.section}>
+      <View style={styles.mainWrapper}>
+        <SectionList
+          style={styles.scrollView}
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+          sections={(() => {
+            const s: any[] = [];
+            if (filter === "Upcoming" || filter === "All") {
+              s.push({
+                title: `Upcoming (${upcomingList.length})`,
+                color: "#e59344",
+                icon: "ticket-outline",
+                emptyText: "No upcoming bookings found",
+                data: upcomingList,
+                status: "upcoming"
+              });
+            }
+            if (filter === "Completed" || filter === "All") {
+              s.push({
+                title: `Completed (${completedList.length})`,
+                color: "#2ea566",
+                icon: "checkmark-done-circle-outline",
+                emptyText: "No completed bookings yet",
+                data: completedList,
+                status: "completed"
+              });
+            }
+            if (filter === "Cancelled") {
+              s.push({
+                title: `Cancelled (0)`,
+                color: "#ef4444",
+                icon: "close-circle-outline",
+                emptyText: "No cancelled bookings found",
+                data: [],
+                status: "cancelled"
+              });
+            }
+            return s;
+          })()}
+          keyExtractor={(item: any, index) => `${item.status}-${item.id}-${index}`}
+          renderSectionHeader={({ section }: any) => (
             <View style={styles.sectionHeader}>
               <View style={styles.headerSpacer} />
-              <Text style={[styles.sectionTitle, { color: "#e59344" }]}>
-                Upcoming ({upcomingList.length})
+              <Text style={[styles.sectionTitle, { color: section.color }]}>
+                {section.title}
               </Text>
               <TouchableOpacity style={styles.refreshBtn} activeOpacity={0.7}>
                 <Ionicons name="sync-outline" size={19} color="#8da0b3" />
               </TouchableOpacity>
             </View>
-            {upcomingList.length === 0 ? (
-              <View style={styles.emptyContainer}>
-                <Ionicons name="ticket-outline" size={44} color="#cbd5e1" />
-                <Text style={styles.emptyText}>No upcoming bookings found</Text>
-              </View>
-            ) : (
-              upcomingList.map((t, idx) => (
-                <TicketCard
-                  key={`upcoming-${t.id}-${idx}`}
-                  ticket={t}
-                  status="upcoming"
-                  onOpen={() => openTicket(t)}
-                />
-              ))
-            )}
-          </View>
-        )}
-
-        {(filter === "Completed" || filter === "All") && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.headerSpacer} />
-              <Text style={[styles.sectionTitle, { color: "#2ea566" }]}>
-                Completed ({completedList.length})
-              </Text>
-              <TouchableOpacity style={styles.refreshBtn} activeOpacity={0.7}>
-                <Ionicons name="sync-outline" size={19} color="#8da0b3" />
-              </TouchableOpacity>
-            </View>
-            {completedList.length === 0 ? (
-              <View style={styles.emptyContainer}>
-                <Ionicons name="checkmark-done-circle-outline" size={44} color="#cbd5e1" />
-                <Text style={styles.emptyText}>No completed bookings yet</Text>
-              </View>
-            ) : (
-              completedList.map((t, idx) => (
-                <TicketCard
-                  key={`completed-${t.id}-${idx}`}
-                  ticket={t}
-                  status="completed"
-                  onOpen={() => openTicket(t)}
-                />
-              ))
-            )}
-          </View>
-        )}
-
-        {filter === "Cancelled" && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.headerSpacer} />
-              <Text style={[styles.sectionTitle, { color: "#ef4444" }]}>
-                Cancelled (0)
-              </Text>
-              <TouchableOpacity style={styles.refreshBtn} activeOpacity={0.7}>
-                <Ionicons name="sync-outline" size={19} color="#8da0b3" />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.emptyContainer}>
-              <Ionicons name="close-circle-outline" size={44} color="#cbd5e1" />
-              <Text style={styles.emptyText}>No cancelled bookings found</Text>
-            </View>
-          </View>
-        )}
-      </ScrollView>
+          )}
+          renderItem={({ item, section }: any) => (
+            <TicketCard
+              ticket={item}
+              status={section.status}
+              onOpen={() => openTicket(item)}
+              onBookAgain={() =>
+                navigation.navigate("Unreserved", {
+                  source: item.source,
+                  dest: item.dest,
+                })
+              }
+            />
+          )}
+          renderSectionFooter={({ section }: any) => {
+            if (section.data.length === 0) {
+              return (
+                <View style={[styles.emptyContainer, { marginBottom: 24 }]}>
+                  <Ionicons name={section.icon} size={44} color="#cbd5e1" />
+                  <Text style={styles.emptyText}>{section.emptyText}</Text>
+                </View>
+              );
+            }
+            return <View style={{ height: 16 }} />; // Adds spacing below non-empty sections
+          }}
+          stickySectionHeadersEnabled={false}
+        />
 
       {/* Bottom Filter Navigation Bar */}
       <View style={styles.filterBarWrapper}>
@@ -287,9 +300,10 @@ export const BookingsScreen = () => {
                       styles.filterTabText,
                       {
                         color: isSelected ? activeColor : "#8da0b3",
-                        fontWeight: isSelected ? "700" : "500",
+                        fontFamily: isSelected ? "Montserrat_700Bold" : "Montserrat_500Medium",
                       },
                     ]}
+                    numberOfLines={1}
                   >
                     {tab}
                   </Text>
@@ -299,13 +313,16 @@ export const BookingsScreen = () => {
           )}
         </View>
       </View>
+      </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#ffffff" },
-  scroll: { paddingHorizontal: 16, paddingTop: 14, paddingBottom: 90 },
+  container: { flex: 1, backgroundColor: "#0066ff" },
+  mainWrapper: { flex: 1, backgroundColor: "#ffffff" },
+  scrollView: { flex: 1, backgroundColor: "#ffffff" },
+  scroll: { paddingHorizontal: 10, paddingTop: 14, paddingBottom: 20 },
   section: { marginBottom: 16 },
   sectionHeader: {
     flexDirection: "row",
@@ -343,15 +360,15 @@ const styles = StyleSheet.create({
   },
 
   filterBarWrapper: {
-    backgroundColor: "#e8f4fd",
+    backgroundColor: "#e7f6fd",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    borderWidth: 1,
-    borderColor: "#c5e1f7",
+    borderWidth: 1.5,
+    borderColor: "#d1eaf7",
     borderBottomWidth: 0,
     paddingHorizontal: 8,
     paddingTop: 8,
-    paddingBottom: 8,
+    paddingBottom: Platform.OS === 'ios' ? 20 : 10,
   },
   filterBar: {
     flexDirection: "row",
@@ -363,19 +380,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 8,
-    borderRadius: 14,
+    borderRadius: 16,
     marginHorizontal: 3,
   },
   filterTabActive: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#fcfcfc",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   filterTabText: {
-    fontSize: 11.5,
+    fontSize: 11,
     marginTop: 4,
+    letterSpacing: 0.2,
   },
 });

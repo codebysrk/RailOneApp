@@ -7,17 +7,14 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   Animated,
-  Dimensions,
   Share,
   ScrollView,
   Alert,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from "@/context/AuthContext";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const DRAWER_WIDTH = SCREEN_WIDTH * 0.84;
 
 type Props = {
   visible: boolean;
@@ -32,8 +29,10 @@ type MenuItem = {
 };
 
 export const MenuDrawer = ({ visible, onClose }: Props) => {
+  const { width } = useWindowDimensions();
+  const drawerWidth = Math.min(width * 0.84, 360);
   const { user, logout } = useAuth();
-  const translateX = useRef(new Animated.Value(DRAWER_WIDTH)).current;
+  const translateX = useRef(new Animated.Value(drawerWidth)).current;
 
   useEffect(() => {
     if (visible) {
@@ -45,12 +44,12 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
       }).start();
     } else {
       Animated.timing(translateX, {
-        toValue: DRAWER_WIDTH,
+        toValue: drawerWidth,
         duration: 200,
         useNativeDriver: true,
       }).start();
     }
-  }, [visible]);
+  }, [visible, drawerWidth]);
 
   const handleShare = async () => {
     try {
@@ -98,7 +97,7 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
         <View style={styles.backdrop} />
       </TouchableWithoutFeedback>
 
-      <Animated.View style={[styles.drawer, { transform: [{ translateX }] }]}>
+      <Animated.View style={[styles.drawer, { width: drawerWidth, transform: [{ translateX }] }]}>
         <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
           <ScrollView
             contentContainerStyle={styles.scroll}
@@ -132,7 +131,7 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
             <View style={styles.menuList}>
               {menuItems.map((item) => (
                 <TouchableOpacity
-                  key={item.id}
+                  key={`menu-drawer-${item.id}`}
                   style={styles.menuRow}
                   activeOpacity={0.65}
                   onPress={item.onPress}
@@ -171,7 +170,6 @@ const styles = StyleSheet.create({
     top: 0,
     right: 0,
     bottom: 0,
-    width: DRAWER_WIDTH,
     backgroundColor: "#ffffff",
     borderTopLeftRadius: 32,
     borderBottomLeftRadius: 32,
@@ -229,6 +227,8 @@ const styles = StyleSheet.create({
   walletLeft: {
     flexDirection: "row",
     alignItems: "center",
+    flex: 1,
+    marginRight: 8,
   },
   walletIconBox: {
     marginRight: 10,
@@ -237,6 +237,7 @@ const styles = StyleSheet.create({
   },
   walletTextContainer: {
     justifyContent: "center",
+    flexShrink: 1,
   },
   walletLabel: {
     fontSize: 12.5,

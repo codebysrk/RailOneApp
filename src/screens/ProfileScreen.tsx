@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView,
-  Modal, TextInput, ActivityIndicator, Dimensions
+  Modal, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform, useWindowDimensions
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import { StorageService, SavedPassenger } from '@/services/storage/storage.service';
-
-const { width } = Dimensions.get('window');
+import { FocusAwareStatusBar } from '@/components/common';
 
 export const ProfileScreen = () => {
+  const { width } = useWindowDimensions();
+  const gridBoxWidth = (width - 40) / 3;
   const { user, logout, updateUserProfile, addWalletBalance } = useAuth();
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
@@ -129,11 +131,11 @@ export const ProfileScreen = () => {
 
   return (
     <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+      <FocusAwareStatusBar backgroundColor="#e4f7fc" barStyle="dark-content" />
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         
-        {/* 1. Header Section */}
-        <View style={[styles.headerBg, { paddingTop: insets.top + 16 }]}>
-          <TouchableOpacity style={[styles.backBtn, { top: insets.top + 12 }]} onPress={() => navigation.goBack()}>
+        <View style={styles.headerBg}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
             <Ionicons name="chevron-back" size={24} color="#0066ff" />
           </TouchableOpacity>
           
@@ -156,7 +158,6 @@ export const ProfileScreen = () => {
           </View>
         </View>
 
-        {/* 2. Wallet Card (Overlapping Header) */}
         <View style={styles.walletCard}>
           <View style={styles.walletLeft}>
             <View style={styles.walletIcon}>
@@ -168,7 +169,7 @@ export const ProfileScreen = () => {
             </View>
           </View>
           <View style={styles.walletRight}>
-            <TouchableOpacity style={{ marginRight: 8 }}>
+            <TouchableOpacity style={styles.mr8}>
               <Ionicons name="refresh" size={22} color="#0066ff" />
             </TouchableOpacity>
             <TouchableOpacity style={styles.addBtnBlue} onPress={() => setModalVisible(true)}>
@@ -177,29 +178,17 @@ export const ProfileScreen = () => {
           </View>
         </View>
 
-        {/* 3. Profile Progress Card */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Profile Complete</Text>
-          <View style={styles.progressRow}>
-            <View style={styles.progressBg}>
-              <View style={styles.progressFill} />
-            </View>
-            <Text style={styles.progressText}>100%</Text>
-          </View>
-        </View>
-
-        {/* 4. Saved Passengers */}
         <View style={styles.passContainer}>
           <View style={styles.passHeader}>
             <View style={styles.passHeaderLeft}>
               <Ionicons name="people" size={28} color="#f59e0b" />
-              <View style={{ marginLeft: 8 }}>
+              <View style={styles.ml8}>
                 <Text style={styles.passHeaderTitle}>Saved Passengers</Text>
                 <Text style={styles.passHeaderSub}>Add/Edit Passenger info</Text>
               </View>
             </View>
             <View style={styles.passHeaderRight}>
-              <TouchableOpacity style={{ marginRight: 10 }} onPress={loadPassengers}>
+              <TouchableOpacity style={styles.mr10} onPress={loadPassengers}>
                 <Ionicons name="refresh" size={22} color="#f59e0b" />
               </TouchableOpacity>
               <TouchableOpacity style={styles.addBtnOrange} onPress={() => setAddPassengerVisible(true)}>
@@ -215,7 +204,7 @@ export const ProfileScreen = () => {
               </View>
             ) : (
               passengers.map((p, idx) => (
-                <View key={p.id || idx} style={[styles.passItem, idx === passengers.length - 1 && { borderBottomWidth: 0 }]}>
+                <View key={p.id || idx} style={[styles.passItem, idx === passengers.length - 1 && styles.noBorderBottom]}>
                   <View style={styles.pInfo}>
                     <View style={styles.pAvatar}>
                       <Ionicons name="person" size={16} color="#f97316" />
@@ -225,9 +214,9 @@ export const ProfileScreen = () => {
                         <Text style={styles.pName}>{p.name}</Text>
                         <Ionicons name="checkmark-circle-outline" size={14} color="#94a3b8" />
                       </View>
-                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <View style={styles.pSubRow}>
                         <Text style={styles.pSub}>{p.age} Y, {p.gender}, {p.berthPreference || 'WS'} | {p.foodPreference || 'No Food'}</Text>
-                        {p.verified && <Ionicons name="checkmark-circle" size={14} color="#22c55e" style={{ marginLeft: 3 }} />}
+                        {p.verified && <Ionicons name="checkmark-circle" size={14} color="#22c55e" style={styles.ml3} />}
                       </View>
                     </View>
                   </View>
@@ -242,40 +231,39 @@ export const ProfileScreen = () => {
           </View>
         </View>
 
-        {/* 5. Grid Options */}
         <View style={styles.grid}>
-          <TouchableOpacity style={styles.gridBox}>
-            <View style={[styles.gridIcon, { backgroundColor: '#cffafe' }]}>
+          <TouchableOpacity style={[styles.gridBox, { width: gridBoxWidth }]}>
+            <View style={[styles.gridIcon, styles.gridCyan]}>
               <Ionicons name="lock-closed" size={22} color="#06b6d4" />
             </View>
             <Text style={styles.gridText}>Change{"\n"}Password</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.gridBox}>
-            <View style={[styles.gridIcon, { backgroundColor: '#dcfce7' }]}>
+          <TouchableOpacity style={[styles.gridBox, { width: gridBoxWidth }]}>
+            <View style={[styles.gridIcon, styles.gridGreen]}>
               <Ionicons name="person-circle" size={24} color="#22c55e" />
             </View>
             <Text style={styles.gridText}>My{"\n"}Account</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.gridBox}>
-            <View style={[styles.gridIcon, { backgroundColor: '#f3e8ff' }]}>
+          <TouchableOpacity style={[styles.gridBox, { width: gridBoxWidth }]}>
+            <View style={[styles.gridIcon, styles.gridPurple]}>
               <Ionicons name="finger-print" size={22} color="#a855f7" />
             </View>
             <Text style={styles.gridText}>Biometric</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.gridBox}>
-            <View style={[styles.gridIcon, { backgroundColor: '#cffafe' }]}>
+          <TouchableOpacity style={[styles.gridBox, { width: gridBoxWidth }]}>
+            <View style={[styles.gridIcon, styles.gridCyan]}>
               <Ionicons name="ticket" size={22} color="#06b6d4" />
             </View>
             <Text style={styles.gridText}>Transfer{"\n"}Ticket</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.gridBox}>
-            <View style={[styles.gridIcon, { backgroundColor: '#ffedd5' }]}>
+          <TouchableOpacity style={[styles.gridBox, { width: gridBoxWidth }]}>
+            <View style={[styles.gridIcon, styles.gridOrange]}>
               <Ionicons name="list" size={22} color="#f97316" />
             </View>
             <Text style={styles.gridText}>My{"\n"}Transaction</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.gridBox}>
-            <View style={[styles.gridIcon, { backgroundColor: '#fef08a' }]}>
+          <TouchableOpacity style={[styles.gridBox, { width: gridBoxWidth }]}>
+            <View style={[styles.gridIcon, styles.gridYellow]}>
               <Ionicons name="card" size={22} color="#eab308" />
             </View>
             <Text style={styles.gridText}>DeLink{"\n"}Aadhar</Text>
@@ -289,8 +277,7 @@ export const ProfileScreen = () => {
 
       </ScrollView>
 
-      {/* Add Passenger Modal */}
-      <Modal visible={addPassengerVisible} transparent animationType="fade" onRequestClose={() => setAddPassengerVisible(false)}>
+      <Modal visible={addPassengerVisible} transparent animationType="slide" onRequestClose={() => setAddPassengerVisible(false)}>
         <View style={styles.modalBackdrop}>
           <View style={styles.rechargeBox}>
             <View style={styles.modalHeaderRow}>
@@ -301,14 +288,14 @@ export const ProfileScreen = () => {
             </View>
             <Text style={styles.fieldLabel}>Passenger Full Name</Text>
             <TextInput style={styles.fieldInput} value={pName} onChangeText={setPName} placeholder="Enter Full Name" />
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-              <View style={{ flex: 1 }}>
+            <View style={styles.formRowGap10}>
+              <View style={styles.flexOne}>
                 <Text style={styles.fieldLabel}>Age</Text>
                 <TextInput style={styles.fieldInput} keyboardType="numeric" value={pAge} onChangeText={setPAge} placeholder="Age" maxLength={3} />
               </View>
-              <View style={{ flex: 1 }}>
+              <View style={styles.flexOne}>
                 <Text style={styles.fieldLabel}>Gender</Text>
-                <View style={{ flexDirection: 'row', gap: 6, marginTop: 4 }}>
+                <View style={styles.genderRow}>
                   {(['M', 'F', 'T'] as const).map(g => (
                     <TouchableOpacity key={g} style={[styles.genderBtn, pGender === g && styles.genderBtnActive]} onPress={() => setPGender(g)}>
                       <Text style={[styles.genderText, pGender === g && styles.genderTextActive]}>{g}</Text>
@@ -324,7 +311,6 @@ export const ProfileScreen = () => {
         </View>
       </Modal>
 
-      {/* Modals from original code */}
       <Modal visible={modalVisible} transparent animationType="fade" onRequestClose={() => setModalVisible(false)}>
         <View style={styles.modalBackdrop}>
           <View style={styles.rechargeBox}>
@@ -341,7 +327,7 @@ export const ProfileScreen = () => {
             </View>
             <View style={styles.quickPillsRow}>
               {['100', '250', '500', '1000'].map((p) => (
-                <TouchableOpacity key={p} style={[styles.quickPill, amount === p && styles.quickPillActive]} onPress={() => setAmount(p)}>
+                <TouchableOpacity key={`quick-pill-${p}`} style={[styles.quickPill, amount === p && styles.quickPillActive]} onPress={() => setAmount(p)}>
                   <Text style={[styles.quickPillText, amount === p && styles.quickPillTextActive]}>+₹{p}</Text>
                 </TouchableOpacity>
               ))}
@@ -384,7 +370,7 @@ const styles = StyleSheet.create({
   
   headerBg: {
     backgroundColor: '#e4f7fc',
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingBottom: 24,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
@@ -394,14 +380,18 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     position: 'absolute',
-    left: 12,
+    left: 10,
     width: 36,
     height: 36,
     borderRadius: 18,
-    borderWidth: 1,
-    borderColor: '#93c5fd',
+    backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 1 }
   },
   avatar: {
     width: 60,
@@ -442,7 +432,7 @@ const styles = StyleSheet.create({
   walletCard: {
     backgroundColor: '#fff',
     borderRadius: 14,
-    marginHorizontal: 12,
+    marginHorizontal: 10,
     marginBottom: 10,
     borderWidth: 1,
     borderColor: '#f1f5f9',
@@ -452,7 +442,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 1 },
     padding: 10,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -471,7 +461,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: '#fff',
     borderRadius: 14,
-    marginHorizontal: 12,
+    marginHorizontal: 10,
     marginBottom: 10,
     borderWidth: 1,
     borderColor: '#f1f5f9',
@@ -487,7 +477,7 @@ const styles = StyleSheet.create({
   passContainer: {
     backgroundColor: '#fff',
     borderRadius: 14,
-    marginHorizontal: 12,
+    marginHorizontal: 10,
     marginBottom: 10,
     borderWidth: 1,
     borderColor: '#f1f5f9',
@@ -525,7 +515,6 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   gridBox: {
-    width: (width - 40) / 3,
     backgroundColor: '#fff',
     borderRadius: 12,
     borderWidth: 1,
@@ -545,6 +534,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 4,
   },
+  gridCyan: { backgroundColor: '#cffafe' },
+  gridGreen: { backgroundColor: '#dcfce7' },
+  gridPurple: { backgroundColor: '#f3e8ff' },
+  gridOrange: { backgroundColor: '#ffedd5' },
+  gridYellow: { backgroundColor: '#fef08a' },
   gridText: { fontSize: 10.5, fontWeight: '600', color: '#1e293b', textAlign: 'center', lineHeight: 13 },
 
   logoutBtn: {
@@ -563,7 +557,7 @@ const styles = StyleSheet.create({
 
   // Modals
   modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 },
-  rechargeBox: { backgroundColor: '#fff', width: '100%', borderRadius: 20, padding: 20, elevation: 5 },
+  rechargeBox: { backgroundColor: '#fff', width: '100%', maxWidth: 420, borderRadius: 20, padding: 20, elevation: 5 },
   modalHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   modalHeaderTitle: { fontSize: 18, fontWeight: '700', color: '#1e293b' },
   modalSub: { fontSize: 13, color: '#64748b', marginBottom: 16 },
@@ -583,4 +577,17 @@ const styles = StyleSheet.create({
   mobileInputRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 10, paddingHorizontal: 12, marginBottom: 18 },
   countryCode: { fontSize: 15, fontWeight: '700', color: '#64748b', marginRight: 8 },
   mobileInput: { flex: 1, fontSize: 15, color: '#1e293b', paddingVertical: 10 },
+  scrollContent: { paddingBottom: 40 },
+  mr8: { marginRight: 8 },
+  ml8: { marginLeft: 8 },
+  mr10: { marginRight: 10 },
+  pSubRow: { flexDirection: 'row', alignItems: 'center' },
+  ml3: { marginLeft: 3 },
+  formRowGap10: { flexDirection: 'row', gap: 10 },
+  flexOne: { flex: 1 },
+  genderRow: { flexDirection: 'row', gap: 6, marginTop: 4 },
+  noBorderBottom: { borderBottomWidth: 0 },
+  linkRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  linkLeft: { flexDirection: 'row', alignItems: 'center' },
+  linkText: { fontSize: 14, fontWeight: '600', color: '#1e293b', marginLeft: 10 },
 });

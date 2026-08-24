@@ -45,12 +45,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#f1f5f9',
     borderRadius: 12,
-    padding: 4,
-    marginBottom: spacing.lg,
+    padding: 3,
+    marginBottom: 16,
   },
   segmentBtn: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 8,
     alignItems: 'center',
     borderRadius: 10,
   },
@@ -59,9 +59,9 @@ const styles = StyleSheet.create({
     ...elevation.sm,
   },
   segmentText: {
-    fontSize: 14,
+    fontSize: 13.5,
+    fontFamily: 'Montserrat_600SemiBold',
     color: colors.textMain,
-    fontWeight: '600',
   },
   segmentTextActive: {
     color: colors.brandBlue,

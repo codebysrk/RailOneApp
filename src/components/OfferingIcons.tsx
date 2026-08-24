@@ -1,65 +1,37 @@
 import React from 'react';
-import Svg, { Path, Circle, Rect, G } from 'react-native-svg';
+import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
+import Svg, { Path, Circle, Rect, G, Defs, Mask } from 'react-native-svg';
 
-export const SearchTrainsIcon = ({ color = '#f472b6', size = 32 }: { color?: string; size?: number }) => (
-  <Svg width={size} height={size} viewBox="0 0 36 36" fill="none">
-    {/* Route S-curve path */}
-    <Path
-      d="M10 28C10 28 14 28 17 25C20 22 17 18 20 15C23 12 27 12 27 12"
-      stroke={color}
-      strokeWidth="3"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    {/* Start point pin */}
-    <Circle cx="9" cy="28" r="4.5" fill={color} />
-    <Circle cx="9" cy="28" r="2" fill="#ffffff" />
-    {/* End point pin */}
-    <Path
-      d="M27 7C24.5 7 22.5 9 22.5 11.5C22.5 14.8 27 19.5 27 19.5C27 19.5 31.5 14.8 31.5 11.5C31.5 9 29.5 7 27 7Z"
-      fill={color}
-    />
-    <Circle cx="27" cy="11.5" r="1.8" fill="#ffffff" />
-  </Svg>
+export const SearchTrainsIcon = ({ color = '#f472b6', size = 31 }: { color?: string; size?: number }) => (
+  <FontAwesome5 name="route" size={size} color={color} />
 );
 
-export const PNRStatusIcon = ({ color = '#22c55e', size = 32 }: { color?: string; size?: number }) => (
-  <Svg width={size} height={size} viewBox="0 0 36 36" fill="none">
-    {/* Ticket with side notches */}
-    <Path
-      d="M5 11C5 9.89543 5.89543 9 7 9H29C30.1046 9 31 9.89543 31 11V14.5C29.6193 14.5 28.5 15.6193 28.5 17C28.5 18.3807 29.6193 19.5 31 19.5V23C31 24.1046 30.1046 25 29 25H7C5.89543 25 5 24.1046 5 23V19.5C6.38071 19.5 7.5 18.3807 7.5 17C7.5 15.6193 6.38071 14.5 5 14.5V11Z"
-      fill={color}
-    />
-    {/* 3 inner white stripes */}
-    <Rect x="12" y="12.5" width="12" height="2" rx="1" fill="#ffffff" />
-    <Rect x="12" y="16" width="12" height="2" rx="1" fill="#ffffff" />
-    <Rect x="12" y="19.5" width="12" height="2" rx="1" fill="#ffffff" />
+export const PNRStatusIcon = ({ color = '#0b5c1f', size = 32 }: { color?: string; size?: number }) => (
+  <Svg width={size} height={size} viewBox="0 0 800 400" fill="none">
+    <Defs>
+      <Mask id="pnr_cut">
+        <Rect width="800" height="400" fill="white" />
+        <Circle cx="0" cy="200" r="90" fill="black" />
+        <Circle cx="800" cy="200" r="90" fill="black" />
+        <Rect x="120" y="40" width="20" height="70" rx="10" fill="black" />
+        <Rect x="120" y="130" width="20" height="70" rx="10" fill="black" />
+        <Rect x="120" y="220" width="20" height="70" rx="10" fill="black" />
+        <Rect x="120" y="310" width="20" height="50" rx="10" fill="black" />
+        <Rect x="220" y="110" width="460" height="40" rx="20" fill="black" />
+        <Rect x="220" y="190" width="460" height="40" rx="20" fill="black" />
+        <Rect x="220" y="270" width="460" height="40" rx="20" fill="black" />
+      </Mask>
+    </Defs>
+    <Rect x="0" y="0" width="800" height="400" rx="40" fill={color} mask="url(#pnr_cut)" />
   </Svg>
 );
 
 export const CoachPositionIcon = ({ color = '#3b82f6', size = 32 }: { color?: string; size?: number }) => (
-  <Svg width={size} height={size} viewBox="0 0 36 36" fill="none">
-    {/* Streamlined train engine body */}
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
     <Path
-      d="M5 23.5H31V21C31 16 27.5 13 22 13H11C7 13 5 16 5 20V23.5Z"
       fill={color}
+      d="M4 15.5V8a2 2 0 0 1 2-2h8.5c1.1 0 2.1.4 2.8 1.2l3.5 3.5c.7.7 1.2 1.8 1.2 2.8v2a2 2 0 0 1-2 2H4zM6 8v3h4V8H6zm6 0v3h4V8h-4zm-8 9h16v1.5H4V17z"
     />
-    {/* Front curve slope */}
-    <Path
-      d="M5 20C5 16 8 13.5 13 13.5H23C28 13.5 31 16.5 31 21V23.5H5V20Z"
-      fill={color}
-    />
-    {/* Windshield / Windows */}
-    <Path
-      d="M8.5 16.5C8.5 15.5 9.5 15 11 15H15.5V18.5H8.5V16.5Z"
-      fill="#ffffff"
-    />
-    <Rect x="17.5" y="15" width="4.5" height="3.5" rx="0.5" fill="#ffffff" />
-    <Rect x="23.5" y="15" width="4.5" height="3.5" rx="0.5" fill="#ffffff" />
-    {/* Headlight */}
-    <Circle cx="8" cy="21.5" r="1.2" fill="#ffffff" />
-    {/* Lower track rails */}
-    <Rect x="4" y="25" width="28" height="2" rx="1" fill={color} />
   </Svg>
 );
 
@@ -87,26 +59,11 @@ export const TrackYourTrainIcon = ({ color = '#eab308', size = 32 }: { color?: s
   </Svg>
 );
 
-export const OrderFoodIcon = ({ color = '#5b5ea6', size = 32 }: { color?: string; size?: number }) => (
-  <Svg width={size} height={size} viewBox="0 0 36 36" fill="none">
-    {/* Beverage Cup & Straw */}
-    <Path d="M22 6L25 12" stroke={color} strokeWidth="2" strokeLinecap="round" />
+export const OrderFoodIcon = ({ color = '#33385d', size = 32 }: { color?: string; size?: number }) => (
+  <Svg width={size} height={size} viewBox="670 620 680 680" fill="none">
     <Path
-      d="M20 12H27.5L26 26H21.5L20 12Z"
       fill={color}
-    />
-    {/* Burger Top Bun */}
-    <Path
-      d="M6 18C6 14.5 9 12 13.5 12C17.5 12 19 14.5 19 18H6Z"
-      fill={color}
-    />
-    {/* Burger Patty & Layers */}
-    <Rect x="5" y="19.5" width="15" height="2" rx="1" fill={color} />
-    <Rect x="5" y="23" width="15" height="2" rx="1" fill={color} />
-    {/* Bottom Bun */}
-    <Path
-      d="M6 26.5C6 27.5 7.5 28.5 13.5 28.5C19.5 28.5 20 27.5 20 26.5H6Z"
-      fill={color}
+      d="M919.939 925.114C941.109 925.114 961.955 927.467 982.481 932.174C1003.01 936.876 1021.93 944.359 1039.25 954.625C1056.57 964.885 1071.44 978.036 1083.84 994.076C1096.24 1010.11 1104.79 1029.25 1109.49 1051.49C1110.78 1057.47 1109.51 1062.82 1105.69 1067.52C1101.87 1072.23 1096.94 1074.58 1090.89 1074.58H748.343C742.298 1074.58 737.361 1072.23 733.543 1067.52C729.724 1062.82 728.457 1057.47 729.742 1051.49C734.444 1029.25 742.996 1010.11 755.398 994.076C767.8 978.036 782.664 964.885 799.98 954.625C817.3 944.359 836.334 936.876 857.072 932.174C877.814 927.467 898.768 925.114 919.939 925.114ZM746.418 1159.26C740.539 1159.26 735.432 1157.08 731.104 1152.73C726.771 1148.38 724.607 1143.24 724.607 1137.33C724.607 1131.42 726.771 1126.32 731.104 1122.05C735.432 1117.77 740.539 1115.63 746.418 1115.63H1092.82C1098.7 1115.63 1103.8 1117.81 1108.13 1122.16C1112.46 1126.51 1114.63 1131.64 1114.63 1137.56C1114.63 1143.47 1112.46 1148.56 1108.13 1152.84C1103.8 1157.11 1098.7 1159.26 1092.82 1159.26H746.418ZM746.418 1243.93C740.539 1243.93 735.432 1241.76 731.104 1237.4C726.771 1233.05 724.607 1227.92 724.607 1222.01C724.607 1216.09 726.771 1211 731.104 1206.72C735.432 1202.45 740.539 1200.31 746.418 1200.31H1092.82C1098.7 1200.31 1103.8 1202.49 1108.13 1206.84C1112.46 1211.19 1114.63 1216.32 1114.63 1222.23C1114.63 1228.14 1112.46 1233.24 1108.13 1237.51C1103.8 1241.79 1098.7 1243.93 1092.82 1243.93H746.418ZM1153.12 1243.93V1067.52C1153.12 1022.43 1138.04 983.463 1107.89 950.63C1077.74 917.797 1040.43 896.888 995.956 887.908L987.616 816.065C986.759 810.078 988.287 805.052 992.196 800.99C996.105 796.928 1001 794.895 1006.86 794.895H1116.55V698.672C1116.55 693.221 1118.41 688.65 1122.12 684.962C1125.83 681.274 1130.43 679.431 1135.91 679.431C1141.39 679.431 1145.95 681.274 1149.59 684.962C1153.22 688.65 1155.04 693.221 1155.04 698.672V794.895H1267.94C1273.93 794.895 1278.74 796.982 1282.38 801.147C1286.01 805.318 1287.4 810.29 1286.55 816.065L1243.56 1226.61C1242.89 1231.42 1240.69 1235.51 1236.96 1238.88C1233.24 1242.25 1229.03 1243.93 1224.32 1243.93H1153.12Z"
     />
   </Svg>
 );
@@ -125,40 +82,14 @@ export const FileRefundIcon = ({ color = '#374151', size = 32 }: { color?: strin
   </Svg>
 );
 
-export const RailMadadIcon = ({ color = '#f43f5e', size = 32 }: { color?: string; size?: number }) => (
-  <Svg width={size} height={size} viewBox="0 0 36 36" fill="none">
-    {/* Stylized Interlocking Handshake at 45 degree angle */}
-    <G transform="rotate(-45 18 18)">
-      <Rect x="7" y="13" width="10" height="10" rx="3" fill={color} />
-      <Rect x="19" y="13" width="10" height="10" rx="3" fill={color} />
-      <Path
-        d="M13 11C13 9.89543 13.8954 9 15 9H21C22.1046 9 23 9.89543 23 11V15H13V11Z"
-        fill={color}
-      />
-      <Path
-        d="M13 21H23V25C23 26.1046 22.1046 27 21 27H15C13.8954 27 13 26.1046 13 25V21Z"
-        fill={color}
-      />
-      {/* 4 Gripping Finger Notches */}
-      <Rect x="13.5" y="14" width="2" height="8" rx="1" fill="#ffffff" />
-      <Rect x="17" y="14" width="2" height="8" rx="1" fill="#ffffff" />
-      <Rect x="20.5" y="14" width="2" height="8" rx="1" fill="#ffffff" />
-    </G>
-  </Svg>
+export const RailMadadIcon = ({ color = '#f43f5e', size = 31 }: { color?: string; size?: number }) => (
+  <MaterialIcons name="handshake" size={size} color={color} />
 );
 
 export const GoToWavesIcon = ({ color = '#ffffff', size = 32 }: { color?: string; size?: number }) => (
-  <Svg width={size} height={size} viewBox="0 0 36 36" fill="none">
-    {/* Center Spire */}
-    <Path d="M18 4L20 18H16L18 4Z" fill={color} />
-    {/* Left Wing */}
-    <Path d="M11 13L14.5 27H11L7 17.5L11 13Z" fill={color} />
-    {/* Center Left Stem */}
-    <Path d="M14.5 17L17 27H14.5L13 20L14.5 17Z" fill={color} />
-    {/* Center Right Stem */}
-    <Path d="M21.5 17L19 27H21.5L23 20L21.5 17Z" fill={color} />
-    {/* Right Wing */}
-    <Path d="M25 13L21.5 27H25L29 17.5L25 13Z" fill={color} />
+  <Svg width={size} height={size} viewBox="0 0 338 365" fill="none">
+    <Path fill={color} d="M164 29L122 281L117 278L86 177H38L91 344H151L164 257V29Z" />
+    <Path fill={color} d="M175 28V257L187 343H248L301 176H253L223 276L217 281L175 28Z" />
   </Svg>
 );
 

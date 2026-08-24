@@ -1,8 +1,9 @@
 import { doc, writeBatch, getDoc } from 'firebase/firestore';
 import { db } from '@/services/firebase/config';
 import { ALL_INDIAN_STATIONS, StationModel } from '@/constants/stations';
+import { VERIFIED_RAILWAY_SECTIONS, RailwaySection } from '@/constants/railwaySections';
 
-export { StationModel };
+export { StationModel, RailwaySection };
 
 export interface TrainModel {
   trainNumber: string;
@@ -17,6 +18,7 @@ export interface TrainModel {
 }
 
 export const INITIAL_STATIONS: StationModel[] = ALL_INDIAN_STATIONS;
+export const INITIAL_SECTIONS: RailwaySection[] = VERIFIED_RAILWAY_SECTIONS;
 
 export const INITIAL_TRAINS: TrainModel[] = [
   {
@@ -102,6 +104,11 @@ export const DatabaseSeedService = {
         batch.set(stationRef, station);
       });
 
+      INITIAL_SECTIONS.forEach((section) => {
+        const sectionRef = doc(db, 'railway_sections', section.id);
+        batch.set(sectionRef, section);
+      });
+
       INITIAL_TRAINS.forEach((train) => {
         const trainRef = doc(db, 'trains', train.trainNumber);
         batch.set(trainRef, train);
@@ -111,7 +118,7 @@ export const DatabaseSeedService = {
       batch.set(flagRef, { seeded: true, seededAt: new Date().toISOString() });
 
       await batch.commit();
-      console.log('✅ Firestore Master Stations & Trains auto-seeded successfully.');
+      console.log('✅ Firestore Master Stations, Railway Sections & Trains auto-seeded successfully.');
     } catch (error) {
       console.warn('⚠️ Firestore Seed check/execution note:', error);
     }
