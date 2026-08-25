@@ -1115,17 +1115,7 @@ export const AdminScreen = () => {
                   placeholder="Enter full name"
                   placeholderTextColor="#94a3b8"
                   value={name}
-                  onChangeText={(val) => {
-                    setName(val);
-                    if (!password && val.trim().length >= 2) {
-                      const firstName = val.trim().split(' ')[0].replace(/[^a-zA-Z0-9]/g, '');
-                      if (firstName) {
-                        const clean = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
-                        const rand = Math.floor(1000 + Math.random() * 9000);
-                        setPassword(`${clean}@${rand}`);
-                      }
-                    }
-                  }}
+                  onChangeText={setName}
                   autoCapitalize="words"
                 />
               </View>
@@ -1165,9 +1155,7 @@ export const AdminScreen = () => {
               <View style={styles.labelRow}>
                 <Text style={styles.label}>Password *</Text>
                 <TouchableOpacity onPress={() => generateRandomPassword()}>
-                  <Text style={styles.autoGenText}>
-                    🎲 Auto-Generate {name.trim() ? `(${name.trim().split(' ')[0]}@...)` : ''}
-                  </Text>
+                  <Text style={styles.autoGenText}>🎲 Auto-Generate</Text>
                 </TouchableOpacity>
               </View>
               <View style={styles.inputWrap}>
