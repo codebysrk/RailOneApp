@@ -110,7 +110,7 @@ export const HomeScreen = () => {
       case "pnr":
         return <PNRStatusIcon color={color} size={31} />;
       case "coach":
-        return <CoachPositionIcon color={color} size={30} />;
+        return <CoachPositionIcon color={color} size={30} bgColor="#e3f8fe" />;
       case "track":
         return <TrackYourTrainIcon color={color} size={30} />;
       case "food":
