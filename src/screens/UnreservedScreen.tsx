@@ -23,27 +23,31 @@ import { FirebaseService, StorageService, StationModel } from "@/services";
 const SideTrainIcon = ({
   size = 20,
   color = "#7a828e",
+  flipHorizontal = false,
 }: {
   size?: number;
   color?: string;
+  flipHorizontal?: boolean;
 }) => (
-  <Svg width={size} height={size} viewBox="0 0 16 16" fill="none">
-    <Path
-      d="M15 12.5 1 12.5l0 1 1 0 0 1 1 0 0 -1 2.5 0 0 1 1 0 0 -1 2.5 0 0 1 1 0 0 -1 2.5 0 0 1 1 0 0 -1 1.5 0 0 -1z"
-      fill={color}
-      strokeWidth={0.5}
-    />
-    <Path
-      d="M4 8H1v-1h3v-1H1v-1h3a1.00105 1.00105 0 0 1 1 1v1a1.00105 1.00105 0 0 1 -1 1Z"
-      fill={color}
-      strokeWidth={0.5}
-    />
-    <Path
-      d="m14.275 7.11525 -4.29 -3.9324A4.48875 4.48875 0 0 0 6.9441 2H1v1h5v2a1.00115 1.00115 0 0 0 1 1h4.57825l2.02085 1.85255A1.23615 1.23615 0 0 1 12.76365 10H1v1h11.76365a2.2363 2.2363 0 0 0 1.51125 -3.885ZM7 5V3.0027A3.4887 3.4887 0 0 1 9.3091 3.92L10.4873 5Z"
-      fill={color}
-      strokeWidth={0.5}
-    />
-  </Svg>
+  <View style={flipHorizontal ? styles.flipHorizontal : undefined}>
+    <Svg width={size} height={size} viewBox="0 0 16 16" fill="none">
+      <Path
+        d="M15 12.5 1 12.5l0 1 1 0 0 1 1 0 0 -1 2.5 0 0 1 1 0 0 -1 2.5 0 0 1 1 0 0 -1 2.5 0 0 1 1 0 0 -1 1.5 0 0 -1z"
+        fill={color}
+        strokeWidth={0.5}
+      />
+      <Path
+        d="M4 8H1v-1h3v-1H1v-1h3a1.00105 1.00105 0 0 1 1 1v1a1.00105 1.00105 0 0 1 -1 1Z"
+        fill={color}
+        strokeWidth={0.5}
+      />
+      <Path
+        d="m14.275 7.11525 -4.29 -3.9324A4.48875 4.48875 0 0 0 6.9441 2H1v1h5v2a1.00115 1.00115 0 0 0 1 1h4.57825l2.02085 1.85255A1.23615 1.23615 0 0 1 12.76365 10H1v1h11.76365a2.2363 2.2363 0 0 0 1.51125 -3.885ZM7 5V3.0027A3.4887 3.4887 0 0 1 9.3091 3.92L10.4873 5Z"
+        fill={color}
+        strokeWidth={0.5}
+      />
+    </Svg>
+  </View>
 );
 
 const mainTabs = [
@@ -295,6 +299,7 @@ export const UnreservedScreen = () => {
                     <SideTrainIcon
                       color={dest ? "#7a828e" : "#94a3b8"}
                       size={22}
+                      flipHorizontal
                     />
                     <Text
                       style={[
@@ -669,5 +674,8 @@ const styles = StyleSheet.create({
   compareIcon: {
     marginVertical: 4,
     transform: [{ scaleX: -1 }, { rotate: "-45deg" }], // 👈 Flipped + Tilted
+  },
+  flipHorizontal: {
+    transform: [{ scaleX: -1 }],
   },
 });
