@@ -10,11 +10,10 @@ import {
   FlatList,
   Alert,
 } from "react-native";
-import { StatusBar } from "expo-status-bar";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, Feather, MaterialIcons } from "@expo/vector-icons";
-import Svg, { Path, Circle } from "react-native-svg";
+import Svg, { Path } from "react-native-svg";
 import { colors } from "@/theme/colors";
 import { spacing, elevation } from "@/theme/spacing";
 import { AppHeader, SegmentedControl } from "@/components/common";
@@ -323,7 +322,12 @@ export const UnreservedScreen = () => {
 
               <TouchableOpacity
                 style={styles.secondaryBtn}
-                onPress={handleProceedToBook}
+                onPress={() => {
+                  Alert.alert(
+                    "Coming Soon",
+                    "Live train schedule and tracking will be available in an upcoming update."
+                  );
+                }}
                 activeOpacity={0.8}
               >
                 <Text style={styles.secondaryBtnText}>
@@ -332,11 +336,27 @@ export const UnreservedScreen = () => {
               </TouchableOpacity>
             </View>
           )}
+
+          {tab === "season" && (
+            <View style={styles.seasonContainer}>
+              <View style={styles.seasonIconWrap}>
+                <Ionicons name="calendar-outline" size={40} color="#0066ff" />
+              </View>
+              <Text style={styles.seasonTitle}>Season Ticket (Monthly / Quarterly)</Text>
+              <Text style={styles.seasonSubtitle}>
+                Issue and renew monthly & quarterly suburban railway season tickets.
+              </Text>
+              <View style={styles.seasonBadge}>
+                <Text style={styles.seasonBadgeText}>Feature Coming Soon</Text>
+              </View>
+            </View>
+          )}
         </View>
 
         <Text style={styles.recentTitle}>Recent Searches</Text>
         <ScrollView
           horizontal
+          nestedScrollEnabled
           showsHorizontalScrollIndicator={false}
           style={styles.recentScroll}
         >
@@ -420,6 +440,14 @@ export const UnreservedScreen = () => {
             <FlatList
               data={stations}
               keyExtractor={(item) => item.code}
+              ListEmptyComponent={
+                <View style={styles.emptyListWrap}>
+                  <Ionicons name="search-outline" size={38} color="#94a3b8" />
+                  <Text style={styles.emptyListText}>
+                    {searchQuery ? `No station found matching "${searchQuery}"` : "No stations available"}
+                  </Text>
+                </View>
+              }
               renderItem={({ item }) => (
                 <TouchableOpacity
                   style={styles.stationItem}
@@ -677,5 +705,62 @@ const styles = StyleSheet.create({
   },
   flipHorizontal: {
     transform: [{ scaleX: -1 }],
+  },
+  seasonContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 28,
+    paddingHorizontal: 16,
+  },
+  seasonIconWrap: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: "#eff6ff",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+  },
+  seasonTitle: {
+    fontFamily: "Montserrat_700Bold",
+    fontSize: 15,
+    color: "#1e3a8a",
+    textAlign: "center",
+    marginBottom: 6,
+  },
+  seasonSubtitle: {
+    fontFamily: "Montserrat_400Regular",
+    fontSize: 12.5,
+    color: "#64748b",
+    textAlign: "center",
+    lineHeight: 18,
+    marginBottom: 16,
+    maxWidth: 280,
+  },
+  seasonBadge: {
+    backgroundColor: "#e0f2fe",
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#bae6fd",
+  },
+  seasonBadgeText: {
+    fontFamily: "Montserrat_600SemiBold",
+    fontSize: 12,
+    color: "#0284c7",
+  },
+  emptyListWrap: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
+    paddingHorizontal: 20,
+  },
+  emptyListText: {
+    fontFamily: "Montserrat_500Medium",
+    fontSize: 13.5,
+    color: "#94a3b8",
+    textAlign: "center",
+    marginTop: 10,
   },
 });

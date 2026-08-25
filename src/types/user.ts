@@ -3,8 +3,7 @@ export interface UserProfile {
   name: string;
   email: string;
   mobile: string;
-  walletBalance: number;
-  createdAt?: string;
-  updatedAt?: string;
+  wallet: number;
+  createdAt?: any;
+  updatedAt?: any;
 }
-

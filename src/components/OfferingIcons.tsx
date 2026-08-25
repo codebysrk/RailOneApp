@@ -1,30 +1,33 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
-import Svg, { Path, Circle, Rect, G, Defs, Mask } from 'react-native-svg';
+import Svg, { Path, Circle, Rect, Defs, Mask } from 'react-native-svg';
 
 export const SearchTrainsIcon = ({ color = '#f472b6', size = 31 }: { color?: string; size?: number }) => (
   <FontAwesome5 name="route" size={size} color={color} />
 );
 
-export const PNRStatusIcon = ({ color = '#0b5c1f', size = 32 }: { color?: string; size?: number }) => (
-  <Svg width={size} height={size} viewBox="0 0 800 400" fill="none">
-    <Defs>
-      <Mask id="pnr_cut">
-        <Rect width="800" height="400" fill="white" />
-        <Circle cx="0" cy="200" r="90" fill="black" />
-        <Circle cx="800" cy="200" r="90" fill="black" />
-        <Rect x="120" y="40" width="20" height="70" rx="10" fill="black" />
-        <Rect x="120" y="130" width="20" height="70" rx="10" fill="black" />
-        <Rect x="120" y="220" width="20" height="70" rx="10" fill="black" />
-        <Rect x="120" y="310" width="20" height="50" rx="10" fill="black" />
-        <Rect x="220" y="110" width="460" height="40" rx="20" fill="black" />
-        <Rect x="220" y="190" width="460" height="40" rx="20" fill="black" />
-        <Rect x="220" y="270" width="460" height="40" rx="20" fill="black" />
-      </Mask>
-    </Defs>
-    <Rect x="0" y="0" width="800" height="400" rx="40" fill={color} mask="url(#pnr_cut)" />
-  </Svg>
-);
+export const PNRStatusIcon = ({ color = '#0b5c1f', size = 32 }: { color?: string; size?: number }) => {
+  const maskId = useId ? `pnr_cut_${useId().replace(/:/g, '_')}` : 'pnr_cut';
+  return (
+    <Svg width={size} height={size} viewBox="0 0 800 400" fill="none">
+      <Defs>
+        <Mask id={maskId}>
+          <Rect width="800" height="400" fill="white" />
+          <Circle cx="0" cy="200" r="90" fill="black" />
+          <Circle cx="800" cy="200" r="90" fill="black" />
+          <Rect x="120" y="40" width="20" height="70" rx="10" fill="black" />
+          <Rect x="120" y="130" width="20" height="70" rx="10" fill="black" />
+          <Rect x="120" y="220" width="20" height="70" rx="10" fill="black" />
+          <Rect x="120" y="310" width="20" height="50" rx="10" fill="black" />
+          <Rect x="220" y="110" width="460" height="40" rx="20" fill="black" />
+          <Rect x="220" y="190" width="460" height="40" rx="20" fill="black" />
+          <Rect x="220" y="270" width="460" height="40" rx="20" fill="black" />
+        </Mask>
+      </Defs>
+      <Rect x="0" y="0" width="800" height="400" rx="40" fill={color} mask={`url(#${maskId})`} />
+    </Svg>
+  );
+};
 
 export const CoachPositionIcon = ({ color = '#3b82f6', size = 32 }: { color?: string; size?: number }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">

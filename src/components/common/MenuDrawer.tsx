@@ -38,7 +38,7 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
       // Reset to off-screen first, then animate in
       translateX.setValue(drawerWidth);
       opacity.setValue(0);
-      Animated.parallel([
+      const anim = Animated.parallel([
         Animated.timing(opacity, {
           toValue: 1,
           duration: 180,
@@ -51,9 +51,11 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
           stiffness: 180,
           mass: 0.8,
         }),
-      ]).start();
+      ]);
+      anim.start();
+      return () => anim.stop();
     }
-  }, [visible]);
+  }, [visible, drawerWidth, opacity, translateX]);
 
   const handleClose = () => {
     Animated.parallel([
@@ -96,12 +98,17 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
   const walletBalance =
     user?.wallet !== undefined ? user.wallet.toFixed(2) : "0.00";
 
+  const showInfoAlert = (title: string, msg: string) => {
+    handleClose();
+    Alert.alert(title, msg);
+  };
+
   const menuItems = [
     {
       id: "show-hide",
       label: "Show/Hide Services",
       icon: "bookmark" as const,
-      onPress: undefined,
+      onPress: () => showInfoAlert("Services", "All services are currently active."),
     },
     {
       id: "lang",
@@ -116,25 +123,25 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
       id: "faqs",
       label: "FAQs",
       icon: "chatbubble-ellipses" as const,
-      onPress: undefined,
+      onPress: () => showInfoAlert("FAQs", "Frequently asked questions and guides will be available in the next release."),
     },
     {
       id: "support",
       label: "Help & Support",
       icon: "headset" as const,
-      onPress: undefined,
+      onPress: () => showInfoAlert("Help & Support", "RailMadad helpline: Dial 139 for 24x7 Indian Railways passenger assistance."),
     },
     {
       id: "about",
       label: "About",
       icon: "information-circle" as const,
-      onPress: undefined,
+      onPress: () => showInfoAlert("About RailOne", `RailOne v${UpdateService.getCurrentVersion()}\nIndian Railways official mobile ticketing companion.`),
     },
     {
       id: "rate",
       label: "Rate Us",
       icon: "thumbs-up" as const,
-      onPress: undefined,
+      onPress: () => showInfoAlert("Rate Us", "Thank you for using RailOne! Rating options will open in Play Store."),
     },
     {
       id: "share",
@@ -195,7 +202,14 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
                   <Text style={styles.walletBalance}>₹ {walletBalance}</Text>
                 </View>
               </View>
-              <TouchableOpacity style={styles.addMoneyBtn} activeOpacity={0.82}>
+              <TouchableOpacity
+                style={styles.addMoneyBtn}
+                activeOpacity={0.82}
+                onPress={() => {
+                  handleClose();
+                  navigation.navigate("ProfileTab");
+                }}
+              >
                 <Text style={styles.addMoneyText}>Add Money</Text>
               </TouchableOpacity>
             </View>

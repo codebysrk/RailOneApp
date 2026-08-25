@@ -21,7 +21,6 @@ import {
   useRoute,
   useIsFocused,
 } from "@react-navigation/native";
-import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { AppHeader } from "@/components/common";
@@ -37,6 +36,15 @@ const ReverseSlidingBlock = React.memo(({ value }: { value: string }) => {
   const [currentVal, setCurrentVal] = useState(value);
   const [prevVal, setPrevVal] = useState<string | null>(null);
   const anim = useRef(new Animated.Value(0)).current;
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      anim.stopAnimation();
+    };
+  }, [anim]);
 
   useEffect(() => {
     if (value !== currentVal) {
@@ -44,14 +52,22 @@ const ReverseSlidingBlock = React.memo(({ value }: { value: string }) => {
       setCurrentVal(value);
       anim.setValue(0);
 
-      Animated.timing(anim, {
+      const animation = Animated.timing(anim, {
         toValue: 1,
         duration: 520,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
-      }).start(() => {
-        setPrevVal(null);
       });
+
+      animation.start(({ finished }) => {
+        if (finished && isMountedRef.current) {
+          setPrevVal(null);
+        }
+      });
+
+      return () => {
+        animation.stop();
+      };
     }
   }, [value, currentVal, anim]);
 
@@ -234,25 +250,32 @@ export const TicketScreen = () => {
   }, [isActive]);
 
   useEffect(() => {
-    if (timeLeft === 0) {
+    // FIX H3: only reset navigation if screen is still focused
+    if (timeLeft === 0 && isFocused) {
       navigation.reset({
         index: 0,
         routes: [{ name: "Main" }],
       });
     }
-  }, [timeLeft, navigation]);
+  }, [timeLeft, isFocused, navigation]);
 
   useEffect(() => {
     if (timeLeft === TOTAL_DURATION) {
       progressAnim.setValue(0);
-    } else {
-      Animated.timing(progressAnim, {
-        toValue: 1 - timeLeft / TOTAL_DURATION,
-        duration: 1000,
-        easing: Easing.linear,
-        useNativeDriver: false,
-      }).start();
+      return;
     }
+    // FIX M8: stop any previous running animation before starting next tick
+    progressAnim.stopAnimation();
+    const timingAnim = Animated.timing(progressAnim, {
+      toValue: 1 - timeLeft / TOTAL_DURATION,
+      duration: 1000,
+      easing: Easing.linear,
+      useNativeDriver: false,
+    });
+    timingAnim.start();
+    return () => {
+      timingAnim.stop();
+    };
   }, [timeLeft, progressAnim, TOTAL_DURATION]);
 
   const progressWidth = progressAnim.interpolate({

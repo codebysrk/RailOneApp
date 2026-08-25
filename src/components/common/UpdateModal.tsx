@@ -8,7 +8,6 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '@/theme/colors';
 import { ReleaseInfo, UpdateService } from '@/services';
 
 interface UpdateModalProps {

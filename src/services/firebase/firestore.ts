@@ -51,6 +51,7 @@ export const FirebaseFirestoreService = {
 
   updateUserProfile: async (uid: string, data: { name?: string; mobile?: string; wallet?: number }) => {
     const userRef = doc(db, 'users', uid);
+    // FIX C1: use setDoc with merge so doc is created if missing
     return setDoc(userRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
   },
 
@@ -64,7 +65,8 @@ export const FirebaseFirestoreService = {
       const userDoc = await txn.get(userRef);
       const currentWallet = userDoc.exists() ? (userDoc.data()?.wallet || 0) : 0;
       const newBalance = Number((currentWallet + amount).toFixed(2));
-      txn.update(userRef, { wallet: newBalance });
+      // FIX C1: set with merge instead of update so doc is created if missing
+      txn.set(userRef, { wallet: newBalance }, { merge: true });
 
       const txnId = 'TXN_' + Date.now();
       const ledgerRef = doc(db, 'users', uid, 'wallet_ledger', txnId);
@@ -103,8 +105,15 @@ export const FirebaseFirestoreService = {
       return runTransaction(db, async (txn) => {
         const userDoc = await txn.get(userRef);
         const currentWallet = userDoc.exists() ? (userDoc.data()?.wallet || 0) : 0;
-        const newBalance = Math.max(0, Number((currentWallet - fareNum).toFixed(2)));
-        txn.update(userRef, { wallet: newBalance });
+
+        // FIX C2: reject booking if insufficient wallet balance
+        if (currentWallet < fareNum) {
+          throw new Error(`Insufficient wallet balance. Available: ₹${currentWallet.toFixed(2)}, Required: ₹${fareNum.toFixed(2)}`);
+        }
+
+        const newBalance = Number((currentWallet - fareNum).toFixed(2));
+        // FIX C1: set with merge instead of update
+        txn.set(userRef, { wallet: newBalance }, { merge: true });
 
         const txnId = 'TXN_' + Date.now();
         const ledgerRef = doc(db, 'users', uid, 'wallet_ledger', txnId);
@@ -122,6 +131,7 @@ export const FirebaseFirestoreService = {
           ...ticket,
           bookedAt: serverTimestamp(),
         });
+        return newBalance;
       });
     }
 
@@ -157,7 +167,7 @@ export const FirebaseFirestoreService = {
         return stations;
       }
     } catch {
-      // Fallback
+      // Fallback to seed data
     }
     return INITIAL_STATIONS;
   },
@@ -169,12 +179,13 @@ export const FirebaseFirestoreService = {
       const popular = all.filter((s) => s.isPopular);
       return popular.length > 0 ? popular : all.slice(0, 25);
     }
+    // FIX C3: null-safe access on city and state to prevent crash on bad Firestore data
     return all.filter(
       (s) =>
-        s.code.toUpperCase().includes(q) ||
-        s.name.toUpperCase().includes(q) ||
-        s.city.toUpperCase().includes(q) ||
-        s.state.toUpperCase().includes(q)
+        s.code?.toUpperCase().includes(q) ||
+        s.name?.toUpperCase().includes(q) ||
+        s.city?.toUpperCase().includes(q) ||
+        s.state?.toUpperCase().includes(q)
     );
   },
 
@@ -188,7 +199,7 @@ export const FirebaseFirestoreService = {
         return trains;
       }
     } catch {
-      // Fallback
+      // Fallback to seed data
     }
     return INITIAL_TRAINS;
   },
@@ -223,4 +234,3 @@ export const FirebaseFirestoreService = {
     };
   },
 };
-

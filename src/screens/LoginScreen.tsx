@@ -4,7 +4,6 @@ import {
   ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { StatusBar } from "expo-status-bar";
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
 import { FocusAwareStatusBar } from '@/components/common';
@@ -26,9 +25,16 @@ export const LoginScreen = () => {
       Alert.alert("Error", "Please fill all required fields.");
       return;
     }
-    if (tab === "register" && (!name.trim() || !mobile.trim())) {
-      Alert.alert("Error", "Please fill all fields.");
-      return;
+    if (tab === "register") {
+      if (!name.trim() || !mobile.trim()) {
+        Alert.alert("Error", "Please fill all fields.");
+        return;
+      }
+      // FIX H10: validate 10-digit numeric mobile number
+      if (!/^\d{10}$/.test(mobile.trim())) {
+        Alert.alert("Invalid Mobile Number", "Please enter a valid 10-digit mobile number.");
+        return;
+      }
     }
     setLoading(true);
     try {
@@ -64,7 +70,7 @@ export const LoginScreen = () => {
       <FocusAwareStatusBar backgroundColor="#f8faff" barStyle="dark-content" />
       <KeyboardAvoidingView
         style={styles.keyboardContainer}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           {/* Logo area */}

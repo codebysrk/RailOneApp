@@ -43,7 +43,10 @@ export const FocusAwareStatusBar: React.FC<FocusAwareStatusBarProps> = ({
 
   const isLight = isColorLight(backgroundColor);
   const resolvedBarStyle = barStyle || (isLight ? 'dark-content' : 'light-content');
-  const expoStyle: StatusBarStyle = isLight ? 'dark' : 'light';
+  // FIX M9: If barStyle is explicitly provided, map it to expoStyle correctly
+  const expoStyle: StatusBarStyle = barStyle
+    ? (barStyle === 'dark-content' ? 'dark' : 'light')
+    : (isLight ? 'dark' : 'light');
 
   return (
     <>

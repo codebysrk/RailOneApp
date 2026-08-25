@@ -1,5 +1,3 @@
-import { Platform } from 'react-native';
-
 export const typography = {
   family: {
     regular: 'Montserrat_400Regular',

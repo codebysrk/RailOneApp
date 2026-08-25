@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Platform,
 } from "react-native";
 import Svg, { Line } from "react-native-svg";
 

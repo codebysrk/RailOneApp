@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { View, Image, Text, TextInput, StyleSheet, StatusBar as RNStatusBar, Platform, Animated, Easing } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -14,7 +14,6 @@ import {
   Montserrat_900Black,
 } from '@expo-google-fonts/montserrat';
 import { StatusBar } from 'expo-status-bar';
-import { RootNavigator } from './src/navigation';
 
 // Keep the splash screen visible while loading resources
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -171,7 +170,7 @@ function AppContent({ fontsLoaded }) {
 }
 
 export default function App() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     Montserrat_300Light,
     Montserrat_400Regular,
     Montserrat_500Medium,
@@ -180,6 +179,9 @@ export default function App() {
     Montserrat_800ExtraBold,
     Montserrat_900Black,
   });
+
+  // FIX H9: if fonts fail to load due to asset error, proceed with system font fallback rather than freezing splash
+  const readyFonts = fontsLoaded || Boolean(fontError);
 
   return (
     <GestureHandlerRootView style={styles.rootGestureView}>
@@ -190,7 +192,7 @@ export default function App() {
         )}
         <NetworkProvider>
           <AuthProvider>
-            <AppContent fontsLoaded={fontsLoaded} />
+            <AppContent fontsLoaded={readyFonts} />
           </AuthProvider>
         </NetworkProvider>
       </SafeAreaProvider>

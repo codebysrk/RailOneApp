@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   TextInput,
-  Platform,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -72,7 +73,11 @@ export const BookingConfigScreen = () => {
   const [customBaseFare, setCustomBaseFare] = useState<number | null>(null);
   const [typedFareInput, setTypedFareInput] = useState<string>('');
   const [isEditingFare, setIsEditingFare] = useState(false);
-  const [lastTap, setLastTap] = useState<number>(0);
+  // FIX M6: useRef for lastTap prevents stale closure on rapid double-taps
+  const lastTapRef = useRef<number>(0);
+  // FIX C5: prevent double-booking on rapid taps
+  const isBookingRef = useRef(false);
+  const [isBooking, setIsBooking] = useState(false);
 
   const trainKey: TrainType = trainType === 'SUPERFAST' ? 'SUPERFAST' : 'MAIL_EXP';
   const defaultSingleAdultFare = calculateFare(trainKey, 1, 0);
@@ -84,11 +89,11 @@ export const BookingConfigScreen = () => {
   const handleFareDoubleTap = () => {
     const now = Date.now();
     const DOUBLE_PRESS_DELAY = 350;
-    if (now - lastTap < DOUBLE_PRESS_DELAY) {
+    if (now - lastTapRef.current < DOUBLE_PRESS_DELAY) {
       setTypedFareInput(totalFare.toFixed(0));
       setIsEditingFare(true);
     } else {
-      setLastTap(now);
+      lastTapRef.current = now;
     }
   };
 
@@ -105,6 +110,11 @@ export const BookingConfigScreen = () => {
   };
 
   const handleBookNow = async () => {
+    // FIX C5: prevent double-booking on rapid taps
+    if (isBookingRef.current) return;
+    isBookingRef.current = true;
+    setIsBooking(true);
+
     let computedVia = 'TKD';
     if ((srcCode === 'MRA' || srcCode === 'GWL') && (dstCode === 'NDLS' || dstCode === 'NZM' || dstCode === 'DLI')) {
       computedVia = 'TKD';
@@ -139,7 +149,8 @@ export const BookingConfigScreen = () => {
       id: Date.now().toString(),
       pnr: '21' + Math.floor(10000000 + Math.random() * 90000000),
       ticketId: 'XMSQEB' + Math.floor(1000 + Math.random() * 9000),
-      train: '12279 (TAJ EXPRESS)',
+      // FIX M7: removed hardcoded "12279 (TAJ EXPRESS)" — use generic label
+      train: 'Unreserved Express',
       date: fullDateTime,
       bookingDateTime: fullDateTime,
       bookedOn: bookedOnStr,
@@ -149,7 +160,7 @@ export const BookingConfigScreen = () => {
       sourceCode: srcCode,
       destCode: dstCode,
       via: computedVia,
-      duration: '4h:8m',
+      duration: '---',
       distance: computedDistance,
       rNumber: computedRNumber,
       irCode: computedIrCode,
@@ -168,10 +179,15 @@ export const BookingConfigScreen = () => {
       } else {
         await StorageService.saveBookedTicket(newTicket);
       }
-    } catch {
-      await StorageService.saveBookedTicket(newTicket);
+      navigation.navigate('Ticket', { ticket: newTicket, fromBooking: true });
+    } catch (err: any) {
+      // FIX C5: surface error to user (including insufficient wallet balance)
+      const msg = err?.message || 'Booking failed. Please try again.';
+      Alert.alert('Booking Failed', msg);
+    } finally {
+      isBookingRef.current = false;
+      setIsBooking(false);
     }
-    navigation.navigate('Ticket', { ticket: newTicket, fromBooking: true });
   };
 
   return (
@@ -314,8 +330,17 @@ export const BookingConfigScreen = () => {
         </View>
 
         <View style={styles.bookBtnWrapper}>
-          <TouchableOpacity style={styles.bookBtn} onPress={handleBookNow} activeOpacity={0.85}>
-            <Text style={styles.bookBtnText}>Book Now</Text>
+          <TouchableOpacity
+            style={[styles.bookBtn, isBooking && { opacity: 0.7 }]}
+            onPress={handleBookNow}
+            activeOpacity={0.85}
+            disabled={isBooking}
+          >
+            {isBooking ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <Text style={styles.bookBtnText}>Book Now</Text>
+            )}
           </TouchableOpacity>
         </View>
       </View>

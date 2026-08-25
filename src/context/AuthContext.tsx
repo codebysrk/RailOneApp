@@ -54,16 +54,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           email: firebaseUser.email || "",
           name: data?.name || firebaseUser.displayName || "User",
           mobile: data?.mobile || "",
+          // FIX C6: only fall back to 250 if wallet field is genuinely absent
           wallet: data?.wallet !== undefined ? data.wallet : 250.0,
         });
       } else {
-        // Document didn't exist in Firestore yet (e.g. created before Firestore was enabled)
+        // Document doesn't exist yet — create it (e.g. pre-Firestore users)
         const initialName = firebaseUser.displayName || "User";
-        await FirebaseService.updateUserProfile(firebaseUser.uid, {
-          name: initialName,
-          mobile: "",
-          wallet: 250.0,
-        });
+        try {
+          await FirebaseService.updateUserProfile(firebaseUser.uid, {
+            name: initialName,
+            mobile: "",
+            wallet: 250.0,
+          });
+        } catch (writeErr) {
+          console.warn('AuthContext: could not create user profile doc:', writeErr);
+        }
         setUser({
           uid: firebaseUser.uid,
           email: firebaseUser.email || "",
@@ -72,13 +77,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           wallet: 250.0,
         });
       }
-    } catch {
-      setUser({
-        uid: firebaseUser.uid,
-        email: firebaseUser.email || "",
-        name: firebaseUser.displayName || "User",
-        mobile: "",
-        wallet: 250.0,
+    } catch (err) {
+      // FIX C6: on network/Firestore error, preserve the last known user state
+      // if we already have a user, keep them — don't overwrite wallet with 250
+      console.warn('AuthContext: failed to load profile, keeping last known state:', err);
+      setUser((prev) => {
+        if (prev) return prev; // Preserve existing state on error
+        // Only set fallback if we have no previous state (first login attempt)
+        return {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email || "",
+          name: firebaseUser.displayName || "User",
+          mobile: "",
+          wallet: 0, // Don't gift ₹250 on error — start at 0 until sync
+        };
       });
     }
   };

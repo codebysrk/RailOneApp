@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -42,6 +42,26 @@ export const NotificationScreen: React.FC = () => {
   const translateX = useRef(new Animated.Value(width)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
+  // FIX H5: handleBack defined with useCallback before useEffect to avoid temporal dead zone
+  const handleBack = useCallback(() => {
+    Animated.parallel([
+      Animated.timing(translateX, {
+        toValue: width,
+        duration: 220,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      navigation.goBack();
+    });
+  }, [translateX, opacity, width, navigation]);
+
+  // FIX H5: deps fixed to [] — width change should not re-register the back handler
   useEffect(() => {
     Animated.parallel([
       Animated.timing(translateX, {
@@ -62,26 +82,11 @@ export const NotificationScreen: React.FC = () => {
       return true;
     };
     const backSub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
-    return () => backSub.remove();
-  }, [width]);
-
-  const handleBack = () => {
-    Animated.parallel([
-      Animated.timing(translateX, {
-        toValue: width,
-        duration: 220,
-        easing: Easing.in(Easing.cubic),
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacity, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      navigation.goBack();
-    });
-  };
+    return () => {
+      backSub.remove();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <View style={styles.rootOverlay}>

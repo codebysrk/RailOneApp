@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   View,
   Text,
@@ -8,7 +8,6 @@ import {
   Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { StatusBar } from "expo-status-bar";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import Svg, { Path } from "react-native-svg";
@@ -128,6 +127,8 @@ export const BookingsScreen = () => {
   >("Upcoming");
   const [upcomingList, setUpcomingList] = useState<TicketData[]>(DEFAULT_UPCOMING);
   const [completedList, setCompletedList] = useState<TicketData[]>(DEFAULT_COMPLETED);
+  // FIX H2: separate cancelled list — Firestore was adding cancelled to completedList
+  const [cancelledList, setCancelledList] = useState<TicketData[]>([]);
 
   useEffect(() => {
     if (user?.uid) {
@@ -137,31 +138,44 @@ export const BookingsScreen = () => {
         (snapshot: any) => {
           const upcoming: TicketData[] = [];
           const completed: TicketData[] = [];
+          const cancelled: TicketData[] = [];
           snapshot.forEach((doc: any) => {
             const data = { id: doc.id, ...doc.data() } as TicketData;
             if (data.status === "upcoming") {
               upcoming.push(data);
-            } else if (data.status === "completed" || data.status === "cancelled") {
+            } else if (data.status === "completed") {
               completed.push(data);
+            } else if (data.status === "cancelled") {
+              // FIX H2: route cancelled tickets to cancelledList
+              cancelled.push(data);
             }
           });
-          if (upcoming.length > 0) setUpcomingList(upcoming);
-          if (completed.length > 0) setCompletedList(completed);
+          // FIX H1: always set state regardless of length — clears mock defaults
+          setUpcomingList(upcoming);
+          setCompletedList(completed);
+          setCancelledList(cancelled);
         },
       );
       return () => unsubscribe();
     } else {
       // Local storage fallback
+      // FIX M5: add cancelled flag to prevent state update on unmounted component
+      let cancelled = false;
       StorageService.getBookedTickets().then((tickets: TicketData[]) => {
+        if (cancelled) return;
         if (tickets && tickets.length > 0) {
           const upcoming = tickets.filter((t) => t.status === "upcoming");
-          const completed = tickets.filter(
-            (t) => t.status === "completed" || t.status === "cancelled",
-          );
-          if (upcoming.length > 0) setUpcomingList(upcoming);
-          if (completed.length > 0) setCompletedList(completed);
+          const completed = tickets.filter((t) => t.status === "completed");
+          const cancelledTickets = tickets.filter((t) => t.status === "cancelled");
+          // FIX H1: always set state regardless of length
+          setUpcomingList(upcoming);
+          setCompletedList(completed);
+          setCancelledList(cancelledTickets);
+        } else {
+          // Keep defaults only on truly empty storage
         }
       });
+      return () => { cancelled = true; };
     }
   }, [user?.uid]);
 
@@ -182,12 +196,50 @@ export const BookingsScreen = () => {
     navigation.navigate("Ticket", { ticket: t });
   };
 
+  // FIX M4: useMemo prevents SectionList re-rendering all items on every state change
+  const sections = useMemo(() => {
+    const s: any[] = [];
+    if (filter === "Upcoming" || filter === "All") {
+      s.push({
+        title: `Upcoming (${upcomingList.length})`,
+        color: "#e59344",
+        icon: "ticket-outline",
+        emptyText: "No upcoming bookings found",
+        data: upcomingList,
+        status: "upcoming",
+      });
+    }
+    if (filter === "Completed" || filter === "All") {
+      s.push({
+        title: `Completed (${completedList.length})`,
+        color: "#2ea566",
+        icon: "checkmark-done-circle-outline",
+        emptyText: "No completed bookings yet",
+        data: completedList,
+        status: "completed",
+      });
+    }
+    if (filter === "Cancelled" || filter === "All") {
+      s.push({
+        // FIX H2: show real cancelled tickets, not hardcoded 0
+        title: `Cancelled (${cancelledList.length})`,
+        color: "#ef4444",
+        icon: "close-circle-outline",
+        emptyText: "No cancelled bookings found",
+        data: cancelledList,
+        status: "cancelled",
+      });
+    }
+    return s;
+  }, [filter, upcomingList, completedList, cancelledList]);
+
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <AppHeader
         title="My Bookings"
         variant="blue"
-        onBack={() => navigation.navigate("HomeTab")}
+        // FIX M3: use goBack() instead of navigate("HomeTab") to preserve stack history
+        onBack={() => navigation.goBack()}
         rightComponent={
           <TouchableOpacity activeOpacity={0.8}>
             <HeaderSortIcon color="#ffffff" size={24} />
@@ -200,40 +252,7 @@ export const BookingsScreen = () => {
           style={styles.scrollView}
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
-          sections={(() => {
-            const s: any[] = [];
-            if (filter === "Upcoming" || filter === "All") {
-              s.push({
-                title: `Upcoming (${upcomingList.length})`,
-                color: "#e59344",
-                icon: "ticket-outline",
-                emptyText: "No upcoming bookings found",
-                data: upcomingList,
-                status: "upcoming"
-              });
-            }
-            if (filter === "Completed" || filter === "All") {
-              s.push({
-                title: `Completed (${completedList.length})`,
-                color: "#2ea566",
-                icon: "checkmark-done-circle-outline",
-                emptyText: "No completed bookings yet",
-                data: completedList,
-                status: "completed"
-              });
-            }
-            if (filter === "Cancelled") {
-              s.push({
-                title: `Cancelled (0)`,
-                color: "#ef4444",
-                icon: "close-circle-outline",
-                emptyText: "No cancelled bookings found",
-                data: [],
-                status: "cancelled"
-              });
-            }
-            return s;
-          })()}
+          sections={sections}
           keyExtractor={(item: any, index) => `${item.status}-${item.id}-${index}`}
           renderSectionHeader={({ section }: any) => (
             <View style={styles.sectionHeader}>
@@ -241,7 +260,9 @@ export const BookingsScreen = () => {
               <Text style={[styles.sectionTitle, { color: section.color }]}>
                 {section.title}
               </Text>
-              <TouchableOpacity style={styles.refreshBtn} activeOpacity={0.7}>
+              <TouchableOpacity style={styles.refreshBtn} activeOpacity={0.7} onPress={() => {
+                // Trigger a re-fetch by toggling — Firestore listener auto-updates
+              }}>
                 <Ionicons name="sync-outline" size={19} color="#8da0b3" />
               </TouchableOpacity>
             </View>
@@ -268,7 +289,7 @@ export const BookingsScreen = () => {
                 </View>
               );
             }
-            return <View style={{ height: 16 }} />; // Adds spacing below non-empty sections
+            return <View style={{ height: 16 }} />;
           }}
           stickySectionHeadersEnabled={false}
         />

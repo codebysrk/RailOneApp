@@ -1,3 +1,10 @@
+let AsyncStorageModule: any = null;
+try {
+  AsyncStorageModule = require('@react-native-async-storage/async-storage').default;
+} catch {
+  // Native module unavailable, use memory fallback
+}
+
 // In-memory fallback cache to ensure zero crashes if native AsyncStorage module is unlinked
 const memoryStore: Record<string, string> = {
   railone_booked_tickets: JSON.stringify([]),
@@ -6,13 +13,12 @@ const memoryStore: Record<string, string> = {
 
 const safeGetItem = async (key: string): Promise<string | null> => {
   try {
-    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-    if (AsyncStorage && typeof AsyncStorage.getItem === 'function') {
-      const val = await AsyncStorage.getItem(key);
+    if (AsyncStorageModule && typeof AsyncStorageModule.getItem === 'function') {
+      const val = await AsyncStorageModule.getItem(key);
       if (val !== null) return val;
     }
   } catch {
-    // Native module unavailable, use memoryStore fallback
+    // Native module error, fallback to memoryStore
   }
   return memoryStore[key] ?? null;
 };
@@ -20,12 +26,11 @@ const safeGetItem = async (key: string): Promise<string | null> => {
 const safeSetItem = async (key: string, value: string): Promise<void> => {
   memoryStore[key] = value;
   try {
-    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-    if (AsyncStorage && typeof AsyncStorage.setItem === 'function') {
-      await AsyncStorage.setItem(key, value);
+    if (AsyncStorageModule && typeof AsyncStorageModule.setItem === 'function') {
+      await AsyncStorageModule.setItem(key, value);
     }
   } catch {
-    // Native module unavailable, silently persist in memoryStore
+    // Native module error, memoryStore is already updated
   }
 };
 

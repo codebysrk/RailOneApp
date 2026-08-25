@@ -433,7 +433,7 @@ export const ProfileScreen = () => {
             <View style={styles.gridIconWrap}>
               <Ionicons name="receipt-outline" size={26} color="#f59e0b" />
             </View>
-            <Text style={styles.gridCardTitle}>My{"\n"}Transactio{"\n"}n</Text>
+            <Text style={styles.gridCardTitle}>My{"\n"}Transactions</Text>
           </TouchableOpacity>
 
           {/* 6. DeLink Aadhar */}

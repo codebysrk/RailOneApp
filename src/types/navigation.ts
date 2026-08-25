@@ -3,11 +3,12 @@ import { Ticket } from '@/types/ticket';
 export type RootStackParamList = {
   Login: undefined;
   Main: undefined;
-  Unreserved: undefined;
+  // FIX M1: Unreserved now accepts optional source/dest string params
+  Unreserved: { source?: string; dest?: string } | undefined;
+  // FIX M2: BookingConfig takes string params (matching actual usage)
   BookingConfig: {
-    source?: { code: string; name: string };
-    dest?: { code: string; name: string };
-    paperless?: boolean;
+    source: string;
+    dest: string;
   };
   Ticket: {
     ticket: Ticket;
@@ -23,4 +24,3 @@ export type BottomTabParamList = {
   ProfileTab: undefined;
   MenuTab: undefined;
 };
-

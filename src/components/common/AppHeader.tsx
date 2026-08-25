@@ -16,6 +16,7 @@ export interface AppHeaderProps {
   textColor?: string;
   iconColor?: string;
   circleBorderColor?: string;
+  barStyle?: 'light-content' | 'dark-content';
   onBack?: () => void;
   onClose?: () => void;
   titleCenter?: boolean;
@@ -37,6 +38,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   textColor,
   iconColor,
   circleBorderColor,
+  barStyle: propBarStyle,
   onBack,
   onClose,
   titleCenter = false,
@@ -49,7 +51,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   let defaultIconColor = '#ffffff';
   let defaultBorderColor = 'rgba(255,255,255,0.45)';
   let defaultCircleBg = 'transparent';
-  let barStyle: 'light-content' | 'dark-content' = 'light-content';
+  let barStyle: 'light-content' | 'dark-content' = propBarStyle || 'light-content';
 
   if (variant === 'light') {
     defaultBg = '#ffffff';

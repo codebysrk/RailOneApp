@@ -1,4 +1,6 @@
+// FIX M12: invalid date guards prevent RangeError on bad Date objects
 export const formatDate = (date: Date = new Date()): string => {
+  if (!date || isNaN(date.getTime())) return '---';
   return date.toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'short',
@@ -7,6 +9,7 @@ export const formatDate = (date: Date = new Date()): string => {
 };
 
 export const formatFullDateTime = (date: Date = new Date()): string => {
+  if (!date || isNaN(date.getTime())) return '---';
   const dateStr = date.toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'short',
@@ -18,4 +21,3 @@ export const formatFullDateTime = (date: Date = new Date()): string => {
   });
   return `${dateStr}, ${timeStr}`;
 };
-

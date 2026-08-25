@@ -1,4 +1,4 @@
-import { Linking, Platform } from 'react-native';
+import { Linking } from 'react-native';
 
 const GITHUB_OWNER = 'codebysrk';
 const GITHUB_REPO = 'RailOneApp';
@@ -19,8 +19,8 @@ const isNewerVersion = (latest: string, current: string): boolean => {
   const cleanLatest = latest.replace(/^v/i, '').trim();
   const cleanCurrent = current.replace(/^v/i, '').trim();
 
-  const latestParts = cleanLatest.split('.').map(Number);
-  const currentParts = cleanCurrent.split('.').map(Number);
+  const latestParts = cleanLatest.split('.').map(p => parseInt(p, 10) || 0);
+  const currentParts = cleanCurrent.split('.').map(p => parseInt(p, 10) || 0);
 
   for (let i = 0; i < Math.max(latestParts.length, currentParts.length); i++) {
     const l = latestParts[i] || 0;
