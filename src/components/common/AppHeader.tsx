@@ -93,7 +93,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             accessibilityLabel="Go back"
             accessibilityRole="button"
           >
-            <Ionicons name="arrow-back" size={20} color={finalIconColor} />
+            <Ionicons name="arrow-back" size={23} color={finalIconColor} />
           </TouchableOpacity>
         ) : onClose ? (
           <TouchableOpacity
@@ -106,10 +106,10 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             accessibilityLabel="Close"
             accessibilityRole="button"
           >
-            <Ionicons name="close" size={20} color={finalIconColor} />
+            <Ionicons name="close" size={23} color={finalIconColor} />
           </TouchableOpacity>
         ) : (
-          hasRight && <View style={styles.spacer38} />
+          hasRight && <View style={styles.spacer40} />
         )}
 
         {/* Center / Left Title Section */}
@@ -161,12 +161,12 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           >
             <Ionicons
               name={rightAction.icon}
-              size={rightAction.size || 20}
+              size={rightAction.size || 23}
               color={rightAction.color || finalIconColor}
             />
           </TouchableOpacity>
         ) : (
-          hasLeft && <View style={styles.spacer38} />
+          hasLeft && <View style={styles.spacer40} />
         )}
       </View>
     </>
@@ -175,16 +175,16 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 
 const styles = StyleSheet.create({
   header: {
-    height: 56,
+    height: 58,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
   },
   circleBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     borderWidth: 1.5,
     justifyContent: 'center',
     alignItems: 'center',
@@ -199,9 +199,9 @@ const styles = StyleSheet.create({
     elevation: 0,
     shadowOpacity: 0,
   },
-  spacer38: {
-    width: 38,
-    height: 38,
+  spacer40: {
+    width: 40,
+    height: 40,
   },
   titleWrapper: {
     flex: 1,
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   title: {
-    fontSize: 18,
+    fontSize: 18.5,
     fontFamily: 'Montserrat_700Bold',
     letterSpacing: 0.2,
   },
@@ -229,8 +229,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.1,
   },
   rightWrap: {
-    width: 38,
-    height: 38,
+    width: 40,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
   },

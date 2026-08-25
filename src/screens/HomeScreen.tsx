@@ -227,7 +227,7 @@ export const HomeScreen = () => {
           accessibilityLabel="Select Language"
           accessibilityRole="button"
         >
-          <LanguageSvgIcon size={22} color="#0066ff" />
+          <LanguageSvgIcon size={24} color="#0066ff" />
         </TouchableOpacity>
 
         <Image
@@ -241,7 +241,7 @@ export const HomeScreen = () => {
           activeOpacity={0.7}
           onPress={() => navigation.navigate("Notification")}
         >
-          <Ionicons name="notifications-outline" size={20} color="#475569" />
+          <Ionicons name="notifications-outline" size={23} color="#475569" />
         </TouchableOpacity>
       </View>
 
@@ -655,9 +655,9 @@ const styles = StyleSheet.create({
     zIndex: 20,
   },
   headerIconCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     borderWidth: 1.2,
     borderColor: "#e2e8f0",
     justifyContent: "center",
