@@ -116,7 +116,7 @@ export const FirebaseFirestoreService = {
       reason: 'Admin Manual Deletion',
     });
 
-    // 2. Clean up ALL user subcollections to avoid phantom documents
+    // 2. Clean up ALL user subcollections to avoid phantom documents in console
     const subcollections = ['wallet_ledger', 'notifications', 'saved_routes', 'search_history'];
     for (const sub of subcollections) {
       try {
