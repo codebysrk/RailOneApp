@@ -4,8 +4,11 @@ export type TrainType = 'ORDINARY' | 'MAIL_EXP' | 'SUPERFAST';
 
 export interface Ticket {
   id: string;
+  bookingId?: string;
+  userId?: string;
   pnr: string;
   ticketId?: string;
+  ticketType?: string;
   train: string;
   date: string;
   journeyDate?: string;
@@ -24,7 +27,8 @@ export interface Ticket {
   rNumber?: string;
   irCode?: string;
   status: TicketStatus;
-  createdAt?: string;
+  createdAt?: any;
+  updatedAt?: any;
 }
 
 export interface Station {

@@ -158,15 +158,24 @@ export const BookingConfigScreen = () => {
     const computedDistance = routeInfo.distance.formatted;
     const computedRNumber = 'R' + Math.floor(10000 + Math.random() * 90000);
     const computedIrCode = 'IR:' + Math.random().toString(36).substring(2, 10).toUpperCase() + 'C1ZR';
+    const generatedTicketId = 'XMSQEB' + Math.floor(1000 + Math.random() * 9000);
+    const bookingIdStr = 'BK_' + Date.now();
 
     const newTicket = {
-      id: Date.now().toString(),
+      id: bookingIdStr,
+      bookingId: bookingIdStr,
       pnr: '',
-      ticketId: 'XMSQEB' + Math.floor(1000 + Math.random() * 9000),
+      ticketId: generatedTicketId,
       train: 'Unreserved Express',
       date: canonicalJourneyDate,
       journeyDate: canonicalJourneyDate,
       bookingDateTime: fullDateTime,
+      userId: user?.uid,
+      sourceStation: { code: srcCode, name: srcName },
+      destStation: { code: dstCode, name: dstName },
+      adults: adults,
+      children: child,
+      journeyType: 'JOURNEY',
       bookedOn: bookedOnStr,
       validTill: validTillStr,
       createdAt: now.toISOString(),

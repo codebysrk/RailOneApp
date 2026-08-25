@@ -1,19 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { FirebaseService } from '@/services';
+import { UserProfile, UserRole, UserStatus } from '@/types/user';
 import { AppAlert } from '@/context/AlertContext';
-
-export type UserProfile = {
-  uid: string;
-  email: string;
-  name: string;
-  mobile: string;
-  wallet: number;
-  role?: 'admin' | 'user' | string;
-  status?: 'active' | 'blocked';
-};
 
 type AuthContextType = {
   user: UserProfile | null;
+  isAdmin: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, mobile: string, email: string, password: string) => Promise<void>;
@@ -52,67 +44,86 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const docSnap = await FirebaseService.getUserProfile(firebaseUser.uid);
       if (docSnap.exists()) {
         const data = docSnap.data();
-        const userRole = data?.role || (firebaseUser.email?.toLowerCase().includes("admin") ? "admin" : "user");
-        const userStatus = data?.status || "active";
 
-        if (userStatus === "blocked" && userRole !== "admin") {
+        // 1. Check account status
+        if (data?.status === 'disabled') {
           await FirebaseService.logout();
           setUser(null);
           AppAlert.show(
-            "Account Suspended",
-            "Your account has been suspended by the administrator. Please contact your admin for reactivation.",
+            'Account Disabled',
+            'Your account has been deactivated by the administrator. Please contact support.',
             undefined,
-            "error"
+            'error'
           );
           return;
         }
 
-        setUser({
+        // 2. Strict Role Enforcement (Only 'admin' or 'user')
+        const verifiedRole: UserRole = data?.role === 'admin' ? 'admin' : 'user';
+        const verifiedStatus: UserStatus = 'active';
+
+        const profile: UserProfile = {
           uid: firebaseUser.uid,
-          email: firebaseUser.email || "",
-          name: data?.name || firebaseUser.displayName || "User",
-          mobile: data?.mobile || "",
-          role: userRole,
-          status: userStatus,
-          // FIX C6: only fall back to 250 if wallet field is genuinely absent
-          wallet: data?.wallet !== undefined ? data.wallet : 250.0,
-        });
+          email: firebaseUser.email || '',
+          name: data?.name || data?.displayName || firebaseUser.displayName || 'User',
+          displayName: data?.displayName || data?.name || firebaseUser.displayName || 'User',
+          mobile: data?.mobile || '',
+          role: verifiedRole,
+          status: verifiedStatus,
+          wallet: data?.wallet !== undefined ? Number(data.wallet) : 250.0,
+          createdAt: data?.createdAt,
+          updatedAt: data?.updatedAt,
+          lastLoginAt: data?.lastLoginAt,
+        };
+
+        setUser(profile);
+
+        // Record last login timestamp non-blockingly
+        FirebaseService.recordLastLogin(firebaseUser.uid).catch(() => {});
       } else {
-        // Document doesn't exist yet — create it (e.g. pre-Firestore users)
-        const initialName = firebaseUser.displayName || "User";
-        const initialRole = firebaseUser.email?.toLowerCase().includes("admin") ? "admin" : "user";
+        // Document doesn't exist yet — initialize with role: 'user'
+        const initialName = firebaseUser.displayName || 'User';
+        const initialRole: UserRole = 'user';
+        const initialStatus: UserStatus = 'active';
+
         try {
-          await FirebaseService.updateUserProfile(firebaseUser.uid, {
+          await FirebaseService.initializeUserProfile(firebaseUser.uid, {
             name: initialName,
-            mobile: "",
-            wallet: 250.0,
+            displayName: initialName,
+            email: firebaseUser.email || '',
+            mobile: '',
             role: initialRole,
+            status: initialStatus,
+            wallet: 250.0,
           });
         } catch (writeErr) {
           console.warn('AuthContext: could not create user profile doc:', writeErr);
         }
+
         setUser({
           uid: firebaseUser.uid,
-          email: firebaseUser.email || "",
+          email: firebaseUser.email || '',
           name: initialName,
-          mobile: "",
+          displayName: initialName,
+          mobile: '',
           wallet: 250.0,
           role: initialRole,
+          status: initialStatus,
         });
       }
     } catch (err) {
-      // FIX C6: on network/Firestore error, preserve the last known user state
-      // if we already have a user, keep them — don't overwrite wallet with 250
       console.warn('AuthContext: failed to load profile, keeping last known state:', err);
       setUser((prev) => {
-        if (prev) return prev; // Preserve existing state on error
-        // Only set fallback if we have no previous state (first login attempt)
+        if (prev) return prev;
         return {
           uid: firebaseUser.uid,
-          email: firebaseUser.email || "",
-          name: firebaseUser.displayName || "User",
-          mobile: "",
-          wallet: 0, // Don't gift ₹250 on error — start at 0 until sync
+          email: firebaseUser.email || '',
+          name: firebaseUser.displayName || 'User',
+          displayName: firebaseUser.displayName || 'User',
+          mobile: '',
+          role: 'user',
+          status: 'active',
+          wallet: 0,
         };
       });
     }
@@ -138,8 +149,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const updateUserProfile = async (name: string, mobile: string) => {
     if (!user?.uid) return;
-    await FirebaseService.updateUserProfile(user.uid, { name, mobile });
-    setUser(prev => prev ? { ...prev, name, mobile } : null);
+    await FirebaseService.updateUserProfile(user.uid, { name, displayName: name, mobile });
+    setUser(prev => prev ? { ...prev, name, displayName: name, mobile } : null);
   };
 
   const addWalletBalance = async (amount: number, description: string = 'Added via UPI') => {
@@ -154,9 +165,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return FirebaseService.getWalletTransactions(user.uid);
   };
 
+  const isAdmin = user?.role === 'admin' && user?.status === 'active';
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, refreshProfile, updateUserProfile, addWalletBalance, getWalletTransactions }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isAdmin,
+        loading,
+        login,
+        register,
+        logout,
+        refreshProfile,
+        updateUserProfile,
+        addWalletBalance,
+        getWalletTransactions,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
+

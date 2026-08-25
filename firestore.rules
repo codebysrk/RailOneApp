@@ -1,37 +1,73 @@
-﻿rules_version = '2';
+rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // User profile & subcollections
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-      
-      match /tickets/{ticketId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-      
-      match /wallet_ledger/{txnId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
 
-      match /passengers/{passengerId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+    // Helper: User is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper: Request is made by the resource owner
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Helper: User has active Admin role in database
+    function isAdmin() {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active';
+    }
+
+    // --- Users Collection ------------------------------------------
+    match /users/{userId} {
+      // Admin can read all users; User can read only their own profile
+      allow read: if isOwner(userId) || isAdmin();
+
+      // New users can only be created with role == 'user' and status == 'active'
+      allow create: if (isOwner(userId) &&
+        request.resource.data.role == 'user' &&
+        request.resource.data.status == 'active') || isAdmin();
+
+      // Users can update basic profile data (displayName, mobile) but cannot escalate role or change status
+      allow update: if (isOwner(userId) &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'status', 'uid'])) || isAdmin();
+
+      // Only Admins can delete users
+      allow delete: if isAdmin();
+
+      // Wallet Ledger Subcollection
+      match /wallet_ledger/{txnId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow write: if isOwner(userId) || isAdmin();
       }
     }
-    
-    // Global Master Collections (Public Read)
-    match /stations/{stationCode} {
-      allow read: if true;
-      allow write: if request.auth != null;
+
+    // --- Bookings Collection (Top-Level) ---------------------------
+    match /bookings/{bookingId} {
+      // Users can read only their own bookings; Admins can read all bookings
+      allow read: if (isAuthenticated() && resource.data.userId == request.auth.uid) || isAdmin();
+
+      // Users can create bookings only under their own UID
+      allow create: if (isAuthenticated() && request.resource.data.userId == request.auth.uid) || isAdmin();
+
+      // Users can update only their own bookings (e.g. cancellation); Admins can update any
+      allow update: if (isAuthenticated() && resource.data.userId == request.auth.uid) || isAdmin();
+
+      // Only Admins can delete booking records
+      allow delete: if isAdmin();
     }
-    
-    match /trains/{trainNumber} {
-      allow read: if true;
-      allow write: if request.auth != null;
+
+    // --- Reference Masters (Stations & Trains) ----------------------
+    match /stations/{stationId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
     }
-    
-    match /pnr_records/{pnr} {
-      allow read: if true;
-      allow write: if request.auth != null;
+
+    match /trains/{trainId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
     }
   }
 }

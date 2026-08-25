@@ -51,8 +51,33 @@ export const FirebaseFirestoreService = {
     return getDoc(doc(db, 'users', uid));
   },
 
+  initializeUserProfile: async (uid: string, data: any) => {
+    const userRef = doc(db, 'users', uid);
+    return setDoc(
+      userRef,
+      {
+        uid,
+        ...data,
+        role: data.role || 'user',
+        status: data.status || 'active',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        lastLoginAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+  },
+
+  recordLastLogin: async (uid: string) => {
+    const userRef = doc(db, 'users', uid);
+    return updateDoc(userRef, {
+      lastLoginAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+  },
+
   getAllUsers: async () => {
-    const q = query(collection(db, 'users'), limit(50));
+    const q = query(collection(db, 'users'), limit(100));
     const snapshot = await getDocs(q);
     const users: any[] = [];
     snapshot.forEach((docSnap) => {
@@ -61,13 +86,21 @@ export const FirebaseFirestoreService = {
     return users;
   },
 
+  updateUserStatus: async (uid: string, status: 'active' | 'disabled') => {
+    const userRef = doc(db, 'users', uid);
+    return updateDoc(userRef, {
+      status,
+      updatedAt: serverTimestamp(),
+    });
+  },
+
   topUpUserWallet: async (uid: string, amount: number, adminEmail: string = 'Admin') => {
     const userRef = doc(db, 'users', uid);
     return runTransaction(db, async (txn) => {
       const userDoc = await txn.get(userRef);
       const currentWallet = userDoc.exists() ? (userDoc.data()?.wallet || 0) : 0;
       const newBalance = Number((currentWallet + amount).toFixed(2));
-      txn.set(userRef, { wallet: newBalance }, { merge: true });
+      txn.set(userRef, { wallet: newBalance, updatedAt: serverTimestamp() }, { merge: true });
 
       const txnId = 'TXN_' + Date.now();
       const ledgerRef = doc(db, 'users', uid, 'wallet_ledger', txnId);
@@ -84,19 +117,13 @@ export const FirebaseFirestoreService = {
     });
   },
 
-  toggleUserStatus: async (uid: string, newStatus: 'active' | 'blocked') => {
+  updateUserProfile: async (uid: string, data: { name?: string; displayName?: string; mobile?: string; wallet?: number; role?: string }) => {
     const userRef = doc(db, 'users', uid);
-    return setDoc(userRef, { status: newStatus, updatedAt: serverTimestamp() }, { merge: true });
-  },
-
-  updateUserProfile: async (uid: string, data: { name?: string; mobile?: string; wallet?: number; role?: string; status?: 'active' | 'blocked' }) => {
-    const userRef = doc(db, 'users', uid);
-    // FIX C1: use setDoc with merge so doc is created if missing
     return setDoc(userRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
   },
 
   updateWallet: async (uid: string, amount: number) => {
-    return updateDoc(doc(db, 'users', uid), { wallet: amount });
+    return updateDoc(doc(db, 'users', uid), { wallet: amount, updatedAt: serverTimestamp() });
   },
 
   addWalletFunds: async (uid: string, amount: number, description: string = 'Added via UPI') => {
@@ -105,8 +132,7 @@ export const FirebaseFirestoreService = {
       const userDoc = await txn.get(userRef);
       const currentWallet = userDoc.exists() ? (userDoc.data()?.wallet || 0) : 0;
       const newBalance = Number((currentWallet + amount).toFixed(2));
-      // FIX C1: set with merge instead of update so doc is created if missing
-      txn.set(userRef, { wallet: newBalance }, { merge: true });
+      txn.set(userRef, { wallet: newBalance, updatedAt: serverTimestamp() }, { merge: true });
 
       const txnId = 'TXN_' + Date.now();
       const ledgerRef = doc(db, 'users', uid, 'wallet_ledger', txnId);
@@ -139,25 +165,33 @@ export const FirebaseFirestoreService = {
     }
   },
 
-  // ─── Tickets ────────────────────────────────────────────────
+  // ─── Bookings (Top-Level Collection) ──────────────────────────
   saveTicket: async (uid: string, ticket: any, deductWallet: boolean = false) => {
     const userRef = doc(db, 'users', uid);
-    const ticketRef = doc(db, 'users', uid, 'tickets', ticket.id);
+    const bookingId = ticket.id || ticket.bookingId || ('BK_' + Date.now());
+    const bookingRef = doc(db, 'bookings', bookingId);
     const fareNum = parseFloat(ticket.fare) || 0;
+
+    const bookingPayload = {
+      ...ticket,
+      id: bookingId,
+      bookingId: bookingId,
+      userId: uid,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
 
     if (deductWallet && fareNum > 0) {
       return runTransaction(db, async (txn) => {
         const userDoc = await txn.get(userRef);
         const currentWallet = userDoc.exists() ? (userDoc.data()?.wallet || 0) : 0;
 
-        // FIX C2: reject booking if insufficient wallet balance
         if (currentWallet < fareNum) {
           throw new Error(`Insufficient wallet balance. Available: ₹${currentWallet.toFixed(2)}, Required: ₹${fareNum.toFixed(2)}`);
         }
 
         const newBalance = Number((currentWallet - fareNum).toFixed(2));
-        // FIX C1: set with merge instead of update
-        txn.set(userRef, { wallet: newBalance }, { merge: true });
+        txn.set(userRef, { wallet: newBalance, updatedAt: serverTimestamp() }, { merge: true });
 
         const txnId = 'TXN_' + Date.now();
         const ledgerRef = doc(db, 'users', uid, 'wallet_ledger', txnId);
@@ -165,30 +199,24 @@ export const FirebaseFirestoreService = {
           id: txnId,
           type: 'debit',
           amount: fareNum,
-          description: `Ticket booking ${ticket.ticketId}`,
+          description: `Ticket booking ${ticket.ticketId || ticket.pnr || bookingId}`,
           balanceAfter: newBalance,
           timestamp: serverTimestamp(),
           status: 'success',
         });
 
-        txn.set(ticketRef, {
-          ...ticket,
-          bookedAt: serverTimestamp(),
-        });
+        txn.set(bookingRef, bookingPayload);
         return newBalance;
       });
     }
 
-    return setDoc(ticketRef, {
-      ...ticket,
-      bookedAt: serverTimestamp(),
-    });
+    return setDoc(bookingRef, bookingPayload);
   },
 
   getTickets: async (uid: string, maxLimit: number = 50) => {
     const q = query(
-      collection(db, 'users', uid, 'tickets'),
-      orderBy('bookedAt', 'desc'),
+      collection(db, 'bookings'),
+      where('userId', '==', uid),
       limit(maxLimit)
     );
     return getDocs(q);
@@ -196,17 +224,90 @@ export const FirebaseFirestoreService = {
 
   listenToTickets: (uid: string, callback: (snapshot: any) => void, maxLimit: number = 50) => {
     const q = query(
-      collection(db, 'users', uid, 'tickets'),
-      orderBy('bookedAt', 'desc'),
+      collection(db, 'bookings'),
+      where('userId', '==', uid),
       limit(maxLimit)
     );
     return onSnapshot(q, callback, (err) => {
-      console.warn('Firestore tickets subscription error:', err);
+      console.warn('Firestore bookings subscription error:', err);
     });
   },
 
-  updateTicketStatus: async (uid: string, ticketId: string, status: string) => {
-    return updateDoc(doc(db, 'users', uid, 'tickets', ticketId), { status });
+  getAllBookings: async (maxLimit: number = 100) => {
+    const q = query(
+      collection(db, 'bookings'),
+      limit(maxLimit)
+    );
+    const snapshot = await getDocs(q);
+    const bookings: any[] = [];
+    snapshot.forEach((d) => bookings.push({ id: d.id, ...d.data() }));
+    return bookings;
+  },
+
+  getAdminStatistics: async () => {
+    try {
+      const usersSnap = await getDocs(query(collection(db, 'users'), limit(500)));
+      const bookingsSnap = await getDocs(query(collection(db, 'bookings'), limit(500)));
+
+      let totalUsers = 0;
+      let activeUsers = 0;
+      let disabledUsers = 0;
+      let totalRevenue = 0;
+      let upcomingBookings = 0;
+      let completedBookings = 0;
+      let cancelledBookings = 0;
+
+      usersSnap.forEach((d) => {
+        const u = d.data();
+        totalUsers++;
+        if (u.status === 'disabled') {
+          disabledUsers++;
+        } else {
+          activeUsers++;
+        }
+      });
+
+      bookingsSnap.forEach((d) => {
+        const b = d.data();
+        const fare = parseFloat(b.fare) || 0;
+        if (b.status !== 'cancelled') {
+          totalRevenue += fare;
+        }
+        if (b.status === 'upcoming') upcomingBookings++;
+        else if (b.status === 'completed') completedBookings++;
+        else if (b.status === 'cancelled') cancelledBookings++;
+      });
+
+      return {
+        totalUsers,
+        activeUsers,
+        disabledUsers,
+        totalBookings: bookingsSnap.size,
+        upcomingBookings,
+        completedBookings,
+        cancelledBookings,
+        totalRevenue: Number(totalRevenue.toFixed(2)),
+      };
+    } catch (err) {
+      console.warn('Could not compute admin stats:', err);
+      return {
+        totalUsers: 0,
+        activeUsers: 0,
+        disabledUsers: 0,
+        totalBookings: 0,
+        upcomingBookings: 0,
+        completedBookings: 0,
+        cancelledBookings: 0,
+        totalRevenue: 0,
+      };
+    }
+  },
+
+  updateTicketStatus: async (ticketId: string, status: string) => {
+    return updateDoc(doc(db, 'bookings', ticketId), {
+      status,
+      updatedAt: serverTimestamp(),
+    });
   },
 
   // ─── Station Masters ────────────────────────────────────────

@@ -1,7 +1,6 @@
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  sendPasswordResetEmail,
   signOut,
   onAuthStateChanged,
   User,
@@ -14,22 +13,23 @@ export const FirebaseAuthService = {
     return signInWithEmailAndPassword(auth, email, password);
   },
 
-  sendPasswordReset: async (email: string) => {
-    return sendPasswordResetEmail(auth, email.trim());
-  },
-
   register: async (name: string, mobile: string, email: string, password: string) => {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     const user = cred.user;
     if (user?.uid) {
       try {
         await setDoc(doc(db, 'users', user.uid), {
-          name,
-          mobile,
-          email,
-          role: 'user',
+          uid: user.uid,
+          name: name.trim(),
+          displayName: name.trim(),
+          mobile: mobile.trim(),
+          email: email.trim(),
+          role: 'user' as const,
+          status: 'active' as const,
           wallet: 250.0, // Welcome bonus balance
           createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          lastLoginAt: serverTimestamp(),
         });
         // Add welcome bonus transaction to wallet ledger
         const txnId = 'TXN_' + Date.now();
@@ -55,7 +55,7 @@ export const FirebaseAuthService = {
     email: string,
     password: string,
     initialWallet: number = 250.0,
-    role: string = 'user'
+    role: 'admin' | 'user' = 'user'
   ) => {
     // Use Firebase Auth REST API to create user without logging out the currently logged in Admin
     const res = await fetch(
@@ -86,13 +86,18 @@ export const FirebaseAuthService = {
 
     const uid = json.localId;
     if (uid) {
+      const targetRole: 'admin' | 'user' = role === 'admin' ? 'admin' : 'user';
       await setDoc(doc(db, 'users', uid), {
+        uid: uid,
         name: name.trim(),
+        displayName: name.trim(),
         mobile: mobile.trim(),
         email: email.trim(),
-        role: role,
+        role: targetRole,
+        status: 'active' as const,
         wallet: initialWallet,
         createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       });
 
       if (initialWallet > 0) {
@@ -109,7 +114,7 @@ export const FirebaseAuthService = {
       }
     }
 
-    return { uid, email: email.trim(), name: name.trim(), password };
+    return { uid, email: email.trim(), name: name.trim(), password, role };
   },
 
   logout: async () => {
