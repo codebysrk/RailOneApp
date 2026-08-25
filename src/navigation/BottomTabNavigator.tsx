@@ -24,9 +24,9 @@ export const BottomTabNavigator: React.FC = () => {
           tabBarInactiveTintColor: '#93c5fd',
           tabBarHideOnKeyboard: true,
           tabBarStyle: {
-            height: Platform.OS === 'ios' ? 76 : 62,
-            paddingBottom: Platform.OS === 'ios' ? 20 : 7,
-            paddingTop: 7,
+            height: Platform.OS === 'ios' ? 74 : 58,
+            paddingBottom: Platform.OS === 'ios' ? 19 : 5,
+            paddingTop: 6,
             backgroundColor: '#0066ff',
             borderTopWidth: 0,
             elevation: 8,
