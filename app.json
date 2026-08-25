@@ -13,7 +13,7 @@
       "package": "com.railone.app",
       "adaptiveIcon": {
         "backgroundColor": "#0066ff",
-        "foregroundImage": "./assets/icon.png"
+        "foregroundImage": "./assets/adaptive-icon.png"
       }
     },
     "androidStatusBar": {
