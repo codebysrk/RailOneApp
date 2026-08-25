@@ -12,7 +12,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { FocusAwareStatusBar } from '@/components/common';
+import { FocusAwareStatusBar, AppHeader } from '@/components/common';
 import { StorageService } from '@/services';
 
 interface LanguageOption {
@@ -98,23 +98,13 @@ export const LanguageScreen: React.FC = () => {
         ]}
       >
         <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-          {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity
-              style={styles.closeBtn}
-              onPress={handleClose}
-              activeOpacity={0.7}
-              accessibilityLabel="Close language selection"
-              accessibilityRole="button"
-            >
-              <Ionicons name="close" size={24} color="#3045b5" />
-            </TouchableOpacity>
-
-            <Text style={styles.headerTitle}>Select Language</Text>
-
-            {/* Empty Spacer to center the title */}
-            <View style={styles.headerSpacer} />
-          </View>
+          {/* Reusable AppHeader */}
+          <AppHeader
+            title="Select Language"
+            variant="soft"
+            titleCenter
+            onClose={handleClose}
+          />
 
           {/* Language Options List */}
           <View style={styles.optionsList}>
