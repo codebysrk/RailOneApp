@@ -51,7 +51,7 @@ const BiometricToggle = ({ enabled = true }: { enabled?: boolean }) => (
 export const ProfileScreen = () => {
   const { width } = useWindowDimensions();
   const gridBoxWidth = (width - 44) / 3;
-  const { user, logout, updateUserProfile, addWalletBalance } = useAuth();
+  const { user, updateUserProfile, addWalletBalance } = useAuth();
   const navigation = useNavigation<any>();
 
   // Modals state
@@ -183,13 +183,6 @@ export const ProfileScreen = () => {
     } finally {
       setRecharging(false);
     }
-  };
-
-  const handleLogout = () => {
-    Alert.alert('Log Out', 'Are you sure you want to log out from RailOne?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Log Out', style: 'destructive', onPress: () => logout() },
-    ]);
   };
 
   const userName = user?.name || 'Shahrukh';
@@ -454,16 +447,6 @@ export const ProfileScreen = () => {
             <Text style={styles.gridCardTitle}>DeLink{"\n"}Aadhar</Text>
           </TouchableOpacity>
         </View>
-
-        {/* ─── 5. Log Out Action ───────────────────────────────────── */}
-        <TouchableOpacity
-          style={styles.logoutBtn}
-          onPress={handleLogout}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="log-out-outline" size={20} color="#ef4444" />
-          <Text style={styles.logoutText}>Log Out</Text>
-        </TouchableOpacity>
       </ScrollView>
 
       {/* ─── MODAL: Add / Edit Passenger ───────────────────────────── */}
@@ -1113,24 +1096,6 @@ const styles = StyleSheet.create({
     height: 18,
     borderRadius: 9,
     backgroundColor: '#ffffff',
-  },
-
-  /* 5. Logout Button */
-  logoutBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: 16,
-    marginTop: 6,
-    paddingVertical: 12,
-    backgroundColor: '#fee2e2',
-    borderRadius: 12,
-  },
-  logoutText: {
-    color: '#ef4444',
-    fontSize: 14,
-    fontFamily: 'Montserrat_600SemiBold',
-    marginLeft: 6,
   },
 
   /* Modal Common */
