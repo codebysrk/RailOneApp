@@ -32,6 +32,67 @@ interface TicketCardProps {
   onBookAgain?: () => void;
 }
 
+// Helper function to format Journey Date as "Day, DD Mon YY" (e.g. "Thu, 30 Jul 25", "Mon, 05 Jan 26")
+const formatJourneyDate = (rawDate: any): string => {
+  if (!rawDate) return "---";
+  try {
+    const str = String(rawDate).trim();
+
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const months = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ];
+
+    // Case 1: Already formatted like "Thu, 30 Jul 2025" or "Thu, 30 Jul 25"
+    const standardMatch = str.match(
+      /^([A-Za-z]{3}),?\s+(\d{1,2})\s+([A-Za-z]{3})\s+(\d{2,4})/,
+    );
+    if (standardMatch) {
+      const dayName =
+        standardMatch[1].charAt(0).toUpperCase() +
+        standardMatch[1].slice(1, 3).toLowerCase();
+      const dayNum = standardMatch[2].padStart(2, "0");
+      const monthName =
+        standardMatch[3].charAt(0).toUpperCase() +
+        standardMatch[3].slice(1, 3).toLowerCase();
+      const yearStr = standardMatch[4].slice(-2);
+      return `${dayName}, ${dayNum} ${monthName} ${yearStr}`;
+    }
+
+    // Case 2: DD/MM/YYYY or DD-MM-YYYY (with optional time)
+    const ddmmyyyyMatch = str.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})/);
+    if (ddmmyyyyMatch) {
+      const day = parseInt(ddmmyyyyMatch[1], 10);
+      const month = parseInt(ddmmyyyyMatch[2], 10) - 1;
+      let year = parseInt(ddmmyyyyMatch[3], 10);
+      if (year < 100) year += 2000;
+      const d = new Date(year, month, day);
+      if (!isNaN(d.getTime())) {
+        const dayName = days[d.getDay()];
+        const dayNum = String(day).padStart(2, "0");
+        const monthName = months[month];
+        const yearStr = String(year).slice(-2);
+        return `${dayName}, ${dayNum} ${monthName} ${yearStr}`;
+      }
+    }
+
+    // Case 3: Parseable standard date / timestamp (e.g. "25 Aug 2026, 12:14" or ISO string)
+    const d = new Date(str);
+    if (!isNaN(d.getTime())) {
+      const dayName = days[d.getDay()];
+      const dayNum = String(d.getDate()).padStart(2, "0");
+      const monthName = months[d.getMonth()];
+      const yearStr = String(d.getFullYear()).slice(-2);
+      return `${dayName}, ${dayNum} ${monthName} ${yearStr}`;
+    }
+
+    return str;
+  } catch {
+    return String(rawDate);
+  }
+};
+
 export const TicketCard: React.FC<TicketCardProps> = ({
   ticket,
   status,
@@ -104,7 +165,7 @@ export const TicketCard: React.FC<TicketCardProps> = ({
           </View>
           <View style={styles.rightAlign}>
             <Text style={styles.infoLabel}>Journey Date</Text>
-            <Text style={styles.infoValue}>{ticket.date}</Text>
+            <Text style={styles.infoValue}>{formatJourneyDate(ticket.date)}</Text>
           </View>
         </View>
 
