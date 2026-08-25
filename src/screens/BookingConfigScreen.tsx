@@ -133,13 +133,22 @@ export const BookingConfigScreen = () => {
     }
 
     const now = new Date();
-    const dateFormatted = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-    const timeFormatted = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
-    const fullDateTime = `${dateFormatted}, ${timeFormatted}`;
-
     const currentDay = now.getDate().toString().padStart(2, '0');
     const currentMonth = (now.getMonth() + 1).toString().padStart(2, '0');
     const currentYear = now.getFullYear();
+    const currentHour = now.getHours().toString().padStart(2, '0');
+    const currentMin = now.getMinutes().toString().padStart(2, '0');
+    const timeFormatted = `${currentHour}:${currentMin}`;
+
+    const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const dayName = DAYS[now.getDay()];
+    const monthName = MONTHS[now.getMonth()];
+    const year2Digit = String(currentYear).slice(-2);
+
+    // Canonical Journey Date in required format: "Day, DD Mon YY" (e.g. "Tue, 25 Aug 26")
+    const canonicalJourneyDate = `${dayName}, ${currentDay} ${monthName} ${year2Digit}`;
+    const fullDateTime = `${dayName}, ${currentDay} ${monthName} ${currentYear}, ${timeFormatted}`;
 
     const bookedOnStr = `${currentDay}/${currentMonth}/${currentYear} ${timeFormatted}`;
     const validTillStr = `${currentDay}/${currentMonth}/${currentYear} 23:59`;
@@ -153,12 +162,13 @@ export const BookingConfigScreen = () => {
       id: Date.now().toString(),
       pnr: '',
       ticketId: 'XMSQEB' + Math.floor(1000 + Math.random() * 9000),
-      // FIX M7: removed hardcoded "12279 (TAJ EXPRESS)" — use generic label
       train: 'Unreserved Express',
-      date: fullDateTime,
+      date: canonicalJourneyDate,
+      journeyDate: canonicalJourneyDate,
       bookingDateTime: fullDateTime,
       bookedOn: bookedOnStr,
       validTill: validTillStr,
+      createdAt: now.toISOString(),
       source: srcName,
       dest: dstName,
       sourceCode: srcCode,

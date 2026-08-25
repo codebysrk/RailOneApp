@@ -29,6 +29,7 @@ import { spacing, elevation } from "@/theme/spacing";
 import { FirebaseService, UpdateService, ReleaseInfo } from "@/services";
 import { useAuth } from "@/context/AuthContext";
 import { UpdateModal, FocusAwareStatusBar } from "@/components/common";
+import { formatUpcomingDate } from "@/utils/date";
 import {
   SearchTrainsIcon,
   PNRStatusIcon,
@@ -101,88 +102,6 @@ export const HomeScreen = () => {
     );
     return () => unsubscribe();
   }, [user?.uid]);
-
-  const formatUpcomingDate = (rawDate: any): string => {
-    if (!rawDate) return "Sat, 29 Aug 2026";
-    try {
-      const str = String(rawDate).trim();
-
-      // Check if already formatted like "Sat, 29 Aug 2026"
-      if (/^[A-Za-z]{3},\s+\d{1,2}\s+[A-Za-z]{3}\s+\d{4}$/.test(str)) {
-        return str;
-      }
-
-      // If formatted like "Sat, 29 Aug 26" (2-digit year) -> expand to 2026
-      const twoDigitMatch = str.match(
-        /^([A-Za-z]{3},\s+\d{1,2}\s+[A-Za-z]{3})\s+(\d{2})$/,
-      );
-      if (twoDigitMatch) {
-        const fullYear =
-          parseInt(twoDigitMatch[2], 10) < 50
-            ? `20${twoDigitMatch[2]}`
-            : `19${twoDigitMatch[2]}`;
-        return `${twoDigitMatch[1]} ${fullYear}`;
-      }
-
-      // If DD/MM/YYYY or DD-MM-YYYY format
-      const ddmmyyyyMatch = str.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})/);
-      if (ddmmyyyyMatch) {
-        const day = parseInt(ddmmyyyyMatch[1], 10);
-        const month = parseInt(ddmmyyyyMatch[2], 10) - 1;
-        const year = parseInt(ddmmyyyyMatch[3], 10);
-        const d = new Date(year, month, day);
-        const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-        const months = [
-          "Jan",
-          "Feb",
-          "Mar",
-          "Apr",
-          "May",
-          "Jun",
-          "Jul",
-          "Aug",
-          "Sep",
-          "Oct",
-          "Nov",
-          "Dec",
-        ];
-        const dayName = days[d.getDay()];
-        const dayNum = String(day).padStart(2, "0");
-        const monthName = months[month];
-        return `${dayName}, ${dayNum} ${monthName} ${year}`;
-      }
-
-      const d = new Date(rawDate);
-      if (!isNaN(d.getTime())) {
-        const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-        const months = [
-          "Jan",
-          "Feb",
-          "Mar",
-          "Apr",
-          "May",
-          "Jun",
-          "Jul",
-          "Aug",
-          "Sep",
-          "Oct",
-          "Nov",
-          "Dec",
-        ];
-        const dayName = days[d.getDay()];
-        const dayNum = String(d.getDate()).padStart(2, "0");
-        const monthName = months[d.getMonth()];
-        const fullYear = d.getFullYear();
-        return `${dayName}, ${dayNum} ${monthName} ${fullYear}`;
-      }
-
-      return str;
-    } catch {
-      return String(rawDate)
-        .replace(/\s+\d{1,2}:\d{2}(\s*[APMapm]{2})?/, "")
-        .trim();
-    }
-  };
 
   const renderOfferingIcon = (type: string, color: string) => {
     switch (type) {

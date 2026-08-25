@@ -8,6 +8,8 @@ export interface Ticket {
   ticketId?: string;
   train: string;
   date: string;
+  journeyDate?: string;
+  bookingDateTime?: string;
   source: string;
   dest: string;
   sourceCode?: string;
