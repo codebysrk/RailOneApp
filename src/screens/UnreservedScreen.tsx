@@ -224,8 +224,8 @@ export const UnreservedScreen = () => {
                   >
                     Outside Station
                   </Text>
-                  <Ionicons
-                    name="information-circle-outline"
+                  <MaterialIcons
+                    name="info"
                     size={16}
                     color={location === "outside" ? colors.white : "#94a3b8"}
                     style={styles.infoIcon}
@@ -251,8 +251,8 @@ export const UnreservedScreen = () => {
                   >
                     At Station
                   </Text>
-                  <Ionicons
-                    name="information-circle-outline"
+                  <MaterialIcons
+                    name="info"
                     size={16}
                     color={location === "at" ? colors.white : "#94a3b8"}
                     style={styles.infoIcon}

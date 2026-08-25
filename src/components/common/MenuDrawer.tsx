@@ -210,8 +210,8 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
     {
       id: "about",
       label: "About",
-      iconType: "ion" as const,
-      icon: "information-circle" as const,
+      iconType: "material" as const,
+      icon: "info" as const,
       onPress: () => showInfoAlert("About RailOne", `RailOne v${UpdateService.getCurrentVersion()}\nIndian Railways official mobile ticketing companion.`),
     },
     {
@@ -396,8 +396,8 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
 
               {/* Notice / Disclaimer */}
               <View style={styles.noticeRow}>
-                <Ionicons
-                  name="information-circle"
+                <MaterialIcons
+                  name="info"
                   size={18}
                   color="#859ab5"
                 />

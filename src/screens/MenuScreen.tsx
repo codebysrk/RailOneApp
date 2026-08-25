@@ -69,7 +69,7 @@ export const MenuScreen = () => {
     { id: "2", label: "Check for Updates", icon: "cloud-download", iconType: "ion", onPress: handleCheckForUpdates },
     { id: "3", label: "FAQs", icon: "chatbubble-ellipses", iconType: "ion" },
     { id: "4", label: "Help & Support", icon: "support-agent", iconType: "material" },
-    { id: "5", label: "About", icon: "information-circle", iconType: "ion" },
+    { id: "5", label: "About", icon: "info", iconType: "material" },
     { id: "6", label: "Rate Us", icon: "thumbs-up", iconType: "ion" },
     { id: "7", label: "Share", icon: "share-social", iconType: "ion", onPress: handleShare },
     { id: "8", label: "Log Out", icon: "log-out", iconType: "ion", onPress: handleLogout },
