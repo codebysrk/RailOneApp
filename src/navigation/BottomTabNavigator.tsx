@@ -3,13 +3,16 @@ import { TouchableOpacity, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors } from '@/theme/colors';
-import { HomeScreen, BookingsScreen, ProfileScreen, MenuScreen } from '@/screens';
+import { HomeScreen, BookingsScreen, ProfileScreen, MenuScreen, AdminScreen } from '@/screens';
 import { BottomTabParamList } from '@/types/navigation';
 import { MenuDrawer } from '@/components/common/MenuDrawer';
+import { useAuth } from '@/context/AuthContext';
 
 const Tab = createBottomTabNavigator<BottomTabParamList>();
 
 export const BottomTabNavigator: React.FC = () => {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const [menuVisible, setMenuVisible] = useState(false);
 
   const openMenu = useCallback(() => setMenuVisible(true), []);
@@ -57,6 +60,8 @@ export const BottomTabNavigator: React.FC = () => {
 
             if (route.name === 'HomeTab') {
               iconName = 'home-outline';
+            } else if (route.name === 'AdminTab') {
+              iconName = 'shield-crown-outline';
             } else if (route.name === 'BookingsTab') {
               iconName = 'ticket-outline';
             } else if (route.name === 'ProfileTab') {
@@ -70,6 +75,13 @@ export const BottomTabNavigator: React.FC = () => {
         })}
       >
         <Tab.Screen name="HomeTab" component={HomeScreen} options={{ title: 'Home' }} />
+        {isAdmin && (
+          <Tab.Screen
+            name="AdminTab"
+            component={AdminScreen}
+            options={{ title: 'Admin' }}
+          />
+        )}
         <Tab.Screen
           name="BookingsTab"
           component={BookingsScreen}

@@ -188,6 +188,20 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
   };
 
   const menuItems = [
+    ...(user?.role === "admin"
+      ? [
+          {
+            id: "admin-control",
+            label: "Admin Control Center 👑",
+            iconType: "material" as const,
+            icon: "admin-panel-settings" as const,
+            onPress: () => {
+              handleClose();
+              navigation.navigate("Admin");
+            },
+          },
+        ]
+      : []),
     {
       id: "show-hide",
       label: "Show/Hide Services",
