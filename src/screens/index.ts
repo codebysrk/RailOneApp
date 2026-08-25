@@ -8,3 +8,4 @@ export * from './NotificationScreen';
 export * from './ProfileScreen';
 export * from './TicketScreen';
 export * from './UnreservedScreen';
+export * from './AdminScreen';

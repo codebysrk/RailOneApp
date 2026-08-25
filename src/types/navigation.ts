@@ -16,6 +16,7 @@ export type RootStackParamList = {
   };
   Notification: undefined;
   Language: undefined;
+  Admin: undefined;
 };
 
 export type BottomTabParamList = {

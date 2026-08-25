@@ -7,6 +7,7 @@ export type UserProfile = {
   name: string;
   mobile: string;
   wallet: number;
+  role?: 'admin' | 'user' | string;
 };
 
 type AuthContextType = {
@@ -54,17 +55,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           email: firebaseUser.email || "",
           name: data?.name || firebaseUser.displayName || "User",
           mobile: data?.mobile || "",
+          role: data?.role || (firebaseUser.email?.toLowerCase().includes("admin") ? "admin" : "user"),
           // FIX C6: only fall back to 250 if wallet field is genuinely absent
           wallet: data?.wallet !== undefined ? data.wallet : 250.0,
         });
       } else {
         // Document doesn't exist yet — create it (e.g. pre-Firestore users)
         const initialName = firebaseUser.displayName || "User";
+        const initialRole = firebaseUser.email?.toLowerCase().includes("admin") ? "admin" : "user";
         try {
           await FirebaseService.updateUserProfile(firebaseUser.uid, {
             name: initialName,
             mobile: "",
             wallet: 250.0,
+            role: initialRole,
           });
         } catch (writeErr) {
           console.warn('AuthContext: could not create user profile doc:', writeErr);
@@ -75,6 +79,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           name: initialName,
           mobile: "",
           wallet: 250.0,
+          role: initialRole,
         });
       }
     } catch (err) {

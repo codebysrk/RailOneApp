@@ -15,6 +15,7 @@ import { useAuth } from "@/context/AuthContext";
 import { AppAlert } from "@/context/AlertContext";
 import { UpdateService, ReleaseInfo } from "@/services";
 import { UpdateModal, FocusAwareStatusBar } from "@/components/common";
+import { triggerHaptic } from "@/utils/haptics";
 
 type MenuItem = {
   id: string;
@@ -108,6 +109,36 @@ export const MenuScreen = () => {
             <Text style={styles.addMoneyText}>Add Money</Text>
           </TouchableOpacity>
         </View>
+
+        {/* ─── 2.5 Admin Panel Tile (Visible to Admin Only) ────────── */}
+        {user?.role === "admin" && (
+          <TouchableOpacity
+            style={styles.adminBanner}
+            onPress={() => {
+              triggerHaptic("medium");
+              navigation.navigate("Admin");
+            }}
+            activeOpacity={0.85}
+          >
+            <View style={styles.adminBannerLeft}>
+              <View style={styles.adminIconBox}>
+                <Ionicons name="shield-checkmark" size={22} color="#ffffff" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <Text style={styles.adminBannerTitle}>Admin Management</Text>
+                  <View style={styles.adminBadge}>
+                    <Text style={styles.adminBadgeText}>ADMIN</Text>
+                  </View>
+                </View>
+                <Text style={styles.adminBannerSubtitle}>
+                  Create user credentials & manage wallets
+                </Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#0066ff" />
+          </TouchableOpacity>
+        )}
 
         {/* ─── 3. Menu Items List ─────────────────────────────────── */}
         <View style={styles.menuList}>
@@ -232,6 +263,58 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 13.5,
     fontWeight: "700",
+  },
+
+  /* Admin Banner */
+  adminBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#eff6ff",
+    borderWidth: 1.5,
+    borderColor: "#93c5fd",
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginBottom: 20,
+  },
+  adminBannerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  adminIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#0066ff",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  adminBannerTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#1e3a8a",
+  },
+  adminBadge: {
+    backgroundColor: "#dbeafe",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 5,
+    marginLeft: 6,
+  },
+  adminBadgeText: {
+    fontSize: 9.5,
+    fontWeight: "800",
+    color: "#1d4ed8",
+    letterSpacing: 0.4,
+  },
+  adminBannerSubtitle: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "#64748b",
+    marginTop: 2,
   },
 
   /* Menu List */

@@ -51,7 +51,40 @@ export const FirebaseFirestoreService = {
     return getDoc(doc(db, 'users', uid));
   },
 
-  updateUserProfile: async (uid: string, data: { name?: string; mobile?: string; wallet?: number }) => {
+  getAllUsers: async () => {
+    const q = query(collection(db, 'users'), limit(50));
+    const snapshot = await getDocs(q);
+    const users: any[] = [];
+    snapshot.forEach((docSnap) => {
+      users.push({ id: docSnap.id, ...docSnap.data() });
+    });
+    return users;
+  },
+
+  topUpUserWallet: async (uid: string, amount: number, adminEmail: string = 'Admin') => {
+    const userRef = doc(db, 'users', uid);
+    return runTransaction(db, async (txn) => {
+      const userDoc = await txn.get(userRef);
+      const currentWallet = userDoc.exists() ? (userDoc.data()?.wallet || 0) : 0;
+      const newBalance = Number((currentWallet + amount).toFixed(2));
+      txn.set(userRef, { wallet: newBalance }, { merge: true });
+
+      const txnId = 'TXN_' + Date.now();
+      const ledgerRef = doc(db, 'users', uid, 'wallet_ledger', txnId);
+      txn.set(ledgerRef, {
+        id: txnId,
+        type: 'credit',
+        amount,
+        description: `Admin Top-Up by ${adminEmail}`,
+        balanceAfter: newBalance,
+        timestamp: serverTimestamp(),
+        status: 'success',
+      });
+      return newBalance;
+    });
+  },
+
+  updateUserProfile: async (uid: string, data: { name?: string; mobile?: string; wallet?: number; role?: string }) => {
     const userRef = doc(db, 'users', uid);
     // FIX C1: use setDoc with merge so doc is created if missing
     return setDoc(userRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });

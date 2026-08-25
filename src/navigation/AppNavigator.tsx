@@ -3,7 +3,7 @@ import { View, StyleSheet, Platform } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from '@/context/AuthContext';
-import { LoginScreen, UnreservedScreen, BookingConfigScreen, TicketScreen, NotificationScreen, LanguageScreen } from '@/screens';
+import { LoginScreen, UnreservedScreen, BookingConfigScreen, TicketScreen, NotificationScreen, LanguageScreen, AdminScreen } from '@/screens';
 import { BottomTabNavigator } from '@/navigation/BottomTabNavigator';
 import { RootStackParamList } from '@/types/navigation';
 
@@ -62,6 +62,7 @@ export const AppNavigator: React.FC = () => {
                 gestureEnabled: false,
               }}
             />
+            <Stack.Screen name="Admin" component={AdminScreen} />
           </>
         )}
       </Stack.Navigator>
