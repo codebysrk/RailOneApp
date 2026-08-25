@@ -552,9 +552,7 @@ export const HomeScreen = () => {
         </Text>
         <View style={styles.socialSection}>
           <ImageBackground
-            source={{
-              uri: "https://images.unsplash.com/photo-1474487548417-781cb71495f3?q=80&w=800&auto=format&fit=crop",
-            }}
+            source={require("../../assets/images/social-banner.webp")}
             style={styles.socialBanner}
             imageStyle={styles.socialBannerImg}
           >
