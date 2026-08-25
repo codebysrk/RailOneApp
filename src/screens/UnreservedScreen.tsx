@@ -12,7 +12,6 @@ import {
   Platform,
   Animated,
 } from "react-native";
-import * as Haptics from "expo-haptics";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, Feather, MaterialIcons } from "@expo/vector-icons";
@@ -22,6 +21,7 @@ import { spacing, elevation } from "@/theme/spacing";
 import { AppAlert } from "@/context/AlertContext";
 import { AppHeader, SegmentedControl } from "@/components/common";
 import { FirebaseService, StorageService, StationModel } from "@/services";
+import { triggerHaptic } from "@/utils/haptics";
 
 const SideTrainIcon = ({
   size = 20,
@@ -118,9 +118,7 @@ export const UnreservedScreen = () => {
   };
 
   const handleSelectStation = (stn: StationModel) => {
-    try {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    } catch {}
+    triggerHaptic('light');
 
     const label = `${stn.code} - ${stn.name}`;
     const opposing = pickingTarget === "source" ? dest : source;
@@ -150,9 +148,7 @@ export const UnreservedScreen = () => {
   };
 
   const handleProceedToBook = () => {
-    try {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    } catch {}
+    triggerHaptic('medium');
 
     if (!source.trim() || !dest.trim()) {
       AppAlert.show(
@@ -190,9 +186,7 @@ export const UnreservedScreen = () => {
   const [rotated, setRotated] = useState(false);
 
   const handleSwapStations = () => {
-    try {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    } catch {}
+    triggerHaptic('medium');
 
     const toValue = rotated ? 0 : 1;
     Animated.spring(rotateAnim, {

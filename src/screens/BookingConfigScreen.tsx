@@ -13,7 +13,6 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Path } from 'react-native-svg';
 import { FirebaseService, StorageService } from '@/services';
@@ -22,6 +21,7 @@ import { AppAlert } from '@/context/AlertContext';
 import { AppHeader } from '@/components/common';
 import { calculateFare, TrainType } from '@/services/FareEngine';
 import { RailwayDistanceEngine } from '@/services/RailwayDistanceEngine';
+import { triggerHaptic } from '@/utils/haptics';
 
 const FareTicketIcon = ({ size = 30, color = "#0066ff" }: { size?: number; color?: string }) => (
   <Svg width={size} height={size * 0.72} viewBox="0 0 32 23" fill="none">
@@ -194,9 +194,7 @@ export const BookingConfigScreen = () => {
       } else {
         await StorageService.saveBookedTicket(newTicket);
       }
-      try {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      } catch {}
+      triggerHaptic('success');
       navigation.navigate('Ticket', { ticket: newTicket, fromBooking: true });
     } catch (err: any) {
       // FIX C5: surface error to user (including insufficient wallet balance)
