@@ -1,5 +1,3 @@
-import { doc, writeBatch, getDoc } from 'firebase/firestore';
-import { db } from '@/services/firebase/config';
 import { ALL_INDIAN_STATIONS, StationModel, generateStationKeywords } from '@/constants/stations';
 import { VERIFIED_RAILWAY_SECTIONS, RailwaySection } from '@/constants/railwaySections';
 
@@ -91,40 +89,4 @@ export const INITIAL_TRAINS: TrainModel[] = [
     runsOn: ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'],
   },
 ];
-
-export const DatabaseSeedService = {
-  seedMastersIfEmpty: async () => {
-    try {
-      const checkDoc = await getDoc(doc(db, 'system', 'seed_flag'));
-      if (checkDoc.exists() && checkDoc.data()?.seeded) {
-        return;
-      }
-
-      const batch = writeBatch(db);
-
-      INITIAL_STATIONS.forEach((station) => {
-        const stationRef = doc(db, 'stations', station.code);
-        batch.set(stationRef, station);
-      });
-
-      INITIAL_SECTIONS.forEach((section) => {
-        const sectionRef = doc(db, 'railway_sections', section.id);
-        batch.set(sectionRef, section);
-      });
-
-      INITIAL_TRAINS.forEach((train) => {
-        const trainRef = doc(db, 'trains', train.trainNumber);
-        batch.set(trainRef, train);
-      });
-
-      const flagRef = doc(db, 'system', 'seed_flag');
-      batch.set(flagRef, { seeded: true, seededAt: new Date().toISOString() });
-
-      await batch.commit();
-      console.log('✅ Firestore Master Stations, Railway Sections & Trains auto-seeded successfully.');
-    } catch (error) {
-      console.warn('⚠️ Firestore Seed check/execution note:', error);
-    }
-  },
-};
 
