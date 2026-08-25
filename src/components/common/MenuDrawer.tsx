@@ -9,7 +9,6 @@ import {
   TouchableWithoutFeedback,
   Animated,
   Share,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
@@ -19,6 +18,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "@/context/AuthContext";
+import { AppAlert } from "@/context/AlertContext";
 import { UpdateService } from "@/services";
 
 type Props = {
@@ -134,11 +134,11 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
   const handleAddFunds = async () => {
     const num = parseFloat(addAmount);
     if (isNaN(num) || num <= 0) {
-      Alert.alert("Invalid Amount", "Please enter a valid amount to add.");
+      AppAlert.show("Invalid Amount", "Please enter a valid amount to add.", undefined, "warning");
       return;
     }
     if (num > 10000) {
-      Alert.alert("Limit Exceeded", "Maximum top-up amount per transaction is ₹10,000.");
+      AppAlert.show("Limit Exceeded", "Maximum top-up amount per transaction is ₹10,000.", undefined, "warning");
       return;
     }
 
@@ -148,9 +148,9 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
         await addWalletBalance(num, "Added via UPI / Card");
       }
       handleCloseAddMoney();
-      Alert.alert("Success", `₹${num.toFixed(2)} added to R-Wallet successfully!`);
+      AppAlert.show("Success", `₹${num.toFixed(2)} added to R-Wallet successfully!`, undefined, "success");
     } catch (err: any) {
-      Alert.alert("Failed", err?.message || "Could not add funds. Please try again.");
+      AppAlert.show("Failed", err?.message || "Could not add funds. Please try again.", undefined, "error");
     } finally {
       setIsAddingMoney(false);
     }
@@ -165,7 +165,7 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
   };
 
   const handleLogout = () => {
-    Alert.alert("Log Out", "Are you sure you want to log out?", [
+    AppAlert.show("Log Out", "Are you sure you want to log out?", [
       { text: "Cancel", style: "cancel" },
       {
         text: "Log Out",
@@ -175,7 +175,7 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
           await logout();
         },
       },
-    ]);
+    ], "confirm");
   };
 
   const userName = user?.name || "Passenger";
@@ -184,7 +184,7 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
 
   const showInfoAlert = (title: string, msg: string) => {
     handleClose();
-    Alert.alert(title, msg);
+    AppAlert.show(title, msg, undefined, "info");
   };
 
   const menuItems = [

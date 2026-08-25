@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   ScrollView,
   Modal,
   TextInput,
@@ -15,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Rect, Circle, Path } from 'react-native-svg';
 import { useAuth } from '@/context/AuthContext';
+import { AppAlert } from '@/context/AlertContext';
 import { useNavigation } from '@react-navigation/native';
 import { StorageService, SavedPassenger } from '@/services/storage/storage.service';
 import { FocusAwareStatusBar } from '@/components/common';
@@ -115,7 +115,7 @@ export const ProfileScreen = () => {
 
   const handleSavePassenger = async () => {
     if (!pName.trim()) {
-      Alert.alert('Required', 'Please enter passenger name.');
+      AppAlert.show('Required', 'Please enter passenger name.', undefined, 'warning');
       return;
     }
     const ageNum = parseInt(pAge) || 25;
@@ -136,7 +136,7 @@ export const ProfileScreen = () => {
   };
 
   const handleDeletePassenger = async (id: string) => {
-    Alert.alert('Remove Passenger', 'Are you sure you want to remove this passenger?', [
+    AppAlert.show('Remove Passenger', 'Are you sure you want to remove this passenger?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Remove',
@@ -146,21 +146,21 @@ export const ProfileScreen = () => {
           setPassengers(updated);
         },
       },
-    ]);
+    ], 'confirm');
   };
 
   const handleSaveProfile = async () => {
     if (!editMobile.trim() || editMobile.trim().length < 10) {
-      Alert.alert('Invalid Mobile', 'Please enter a valid 10-digit mobile number.');
+      AppAlert.show('Invalid Mobile', 'Please enter a valid 10-digit mobile number.', undefined, 'warning');
       return;
     }
     setSavingProfile(true);
     try {
       await updateUserProfile(editName.trim() || 'User', editMobile.trim());
       setEditModalVisible(false);
-      Alert.alert('Success', 'Profile updated successfully!');
+      AppAlert.show('Success', 'Profile updated successfully!', undefined, 'success');
     } catch {
-      Alert.alert('Error', 'Could not update profile. Please try again.');
+      AppAlert.show('Error', 'Could not update profile. Please try again.', undefined, 'error');
     } finally {
       setSavingProfile(false);
     }
@@ -169,7 +169,7 @@ export const ProfileScreen = () => {
   const handleAddMoney = async () => {
     const val = parseFloat(amount);
     if (!val || val <= 0) {
-      Alert.alert('Invalid Amount', 'Please enter a valid amount to recharge.');
+      AppAlert.show('Invalid Amount', 'Please enter a valid amount to recharge.', undefined, 'warning');
       return;
     }
     setRecharging(true);
@@ -177,9 +177,9 @@ export const ProfileScreen = () => {
       await addWalletBalance(val, 'Recharge via UPI / Netbanking');
       setModalVisible(false);
       setAmount('100');
-      Alert.alert('Success', `₹${val.toFixed(2)} added to your R-Wallet!`);
+      AppAlert.show('Success', `₹${val.toFixed(2)} added to your R-Wallet!`, undefined, 'success');
     } catch {
-      Alert.alert('Error', 'Could not recharge wallet. Please try again.');
+      AppAlert.show('Error', 'Could not recharge wallet. Please try again.', undefined, 'error');
     } finally {
       setRecharging(false);
     }

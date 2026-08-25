@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Svg, { Path } from 'react-native-svg';
 import { FirebaseService, StorageService } from '@/services';
 import { useAuth } from '@/context/AuthContext';
+import { AppAlert } from '@/context/AlertContext';
 import { AppHeader } from '@/components/common';
 import { calculateFare, TrainType } from '@/services/FareEngine';
 import { RailwayDistanceEngine } from '@/services/RailwayDistanceEngine';
@@ -183,7 +183,7 @@ export const BookingConfigScreen = () => {
     } catch (err: any) {
       // FIX C5: surface error to user (including insufficient wallet balance)
       const msg = err?.message || 'Booking failed. Please try again.';
-      Alert.alert('Booking Failed', msg);
+      AppAlert.show('Booking Failed', msg, undefined, 'error');
     } finally {
       isBookingRef.current = false;
       setIsBooking(false);

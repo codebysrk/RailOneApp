@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   Image,
   TextInput,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Share,
@@ -23,6 +22,7 @@ import {
 } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { AppAlert } from "@/context/AlertContext";
 import { AppHeader } from "@/components/common";
 import { colors } from "@/theme/colors";
 import { spacing, elevation } from "@/theme/spacing";
@@ -335,16 +335,20 @@ export const TicketScreen = () => {
 
   const handleSubmitFeedback = () => {
     if (rating === 0 && !description.trim()) {
-      Alert.alert(
+      AppAlert.show(
         "Feedback",
         "Please provide a star rating or comments before submitting.",
+        undefined,
+        "warning"
       );
       return;
     }
     setFeedbackSubmitted(true);
-    Alert.alert(
+    AppAlert.show(
       "Thank You!",
       "Your rating and feedback have been recorded successfully.",
+      undefined,
+      "success"
     );
   };
 

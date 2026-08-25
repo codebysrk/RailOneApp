@@ -6,14 +6,13 @@ import {
   TouchableOpacity,
   ScrollView,
   Share,
-  Alert,
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { StatusBar } from "expo-status-bar";
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "@/context/AuthContext";
+import { AppAlert } from "@/context/AlertContext";
 import { UpdateService, ReleaseInfo } from "@/services";
 import { UpdateModal, FocusAwareStatusBar } from "@/components/common";
 
@@ -48,18 +47,20 @@ export const MenuScreen = () => {
       setUpdateInfo(info);
       setShowUpdateModal(true);
     } else {
-      Alert.alert(
+      AppAlert.show(
         "You're Up to Date! ✨",
-        `You are running the latest version of RailOne (v${UpdateService.getCurrentVersion()}).`
+        `You are running the latest version of RailOne (v${UpdateService.getCurrentVersion()}).`,
+        undefined,
+        "success"
       );
     }
   };
 
   const handleLogout = () => {
-    Alert.alert("Log Out", "Are you sure you want to log out?", [
+    AppAlert.show("Log Out", "Are you sure you want to log out?", [
       { text: "Cancel", style: "cancel" },
       { text: "Log Out", style: "destructive", onPress: () => logout() },
-    ]);
+    ], "confirm");
   };
 
   const menuItems: MenuItem[] = [

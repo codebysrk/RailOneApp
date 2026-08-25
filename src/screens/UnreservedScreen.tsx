@@ -8,7 +8,6 @@ import {
   Modal,
   TextInput,
   FlatList,
-  Alert,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -16,6 +15,7 @@ import { Ionicons, Feather, MaterialIcons } from "@expo/vector-icons";
 import Svg, { Path } from "react-native-svg";
 import { colors } from "@/theme/colors";
 import { spacing, elevation } from "@/theme/spacing";
+import { AppAlert } from "@/context/AlertContext";
 import { AppHeader, SegmentedControl } from "@/components/common";
 import { FirebaseService, StorageService, StationModel } from "@/services";
 
@@ -123,9 +123,11 @@ export const UnreservedScreen = () => {
       (stn.code === opposingCode ||
         label.toUpperCase() === opposing.toUpperCase())
     ) {
-      Alert.alert(
+      AppAlert.show(
         "Same Station Selected",
         `Source and Destination cannot be the same station (${stn.code} - ${stn.name}). Please select a different station.`,
+        undefined,
+        "warning"
       );
       return;
     }
@@ -141,9 +143,11 @@ export const UnreservedScreen = () => {
 
   const handleProceedToBook = () => {
     if (!source.trim() || !dest.trim()) {
-      Alert.alert(
+      AppAlert.show(
         "Selection Required",
         "Please select both Source and Destination stations to proceed.",
+        undefined,
+        "warning"
       );
       return;
     }
@@ -153,9 +157,11 @@ export const UnreservedScreen = () => {
       srcCode === dstCode ||
       source.trim().toUpperCase() === dest.trim().toUpperCase()
     ) {
-      Alert.alert(
+      AppAlert.show(
         "Invalid Route",
         "Source and Destination stations cannot be the same. Please select different stations to proceed.",
+        undefined,
+        "warning"
       );
       return;
     }
@@ -323,9 +329,11 @@ export const UnreservedScreen = () => {
               <TouchableOpacity
                 style={styles.secondaryBtn}
                 onPress={() => {
-                  Alert.alert(
+                  AppAlert.show(
                     "Coming Soon",
-                    "Live train schedule and tracking will be available in an upcoming update."
+                    "Live train schedule and tracking will be available in an upcoming update.",
+                    undefined,
+                    "info"
                   );
                 }}
                 activeOpacity={0.8}

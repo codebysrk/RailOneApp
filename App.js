@@ -93,6 +93,7 @@ TextInput.defaultProps.style = { fontFamily: 'Montserrat_400Regular' };
 
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { NetworkProvider } from './src/context/NetworkContext';
+import { AlertProvider } from './src/context/AlertContext';
 import { OfflineBanner } from './src/components/common';
 import { AppNavigator } from './src/navigation/AppNavigator';
 
@@ -190,11 +191,13 @@ export default function App() {
         {Platform.OS === 'android' && (
           <RNStatusBar barStyle="dark-content" backgroundColor="#ffffff" translucent={false} />
         )}
-        <NetworkProvider>
-          <AuthProvider>
-            <AppContent fontsLoaded={readyFonts} />
-          </AuthProvider>
-        </NetworkProvider>
+        <AlertProvider>
+          <NetworkProvider>
+            <AuthProvider>
+              <AppContent fontsLoaded={readyFonts} />
+            </AuthProvider>
+          </NetworkProvider>
+        </AlertProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

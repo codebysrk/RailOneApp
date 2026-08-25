@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Alert,
+  ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
+import { AppAlert } from '@/context/AlertContext';
 import { FocusAwareStatusBar } from '@/components/common';
 
 type Tab = "login" | "register";
@@ -22,17 +23,17 @@ export const LoginScreen = () => {
 
   const handleSubmit = async () => {
     if (!email.trim() || !password.trim()) {
-      Alert.alert("Error", "Please fill all required fields.");
+      AppAlert.show("Error", "Please fill all required fields.", undefined, "warning");
       return;
     }
     if (tab === "register") {
       if (!name.trim() || !mobile.trim()) {
-        Alert.alert("Error", "Please fill all fields.");
+        AppAlert.show("Error", "Please fill all fields.", undefined, "warning");
         return;
       }
       // FIX H10: validate 10-digit numeric mobile number
       if (!/^\d{10}$/.test(mobile.trim())) {
-        Alert.alert("Invalid Mobile Number", "Please enter a valid 10-digit mobile number.");
+        AppAlert.show("Invalid Mobile Number", "Please enter a valid 10-digit mobile number.", undefined, "warning");
         return;
       }
     }
@@ -59,7 +60,7 @@ export const LoginScreen = () => {
       } else {
         msg = msg.replace(/Firebase:\s*/i, "").replace(/\[.*?\]\s*/, "").replace(/\(auth\/.*?\)\.?/, "").trim();
       }
-      Alert.alert("Error", msg);
+      AppAlert.show("Error", msg, undefined, "error");
     } finally {
       setLoading(false);
     }
