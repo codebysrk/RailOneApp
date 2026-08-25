@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { TouchableOpacity, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors } from '@/theme/colors';
 import { HomeScreen, BookingsScreen, ProfileScreen, MenuScreen } from '@/screens';
 import { BottomTabParamList } from '@/types/navigation';
@@ -48,9 +48,11 @@ export const BottomTabNavigator: React.FC = () => {
             />
           ),
           tabBarIcon: ({ color, focused }) => {
+            if (route.name === 'HomeTab') {
+              return <MaterialCommunityIcons name="home-outline" size={24} color={color} />;
+            }
             let iconName: keyof typeof Ionicons.glyphMap;
-            if (route.name === 'HomeTab') iconName = focused ? 'home' : 'home-outline';
-            else if (route.name === 'BookingsTab') iconName = focused ? 'ticket' : 'ticket-outline';
+            if (route.name === 'BookingsTab') iconName = focused ? 'ticket' : 'ticket-outline';
             else if (route.name === 'ProfileTab') iconName = focused ? 'person' : 'person-outline';
             else iconName = focused ? 'menu' : 'menu-outline';
             return <Ionicons name={iconName} size={22} color={color} />;
