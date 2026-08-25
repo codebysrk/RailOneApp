@@ -1,6 +1,7 @@
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
   signOut,
   onAuthStateChanged,
   User,
@@ -11,6 +12,10 @@ import { auth, db } from '@/services/firebase/config';
 export const FirebaseAuthService = {
   login: async (email: string, password: string) => {
     return signInWithEmailAndPassword(auth, email, password);
+  },
+
+  sendPasswordReset: async (email: string) => {
+    return sendPasswordResetEmail(auth, email.trim());
   },
 
   register: async (name: string, mobile: string, email: string, password: string) => {

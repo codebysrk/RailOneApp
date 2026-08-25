@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { FirebaseService } from '@/services';
+import { AppAlert } from '@/context/AlertContext';
 
 export type UserProfile = {
   uid: string;
@@ -8,6 +9,7 @@ export type UserProfile = {
   mobile: string;
   wallet: number;
   role?: 'admin' | 'user' | string;
+  status?: 'active' | 'blocked';
 };
 
 type AuthContextType = {
@@ -50,12 +52,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const docSnap = await FirebaseService.getUserProfile(firebaseUser.uid);
       if (docSnap.exists()) {
         const data = docSnap.data();
+        const userRole = data?.role || (firebaseUser.email?.toLowerCase().includes("admin") ? "admin" : "user");
+        const userStatus = data?.status || "active";
+
+        if (userStatus === "blocked" && userRole !== "admin") {
+          await FirebaseService.logout();
+          setUser(null);
+          AppAlert.show(
+            "Account Suspended",
+            "Your account has been suspended by the administrator. Please contact your admin for reactivation.",
+            undefined,
+            "error"
+          );
+          return;
+        }
+
         setUser({
           uid: firebaseUser.uid,
           email: firebaseUser.email || "",
           name: data?.name || firebaseUser.displayName || "User",
           mobile: data?.mobile || "",
-          role: data?.role || (firebaseUser.email?.toLowerCase().includes("admin") ? "admin" : "user"),
+          role: userRole,
+          status: userStatus,
           // FIX C6: only fall back to 250 if wallet field is genuinely absent
           wallet: data?.wallet !== undefined ? data.wallet : 250.0,
         });

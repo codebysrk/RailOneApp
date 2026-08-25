@@ -84,7 +84,12 @@ export const FirebaseFirestoreService = {
     });
   },
 
-  updateUserProfile: async (uid: string, data: { name?: string; mobile?: string; wallet?: number; role?: string }) => {
+  toggleUserStatus: async (uid: string, newStatus: 'active' | 'blocked') => {
+    const userRef = doc(db, 'users', uid);
+    return setDoc(userRef, { status: newStatus, updatedAt: serverTimestamp() }, { merge: true });
+  },
+
+  updateUserProfile: async (uid: string, data: { name?: string; mobile?: string; wallet?: number; role?: string; status?: 'active' | 'blocked' }) => {
     const userRef = doc(db, 'users', uid);
     // FIX C1: use setDoc with merge so doc is created if missing
     return setDoc(userRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });

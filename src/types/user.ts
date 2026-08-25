@@ -5,6 +5,7 @@ export interface UserProfile {
   mobile: string;
   wallet: number;
   role?: 'admin' | 'user' | string;
+  status?: 'active' | 'blocked';
   createdAt?: any;
   updatedAt?: any;
 }
