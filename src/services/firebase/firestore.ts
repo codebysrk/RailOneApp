@@ -150,6 +150,19 @@ export const FirebaseFirestoreService = {
     });
   },
 
+  deleteSingleDeletedUserLog: async (uid: string) => {
+    const logRef = doc(db, 'deleted_users', uid);
+    return deleteDoc(logRef);
+  },
+
+  clearDeletedUsersLogs: async () => {
+    const q = query(collection(db, 'deleted_users'), limit(200));
+    const snapshot = await getDocs(q);
+    const deletePromises = snapshot.docs.map((d) => deleteDoc(d.ref));
+    await Promise.all(deletePromises);
+    return { success: true, count: snapshot.docs.length };
+  },
+
   topUpUserWallet: async (uid: string, amount: number, adminEmail: string = 'Admin') => {
     const userRef = doc(db, 'users', uid);
     return runTransaction(db, async (txn) => {

@@ -347,6 +347,60 @@ export const AdminScreen = () => {
     }
   };
 
+  const handleClearAllLogs = () => {
+    triggerHaptic('medium');
+    if (deletedLogs.length === 0) return;
+
+    AppAlert.show(
+      'Clear All Audit Logs?',
+      'Are you sure you want to permanently clear all deleted user audit logs? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear All',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await FirebaseService.clearDeletedUsersLogs();
+              triggerHaptic('success');
+              setDeletedLogs([]);
+              AppAlert.show('Logs Cleared', 'All audit logs have been successfully cleared.', undefined, 'success');
+            } catch (err: any) {
+              AppAlert.show('Failed', err?.message || 'Could not clear logs.', undefined, 'error');
+            }
+          },
+        },
+      ],
+      'confirm'
+    );
+  };
+
+  const handleDeleteSingleLog = (log: any) => {
+    triggerHaptic('medium');
+    AppAlert.show(
+      'Delete Log Entry?',
+      `Remove audit log for ${log.name || log.email || log.uid}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete Log',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await FirebaseService.deleteSingleDeletedUserLog(log.uid || log.id);
+              triggerHaptic('success');
+              setDeletedLogs((prev) => prev.filter((l) => (l.uid || l.id) !== (log.uid || log.id)));
+              AppAlert.show('Log Removed', 'The audit entry was removed.', undefined, 'success');
+            } catch (err: any) {
+              AppAlert.show('Failed', err?.message || 'Could not delete log.', undefined, 'error');
+            }
+          },
+        },
+      ],
+      'confirm'
+    );
+  };
+
   const handleTopUpAmount = async (targetUser: any, amount: number) => {
     triggerHaptic('medium');
     const uid = targetUser.id || targetUser.uid;
@@ -1399,13 +1453,26 @@ export const AdminScreen = () => {
                 </Text>
               </View>
 
-              <TouchableOpacity
-                style={styles.modalCloseBtn}
-                onPress={() => setShowDeletedLogsModal(false)}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <Ionicons name="close" size={20} color="#64748b" />
-              </TouchableOpacity>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                {deletedLogs.length > 0 && (
+                  <TouchableOpacity
+                    style={styles.clearLogsBtn}
+                    onPress={handleClearAllLogs}
+                    activeOpacity={0.8}
+                  >
+                    <Feather name="trash" size={11} color="#b91c1c" style={{ marginRight: 3 }} />
+                    <Text style={styles.clearLogsBtnText}>Clear All</Text>
+                  </TouchableOpacity>
+                )}
+
+                <TouchableOpacity
+                  style={styles.modalCloseBtn}
+                  onPress={() => setShowDeletedLogsModal(false)}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons name="close" size={20} color="#64748b" />
+                </TouchableOpacity>
+              </View>
             </View>
 
             <FlatList
@@ -1425,27 +1492,39 @@ export const AdminScreen = () => {
                 return (
                   <View style={styles.logCard}>
                     <View style={styles.logCardHeader}>
-                      <View style={{ flex: 1 }}>
+                      <View style={{ flex: 1, marginRight: 6 }}>
                         <Text style={styles.logNameText}>{item.name || 'Unnamed'}</Text>
                         <Text style={styles.logEmailText}>{item.email || 'No email'}</Text>
                       </View>
-                      <TouchableOpacity
-                        style={[
-                          styles.authStatusBadge,
-                          isAuthRemoved ? styles.authStatusBadgeDone : styles.authStatusBadgePending,
-                        ]}
-                        onPress={() => handleToggleAuthRemoved(item)}
-                        activeOpacity={0.8}
-                      >
-                        <Text
+
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <TouchableOpacity
                           style={[
-                            styles.authStatusBadgeText,
-                            isAuthRemoved ? styles.authStatusBadgeDoneText : styles.authStatusBadgePendingText,
+                            styles.authStatusBadge,
+                            isAuthRemoved ? styles.authStatusBadgeDone : styles.authStatusBadgePending,
                           ]}
+                          onPress={() => handleToggleAuthRemoved(item)}
+                          activeOpacity={0.8}
                         >
-                          {isAuthRemoved ? 'Auth Removed ✅' : 'Auth Pending ⚠️'}
-                        </Text>
-                      </TouchableOpacity>
+                          <Text
+                            style={[
+                              styles.authStatusBadgeText,
+                              isAuthRemoved ? styles.authStatusBadgeDoneText : styles.authStatusBadgePendingText,
+                            ]}
+                          >
+                            {isAuthRemoved ? 'Auth Removed ✅' : 'Auth Pending ⚠️'}
+                          </Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={styles.deleteSingleLogBtn}
+                          onPress={() => handleDeleteSingleLog(item)}
+                          activeOpacity={0.75}
+                          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                        >
+                          <Feather name="trash-2" size={13} color="#94a3b8" />
+                        </TouchableOpacity>
+                      </View>
                     </View>
 
                     {/* UID Box with Share/Copy */}
@@ -2442,6 +2521,26 @@ const styles = StyleSheet.create({
   },
   modalCloseBtn: {
     padding: 4,
+  },
+  clearLogsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fee2e2',
+    paddingHorizontal: 8,
+    paddingVertical: 4.5,
+    borderRadius: 6,
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: '#fecaca',
+  },
+  clearLogsBtnText: {
+    fontSize: 10.5,
+    fontFamily: 'Montserrat_700Bold',
+    color: '#b91c1c',
+  },
+  deleteSingleLogBtn: {
+    padding: 4,
+    marginLeft: 6,
   },
   userModalStatsStrip: {
     flexDirection: 'row',
