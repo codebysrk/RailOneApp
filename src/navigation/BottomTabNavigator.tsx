@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { TouchableOpacity, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors } from '@/theme/colors';
 import { HomeScreen, BookingsScreen, ProfileScreen, MenuScreen } from '@/screens';
 import { BottomTabParamList } from '@/types/navigation';
@@ -52,14 +52,20 @@ export const BottomTabNavigator: React.FC = () => {
             />
           ),
           tabBarIcon: ({ color, focused }) => {
+            const ICON_SIZE = 26;
+            let iconName: keyof typeof MaterialCommunityIcons.glyphMap;
+
             if (route.name === 'HomeTab') {
-              return <MaterialCommunityIcons name="home-outline" size={24} color={color} />;
+              iconName = focused ? 'home' : 'home-outline';
+            } else if (route.name === 'BookingsTab') {
+              iconName = focused ? 'ticket' : 'ticket-outline';
+            } else if (route.name === 'ProfileTab') {
+              iconName = focused ? 'account' : 'account-outline';
+            } else {
+              iconName = 'menu';
             }
-            let iconName: keyof typeof Ionicons.glyphMap;
-            if (route.name === 'BookingsTab') iconName = focused ? 'ticket' : 'ticket-outline';
-            else if (route.name === 'ProfileTab') iconName = focused ? 'person' : 'person-outline';
-            else iconName = focused ? 'menu' : 'menu-outline';
-            return <Ionicons name={iconName} size={22} color={color} />;
+
+            return <MaterialCommunityIcons name={iconName} size={ICON_SIZE} color={color} />;
           },
         })}
       >
