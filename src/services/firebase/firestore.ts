@@ -5,6 +5,8 @@ import {
   updateDoc,
   collection,
   query,
+  where,
+  limit,
   orderBy,
   getDocs,
   onSnapshot,
@@ -83,9 +85,13 @@ export const FirebaseFirestoreService = {
     });
   },
 
-  getWalletTransactions: async (uid: string) => {
+  getWalletTransactions: async (uid: string, maxLimit: number = 50) => {
     try {
-      const q = query(collection(db, 'users', uid, 'wallet_ledger'), orderBy('timestamp', 'desc'));
+      const q = query(
+        collection(db, 'users', uid, 'wallet_ledger'),
+        orderBy('timestamp', 'desc'),
+        limit(maxLimit)
+      );
       const snap = await getDocs(q);
       const txns: WalletTransaction[] = [];
       snap.forEach((d) => txns.push({ id: d.id, ...d.data() } as WalletTransaction));
@@ -141,13 +147,21 @@ export const FirebaseFirestoreService = {
     });
   },
 
-  getTickets: async (uid: string) => {
-    const q = query(collection(db, 'users', uid, 'tickets'), orderBy('bookedAt', 'desc'));
+  getTickets: async (uid: string, maxLimit: number = 50) => {
+    const q = query(
+      collection(db, 'users', uid, 'tickets'),
+      orderBy('bookedAt', 'desc'),
+      limit(maxLimit)
+    );
     return getDocs(q);
   },
 
-  listenToTickets: (uid: string, callback: (snapshot: any) => void) => {
-    const q = query(collection(db, 'users', uid, 'tickets'), orderBy('bookedAt', 'desc'));
+  listenToTickets: (uid: string, callback: (snapshot: any) => void, maxLimit: number = 50) => {
+    const q = query(
+      collection(db, 'users', uid, 'tickets'),
+      orderBy('bookedAt', 'desc'),
+      limit(maxLimit)
+    );
     return onSnapshot(q, callback, (err) => {
       console.warn('Firestore tickets subscription error:', err);
     });
@@ -158,9 +172,10 @@ export const FirebaseFirestoreService = {
   },
 
   // ─── Station Masters ────────────────────────────────────────
-  getStations: async (): Promise<StationModel[]> => {
+  getStations: async (maxLimit: number = 50): Promise<StationModel[]> => {
     try {
-      const snap = await getDocs(collection(db, 'stations'));
+      const q = query(collection(db, 'stations'), limit(maxLimit));
+      const snap = await getDocs(q);
       if (!snap.empty) {
         const stations: StationModel[] = [];
         snap.forEach((d) => stations.push(d.data() as StationModel));
@@ -169,30 +184,65 @@ export const FirebaseFirestoreService = {
     } catch {
       // Fallback to seed data
     }
-    return INITIAL_STATIONS;
+    return INITIAL_STATIONS.slice(0, maxLimit);
   },
 
-  searchStations: async (queryText: string): Promise<StationModel[]> => {
-    const q = queryText.toUpperCase().trim();
-    const all = await FirebaseFirestoreService.getStations();
-    if (!q) {
-      const popular = all.filter((s) => s.isPopular);
-      return popular.length > 0 ? popular : all.slice(0, 25);
+  searchStations: async (queryText: string, maxLimit: number = 25): Promise<StationModel[]> => {
+    const qRaw = queryText.trim();
+    const qLower = qRaw.toLowerCase();
+    const qUpper = qRaw.toUpperCase();
+
+    // 1. Empty query: return popular stations with limit
+    if (!qRaw) {
+      try {
+        const qPopular = query(
+          collection(db, 'stations'),
+          where('isPopular', '==', true),
+          limit(maxLimit)
+        );
+        const snap = await getDocs(qPopular);
+        if (!snap.empty) {
+          const stations: StationModel[] = [];
+          snap.forEach((d) => stations.push(d.data() as StationModel));
+          return stations;
+        }
+      } catch {}
+
+      // Fallback to memory
+      const popular = INITIAL_STATIONS.filter((s) => s.isPopular);
+      return popular.length > 0 ? popular.slice(0, maxLimit) : INITIAL_STATIONS.slice(0, maxLimit);
     }
-    // FIX C3: null-safe access on city and state to prevent crash on bad Firestore data
-    return all.filter(
+
+    // 2. Keyword Indexed Firestore search
+    try {
+      const qKeywords = query(
+        collection(db, 'stations'),
+        where('keywords', 'array-contains', qLower),
+        limit(maxLimit)
+      );
+      const snap = await getDocs(qKeywords);
+      if (!snap.empty) {
+        const stations: StationModel[] = [];
+        snap.forEach((d) => stations.push(d.data() as StationModel));
+        return stations;
+      }
+    } catch {}
+
+    // 3. High performance in-memory fallback (Instant & Offline-Safe)
+    return INITIAL_STATIONS.filter(
       (s) =>
-        s.code?.toUpperCase().includes(q) ||
-        s.name?.toUpperCase().includes(q) ||
-        s.city?.toUpperCase().includes(q) ||
-        s.state?.toUpperCase().includes(q)
-    );
+        s.code?.toUpperCase().includes(qUpper) ||
+        s.name?.toUpperCase().includes(qUpper) ||
+        s.city?.toUpperCase().includes(qUpper) ||
+        s.state?.toUpperCase().includes(qUpper)
+    ).slice(0, maxLimit);
   },
 
   // ─── Train Masters ──────────────────────────────────────────
-  getTrains: async (): Promise<TrainModel[]> => {
+  getTrains: async (maxLimit: number = 50): Promise<TrainModel[]> => {
     try {
-      const snap = await getDocs(collection(db, 'trains'));
+      const q = query(collection(db, 'trains'), limit(maxLimit));
+      const snap = await getDocs(q);
       if (!snap.empty) {
         const trains: TrainModel[] = [];
         snap.forEach((d) => trains.push(d.data() as TrainModel));
@@ -201,7 +251,7 @@ export const FirebaseFirestoreService = {
     } catch {
       // Fallback to seed data
     }
-    return INITIAL_TRAINS;
+    return INITIAL_TRAINS.slice(0, maxLimit);
   },
 
   // ─── PNR Lookup ─────────────────────────────────────────────

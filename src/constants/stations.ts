@@ -5,7 +5,38 @@ export interface StationModel {
   state: string;
   zone: string;
   isPopular: boolean;
+  keywords?: string[];
 }
+
+export const generateStationKeywords = (station: StationModel): string[] => {
+  const set = new Set<string>();
+  const addVariations = (text?: string) => {
+    if (!text) return;
+    const clean = text.toLowerCase().trim();
+    set.add(clean);
+    // Prefixes from 2 characters upwards
+    for (let i = 2; i <= clean.length; i++) {
+      set.add(clean.slice(0, i));
+    }
+    // Individual words and their prefixes
+    const words = clean.split(/[\s\-()\/,]+/);
+    for (const w of words) {
+      if (w.length >= 2) {
+        set.add(w);
+        for (let i = 2; i <= w.length; i++) {
+          set.add(w.slice(0, i));
+        }
+      }
+    }
+  };
+
+  addVariations(station.code);
+  addVariations(station.name);
+  addVariations(station.city);
+  addVariations(station.state);
+
+  return Array.from(set).slice(0, 100);
+};
 
 export const ALL_INDIAN_STATIONS: StationModel[] = [
   // ─── NORTHERN ZONE (NR & NCR) ──────────────────────────────

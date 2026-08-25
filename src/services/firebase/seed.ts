@@ -1,6 +1,6 @@
 import { doc, writeBatch, getDoc } from 'firebase/firestore';
 import { db } from '@/services/firebase/config';
-import { ALL_INDIAN_STATIONS, StationModel } from '@/constants/stations';
+import { ALL_INDIAN_STATIONS, StationModel, generateStationKeywords } from '@/constants/stations';
 import { VERIFIED_RAILWAY_SECTIONS, RailwaySection } from '@/constants/railwaySections';
 
 export { StationModel, RailwaySection };
@@ -17,7 +17,10 @@ export interface TrainModel {
   runsOn: string[];
 }
 
-export const INITIAL_STATIONS: StationModel[] = ALL_INDIAN_STATIONS;
+export const INITIAL_STATIONS: StationModel[] = ALL_INDIAN_STATIONS.map((s) => ({
+  ...s,
+  keywords: generateStationKeywords(s),
+}));
 export const INITIAL_SECTIONS: RailwaySection[] = VERIFIED_RAILWAY_SECTIONS;
 
 export const INITIAL_TRAINS: TrainModel[] = [

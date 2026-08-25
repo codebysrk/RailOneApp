@@ -5,7 +5,12 @@ import {
 } from 'firebase/auth';
 // @ts-ignore
 import { getReactNativePersistence } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  getFirestore,
+} from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const firebaseConfig = {
@@ -37,6 +42,22 @@ try {
   }
 }
 
+// Initialize Firestore with Persistent Offline Cache
+let firestoreInstance: any;
+try {
+  firestoreInstance = initializeFirestore(app, {
+    localCache: persistentLocalCache({
+      tabManager: persistentMultipleTabManager(),
+    }),
+  });
+} catch {
+  try {
+    firestoreInstance = getFirestore(app);
+  } catch (err) {
+    console.warn('Firebase getFirestore error:', err);
+  }
+}
+
 export const auth = authInstance;
-export const db = getFirestore(app);
+export const db = firestoreInstance;
 
