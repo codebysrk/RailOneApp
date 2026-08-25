@@ -323,16 +323,6 @@ export const TicketScreen = () => {
   const [description, setDescription] = useState<string>("");
   const [feedbackSubmitted, setFeedbackSubmitted] = useState<boolean>(false);
 
-  const onShare = async () => {
-    try {
-      await Share.share({
-        message: `UTS Journey Ticket: ${source} to ${dest}. PNR: ${pnr}. Ticket ID: ${ticketId}. Fare: ₹${fare}`,
-      });
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   const handleSubmitFeedback = () => {
     if (rating === 0 && !description.trim()) {
       AppAlert.show(
@@ -413,7 +403,14 @@ export const TicketScreen = () => {
         onBack={handleBack}
         rightAction={{
           icon: "share-social-outline",
-          onPress: onShare,
+          borderless: true,
+          onPress: async () => {
+            try {
+              await Share.share({
+                message: `RailOne UTS Journey Ticket\nPNR: ${pnr}\nTicket ID: ${ticketId}\nRoute: ${source} -> ${dest}\nFare: ₹${fare}\nValid: ${validTillNumeric}`,
+              });
+            } catch {}
+          },
         }}
       />
 
