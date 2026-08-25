@@ -52,6 +52,7 @@ export const AppNavigator: React.FC = () => {
               name="Notification"
               component={NotificationScreen}
               options={{
+                presentation: 'fullScreenModal',
                 animation: 'slide_from_right',
                 animationDuration: 260,
                 gestureEnabled: true,
@@ -62,6 +63,7 @@ export const AppNavigator: React.FC = () => {
               name="Language"
               component={LanguageScreen}
               options={{
+                presentation: 'fullScreenModal',
                 animation: 'slide_from_right',
                 animationDuration: 260,
                 gestureEnabled: true,

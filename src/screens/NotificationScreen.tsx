@@ -117,9 +117,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0066ff',
+    zIndex: 9999,
+    elevation: 10,
   },
   animatedWrapper: {
     flex: 1,
+    zIndex: 9999,
   },
   content: {
     flex: 1,

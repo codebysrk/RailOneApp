@@ -131,9 +131,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#eef2fa',
+    zIndex: 9999,
+    elevation: 10,
   },
   animatedWrapper: {
     flex: 1,
+    zIndex: 9999,
   },
   header: {
     flexDirection: 'row',
