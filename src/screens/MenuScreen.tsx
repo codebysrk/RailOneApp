@@ -66,6 +66,17 @@ export const MenuScreen = () => {
   };
 
   const menuItems: MenuItem[] = [
+    ...(user?.role === "admin"
+      ? [
+          {
+            id: "admin",
+            label: "Admin Control Center",
+            icon: "shield-checkmark",
+            iconType: "ion" as const,
+            onPress: () => navigation.navigate("Admin"),
+          },
+        ]
+      : []),
     { id: "1", label: "Show/Hide Services", icon: "bookmark", iconType: "ion" },
     { id: "2", label: "Check for Updates", icon: "cloud-download", iconType: "ion", onPress: handleCheckForUpdates },
     { id: "3", label: "FAQs", icon: "chatbubble-ellipses", iconType: "ion" },
@@ -78,10 +89,6 @@ export const MenuScreen = () => {
 
   const userName = user?.name || "Passenger";
   const walletBalance = user?.wallet !== undefined ? user.wallet.toFixed(2) : "0.00";
-  const isAdmin =
-    user?.role === "admin" ||
-    user?.email?.toLowerCase().includes("admin") ||
-    user?.email?.toLowerCase() === "admin@railone.com";
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
@@ -115,7 +122,7 @@ export const MenuScreen = () => {
         </View>
 
         {/* ─── 2.5 Admin Panel Tile (Visible to Admin Only) ────────── */}
-        {isAdmin && (
+        {user?.role === "admin" && (
           <TouchableOpacity
             style={styles.adminBanner}
             onPress={() => {
