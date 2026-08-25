@@ -272,26 +272,6 @@ export const ProfileScreen = () => {
           </View>
         </View>
 
-        {/* ─── 1.5 Admin Quick Card (If Admin) ────────────────────── */}
-        {user?.role === 'admin' && (
-          <TouchableOpacity
-            style={styles.adminQuickCard}
-            onPress={() => navigation.navigate('Admin')}
-            activeOpacity={0.85}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <View style={styles.adminQuickIconBox}>
-                <Ionicons name="shield-checkmark" size={20} color="#ffffff" />
-              </View>
-              <View style={{ marginLeft: 10 }}>
-                <Text style={styles.adminQuickTitle}>Admin Control Center</Text>
-                <Text style={styles.adminQuickSub}>Manage users, bookings & metrics</Text>
-              </View>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color="#0066ff" />
-          </TouchableOpacity>
-        )}
-
         {/* ─── 2. Profile Complete Progress Card ───────────────────── */}
         <View style={styles.progressCard}>
           <Text style={styles.progressTitle}>Profile Complete</Text>

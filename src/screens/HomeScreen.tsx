@@ -174,33 +174,6 @@ export const HomeScreen = () => {
           Hi, {user?.name ? user.name.split(" ")[0] : "User"}!
         </Text>
 
-        {/* ─── Admin Mode Banner (If Admin) ────────────────────────── */}
-        {user?.role === "admin" && (
-          <TouchableOpacity
-            style={styles.adminHeroBanner}
-            onPress={() => navigation.navigate("Admin")}
-            activeOpacity={0.85}
-          >
-            <LinearGradient
-              colors={["#0f172a", "#1e3a8a"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.adminHeroGradient}
-            >
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <View style={styles.adminHeroIconBox}>
-                  <Ionicons name="shield-checkmark" size={20} color="#facc15" />
-                </View>
-                <View style={{ marginLeft: 10 }}>
-                  <Text style={styles.adminHeroTitle}>Admin Control Center 👑</Text>
-                  <Text style={styles.adminHeroSub}>Manage Users, Bookings & Analytics</Text>
-                </View>
-              </View>
-              <Ionicons name="arrow-forward-circle" size={24} color="#60a5fa" />
-            </LinearGradient>
-          </TouchableOpacity>
-        )}
-
         {/* ─── 1. Journey Planner ──────────────────────────────────── */}
         <Text style={styles.sectionTitle}>Journey Planner</Text>
         <FlatList
