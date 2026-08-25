@@ -1,41 +1,85 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView,
-  Modal, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform, useWindowDimensions
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  ScrollView,
+  Modal,
+  TextInput,
+  ActivityIndicator,
+  useWindowDimensions,
 } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import Svg, { Rect, Circle, Path } from 'react-native-svg';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import { StorageService, SavedPassenger } from '@/services/storage/storage.service';
 import { FocusAwareStatusBar } from '@/components/common';
 
+// Food Preference Badge (Indian Railways Veg / Non-Veg / No-Food icon)
+const FoodTypeBadge = ({ type = 'Veg' }: { type?: string }) => {
+  const isVeg = type.toLowerCase().includes('veg') && !type.toLowerCase().includes('non');
+  const color = isVeg ? '#16a34a' : '#64748b';
+
+  return (
+    <View style={[styles.foodBadgeContainer, { borderColor: color }]}>
+      <View style={[styles.foodBadgeDot, { backgroundColor: color }]} />
+    </View>
+  );
+};
+
+// Custom Wallet SVG Icon
+const RWalletIcon = () => (
+  <Svg width={36} height={26} viewBox="0 0 36 26" fill="none">
+    <Rect width="36" height="26" rx="6" fill="#22c55e" />
+    <Circle cx="27" cy="13" r="3.5" fill="#ffffff" />
+    <Path d="M0 6C0 2.68629 2.68629 0 6 0H30C33.3137 0 36 2.68629 36 6V7H0V6Z" fill="#16a34a" fillOpacity="0.3" />
+  </Svg>
+);
+
+// Custom Biometric Toggle Icon
+const BiometricToggle = ({ enabled = true }: { enabled?: boolean }) => (
+  <View style={[styles.bioToggleContainer, enabled ? styles.bioToggleOn : styles.bioToggleOff]}>
+    {enabled && <Text style={styles.bioToggleText}>On</Text>}
+    <View style={styles.bioToggleKnob} />
+  </View>
+);
+
 export const ProfileScreen = () => {
   const { width } = useWindowDimensions();
-  const gridBoxWidth = (width - 40) / 3;
+  const gridBoxWidth = (width - 44) / 3;
   const { user, logout, updateUserProfile, addWalletBalance } = useAuth();
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
-  
+
   // Modals state
   const [modalVisible, setModalVisible] = useState(false);
   const [amount, setAmount] = useState('100');
   const [recharging, setRecharging] = useState(false);
-  
+
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editName, setEditName] = useState(user?.name || '');
   const [editMobile, setEditMobile] = useState(user?.mobile || '');
   const [savingProfile, setSavingProfile] = useState(false);
 
+  // View Details Modal
+  const [viewDetailsVisible, setViewDetailsVisible] = useState(false);
+
   // Passengers State
   const [passengers, setPassengers] = useState<SavedPassenger[]>([]);
   const [addPassengerVisible, setAddPassengerVisible] = useState(false);
+  const [editingPassengerId, setEditingPassengerId] = useState<string | null>(null);
   const [pName, setPName] = useState('');
   const [pAge, setPAge] = useState('');
   const [pGender, setPGender] = useState<'M' | 'F' | 'T'>('M');
   const [pBerth, setPBerth] = useState('WS');
   const [pFood, setPFood] = useState('Veg');
+
+  // Biometric state
+  const [biometricEnabled, setBiometricEnabled] = useState(true);
 
   useEffect(() => {
     if (user) {
@@ -50,14 +94,34 @@ export const ProfileScreen = () => {
     setPassengers(list);
   };
 
-  const handleAddPassenger = async () => {
+  const handleOpenAddPassenger = () => {
+    setEditingPassengerId(null);
+    setPName('');
+    setPAge('');
+    setPGender('M');
+    setPBerth('WS');
+    setPFood('Veg');
+    setAddPassengerVisible(true);
+  };
+
+  const handleOpenEditPassenger = (p: SavedPassenger) => {
+    setEditingPassengerId(p.id);
+    setPName(p.name);
+    setPAge(p.age.toString());
+    setPGender(p.gender);
+    setPBerth(p.berthPreference || 'WS');
+    setPFood(p.foodPreference || 'Veg');
+    setAddPassengerVisible(true);
+  };
+
+  const handleSavePassenger = async () => {
     if (!pName.trim()) {
       Alert.alert('Required', 'Please enter passenger name.');
       return;
     }
     const ageNum = parseInt(pAge) || 25;
-    const newP: SavedPassenger = {
-      id: Date.now().toString(),
+    const passengerData: SavedPassenger = {
+      id: editingPassengerId || Date.now().toString(),
       name: pName.trim(),
       age: ageNum,
       gender: pGender,
@@ -65,7 +129,7 @@ export const ProfileScreen = () => {
       foodPreference: pFood,
       verified: true,
     };
-    const updated = await StorageService.savePassenger(newP);
+    const updated = await StorageService.savePassenger(passengerData);
     setPassengers(updated);
     setAddPassengerVisible(false);
     setPName('');
@@ -129,100 +193,191 @@ export const ProfileScreen = () => {
     ]);
   };
 
+  const userName = user?.name || 'Shahrukh';
+  const walletAmount = user?.wallet !== undefined ? user.wallet.toFixed(2) : '0.00';
+
   return (
     <View style={styles.container}>
       <FocusAwareStatusBar backgroundColor="#e4f7fc" barStyle="dark-content" />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        
-        <View style={styles.headerBg}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Ionicons name="chevron-back" size={24} color="#0066ff" />
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: 24 }]}
+      >
+        {/* ─── 1. Curved Sky-Blue Header ───────────────────────────── */}
+        <View style={[styles.headerBanner, { paddingTop: Math.max(insets.top, 12) }]}>
+          {/* Back Circle Button */}
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="arrow-back" size={20} color="#0066ff" />
           </TouchableOpacity>
-          
-          <View style={styles.avatar}>
-            <Ionicons name="person" size={32} color="#a4d3f5" />
+
+          {/* User Avatar Circle */}
+          <View style={styles.avatarContainer}>
+            <Ionicons name="person" size={38} color="#b4e2fb" />
           </View>
-          
-          <Text style={styles.nameText}>{user?.name || 'Passenger'}</Text>
-          
-          <View style={styles.actionsRow}>
-            <TouchableOpacity style={styles.actionBtn}>
-              <Ionicons name="information-circle-outline" size={16} color="#0066ff" />
-              <Text style={styles.actionText}>View Details</Text>
+
+          {/* User Name */}
+          <Text style={styles.userNameText}>{userName}</Text>
+
+          {/* View Details | Edit Details Row */}
+          <View style={styles.detailsActionRow}>
+            <TouchableOpacity
+              style={styles.actionBtn}
+              onPress={() => setViewDetailsVisible(true)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="eye-outline" size={16} color="#0066ff" />
+              <Text style={styles.actionBtnText}>View Details</Text>
             </TouchableOpacity>
-            <Text style={styles.divider}>|</Text>
-            <TouchableOpacity style={styles.actionBtn} onPress={() => setEditModalVisible(true)}>
+
+            <Text style={styles.actionDivider}>|</Text>
+
+            <TouchableOpacity
+              style={styles.actionBtn}
+              onPress={() => setEditModalVisible(true)}
+              activeOpacity={0.7}
+            >
               <Ionicons name="pencil" size={14} color="#0066ff" />
-              <Text style={styles.actionText}>Edit Details</Text>
+              <Text style={styles.actionBtnText}>Edit Details</Text>
             </TouchableOpacity>
+          </View>
+
+          {/* Floating R-Wallet Card */}
+          <View style={styles.walletCard}>
+            <View style={styles.walletLeft}>
+              <RWalletIcon />
+              <View style={styles.walletTextCol}>
+                <Text style={styles.walletLabel}>R-Wallet</Text>
+                <Text style={styles.walletAmount}>₹ {walletAmount}</Text>
+              </View>
+            </View>
+
+            <View style={styles.walletRight}>
+              <TouchableOpacity
+                style={styles.walletRefreshBtn}
+                onPress={() => {}}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="refresh" size={22} color="#0066ff" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.walletAddBtn}
+                onPress={() => setModalVisible(true)}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.walletAddBtnText}>Add</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
-        <View style={styles.walletCard}>
-          <View style={styles.walletLeft}>
-            <View style={styles.walletIcon}>
-              <Ionicons name="wallet-outline" size={20} color="#fff" />
+        {/* ─── 2. Profile Complete Progress Card ───────────────────── */}
+        <View style={styles.progressCard}>
+          <Text style={styles.progressTitle}>Profile Complete</Text>
+          <View style={styles.progressBarRow}>
+            <View style={styles.progressBarBg}>
+              <View style={styles.progressBarFill} />
             </View>
-            <View style={styles.walletTexts}>
-              <Text style={styles.walletLabel}>R-Wallet</Text>
-              <Text style={styles.walletAmt}>₹ {user?.wallet?.toFixed(2) || '0.00'}</Text>
-            </View>
-          </View>
-          <View style={styles.walletRight}>
-            <TouchableOpacity style={styles.mr8}>
-              <Ionicons name="refresh" size={22} color="#0066ff" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.addBtnBlue} onPress={() => setModalVisible(true)}>
-              <Text style={styles.addBtnBlueText}>Add</Text>
-            </TouchableOpacity>
+            <Text style={styles.progressPercentText}>100%</Text>
           </View>
         </View>
 
-        <View style={styles.passContainer}>
+        {/* ─── 3. Saved Passengers Card ────────────────────────────── */}
+        <View style={styles.passengersCard}>
+          {/* Beige/Peach Header */}
           <View style={styles.passHeader}>
             <View style={styles.passHeaderLeft}>
-              <Ionicons name="people" size={28} color="#f59e0b" />
-              <View style={styles.ml8}>
+              <Ionicons name="people" size={26} color="#f59e0b" />
+              <View style={styles.passHeaderTextCol}>
                 <Text style={styles.passHeaderTitle}>Saved Passengers</Text>
                 <Text style={styles.passHeaderSub}>Add/Edit Passenger info</Text>
               </View>
             </View>
+
             <View style={styles.passHeaderRight}>
-              <TouchableOpacity style={styles.mr10} onPress={loadPassengers}>
-                <Ionicons name="refresh" size={22} color="#f59e0b" />
+              <TouchableOpacity
+                style={styles.passRefreshBtn}
+                onPress={loadPassengers}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="refresh" size={20} color="#f59e0b" />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.addBtnOrange} onPress={() => setAddPassengerVisible(true)}>
-                <Text style={styles.addBtnOrangeText}>Add</Text>
+
+              <TouchableOpacity
+                style={styles.passAddBtn}
+                onPress={handleOpenAddPassenger}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.passAddBtnText}>Add</Text>
               </TouchableOpacity>
             </View>
           </View>
-          
-          <View style={styles.passList}>
+
+          {/* Passenger Items */}
+          <View style={styles.passengersList}>
             {passengers.length === 0 ? (
-              <View style={styles.emptyPass}>
-                <Text style={styles.emptyPassText}>No saved passengers. Tap Add to create one.</Text>
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No saved passengers. Tap Add to create one.</Text>
               </View>
             ) : (
               passengers.map((p, idx) => (
-                <View key={p.id || idx} style={[styles.passItem, idx === passengers.length - 1 && styles.noBorderBottom]}>
-                  <View style={styles.pInfo}>
-                    <View style={styles.pAvatar}>
-                      <Ionicons name="person" size={16} color="#f97316" />
+                <View
+                  key={p.id || idx}
+                  style={[
+                    styles.passengerRow,
+                    idx === passengers.length - 1 && styles.noBorderBottom,
+                  ]}
+                >
+                  <View style={styles.pLeftCol}>
+                    <View style={styles.pAvatarBadge}>
+                      <Ionicons name="person" size={17} color="#f59e0b" />
                     </View>
-                    <View style={styles.pDetails}>
+
+                    <View style={styles.pInfoCol}>
+                      {/* Name + Food Icon */}
                       <View style={styles.pNameRow}>
-                        <Text style={styles.pName}>{p.name}</Text>
-                        <Ionicons name="checkmark-circle-outline" size={14} color="#94a3b8" />
+                        <Text style={styles.pNameText}>{p.name}</Text>
+                        <FoodTypeBadge type={p.foodPreference || 'Veg'} />
                       </View>
+
+                      {/* Subtitle Details + Verified Check */}
                       <View style={styles.pSubRow}>
-                        <Text style={styles.pSub}>{p.age} Y, {p.gender}, {p.berthPreference || 'WS'} | {p.foodPreference || 'No Food'}</Text>
-                        {p.verified && <Ionicons name="checkmark-circle" size={14} color="#22c55e" style={styles.ml3} />}
+                        <Text style={styles.pSubText}>
+                          {p.age} Y, {p.gender}, {p.berthPreference || 'WS'} | {p.foodPreference || 'No Food'}
+                        </Text>
+                        {p.verified && (
+                          <Ionicons
+                            name="checkmark-circle"
+                            size={14}
+                            color="#16a34a"
+                            style={styles.verifiedCheck}
+                          />
+                        )}
                       </View>
                     </View>
                   </View>
-                  <View style={styles.pActions}>
-                    <TouchableOpacity onPress={() => handleDeletePassenger(p.id)}>
-                      <Ionicons name="trash-outline" size={18} color="#fbb756" />
+
+                  {/* Actions: Edit & Trash */}
+                  <View style={styles.pActionsRow}>
+                    <TouchableOpacity
+                      style={styles.pActionBtn}
+                      onPress={() => handleOpenEditPassenger(p)}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons name="pencil-outline" size={18} color="#f5a623" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.pActionBtn}
+                      onPress={() => handleDeletePassenger(p.id)}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons name="trash-outline" size={18} color="#f5a623" />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -231,132 +386,319 @@ export const ProfileScreen = () => {
           </View>
         </View>
 
-        <View style={styles.grid}>
-          <TouchableOpacity style={[styles.gridBox, { width: gridBoxWidth }]}>
-            <View style={[styles.gridIcon, styles.gridCyan]}>
-              <Ionicons name="lock-closed" size={22} color="#06b6d4" />
+        {/* ─── 4. 6-Feature Grid Cards ─────────────────────────────── */}
+        <View style={styles.gridContainer}>
+          {/* 1. Change Password */}
+          <TouchableOpacity
+            style={[styles.gridCard, styles.gridCardCyan, { width: gridBoxWidth }]}
+            activeOpacity={0.8}
+          >
+            <View style={styles.gridIconWrap}>
+              <Ionicons name="keypad-outline" size={26} color="#06b6d4" />
             </View>
-            <Text style={styles.gridText}>Change{"\n"}Password</Text>
+            <Text style={styles.gridCardTitle}>Change{"\n"}Password</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.gridBox, { width: gridBoxWidth }]}>
-            <View style={[styles.gridIcon, styles.gridGreen]}>
-              <Ionicons name="person-circle" size={24} color="#22c55e" />
+
+          {/* 2. My Account */}
+          <TouchableOpacity
+            style={[styles.gridCard, styles.gridCardGreen, { width: gridBoxWidth }]}
+            activeOpacity={0.8}
+          >
+            <View style={styles.gridIconWrap}>
+              <Ionicons name="card-outline" size={26} color="#22c55e" />
             </View>
-            <Text style={styles.gridText}>My{"\n"}Account</Text>
+            <Text style={styles.gridCardTitle}>My{"\n"}Account</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.gridBox, { width: gridBoxWidth }]}>
-            <View style={[styles.gridIcon, styles.gridPurple]}>
-              <Ionicons name="finger-print" size={22} color="#a855f7" />
+
+          {/* 3. Biometric Toggle */}
+          <TouchableOpacity
+            style={[styles.gridCard, styles.gridCardPink, { width: gridBoxWidth }]}
+            onPress={() => setBiometricEnabled(!biometricEnabled)}
+            activeOpacity={0.8}
+          >
+            <View style={styles.gridIconWrap}>
+              <BiometricToggle enabled={biometricEnabled} />
             </View>
-            <Text style={styles.gridText}>Biometric</Text>
+            <Text style={styles.gridCardTitle}>Biometric</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.gridBox, { width: gridBoxWidth }]}>
-            <View style={[styles.gridIcon, styles.gridCyan]}>
-              <Ionicons name="ticket" size={22} color="#06b6d4" />
+
+          {/* 4. Transfer Ticket */}
+          <TouchableOpacity
+            style={[styles.gridCard, styles.gridCardBlue, { width: gridBoxWidth }]}
+            activeOpacity={0.8}
+          >
+            <View style={styles.gridIconWrap}>
+              <Ionicons name="ticket-outline" size={26} color="#0284c7" />
             </View>
-            <Text style={styles.gridText}>Transfer{"\n"}Ticket</Text>
+            <Text style={styles.gridCardTitle}>Transfer{"\n"}Ticket</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.gridBox, { width: gridBoxWidth }]}>
-            <View style={[styles.gridIcon, styles.gridOrange]}>
-              <Ionicons name="list" size={22} color="#f97316" />
+
+          {/* 5. My Transaction */}
+          <TouchableOpacity
+            style={[styles.gridCard, styles.gridCardPeach, { width: gridBoxWidth }]}
+            activeOpacity={0.8}
+          >
+            <View style={styles.gridIconWrap}>
+              <Ionicons name="receipt-outline" size={26} color="#f59e0b" />
             </View>
-            <Text style={styles.gridText}>My{"\n"}Transaction</Text>
+            <Text style={styles.gridCardTitle}>My{"\n"}Transactio{"\n"}n</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.gridBox, { width: gridBoxWidth }]}>
-            <View style={[styles.gridIcon, styles.gridYellow]}>
-              <Ionicons name="card" size={22} color="#eab308" />
+
+          {/* 6. DeLink Aadhar */}
+          <TouchableOpacity
+            style={[styles.gridCard, styles.gridCardGrey, { width: gridBoxWidth }]}
+            activeOpacity={0.8}
+          >
+            <View style={styles.gridIconWrap}>
+              <Ionicons name="card-outline" size={26} color="#65a30d" />
             </View>
-            <Text style={styles.gridText}>DeLink{"\n"}Aadhar</Text>
+            <Text style={styles.gridCardTitle}>DeLink{"\n"}Aadhar</Text>
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+        {/* ─── 5. Log Out Action ───────────────────────────────────── */}
+        <TouchableOpacity
+          style={styles.logoutBtn}
+          onPress={handleLogout}
+          activeOpacity={0.8}
+        >
           <Ionicons name="log-out-outline" size={20} color="#ef4444" />
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
-
       </ScrollView>
 
-      <Modal visible={addPassengerVisible} transparent animationType="slide" onRequestClose={() => setAddPassengerVisible(false)}>
+      {/* ─── MODAL: Add / Edit Passenger ───────────────────────────── */}
+      <Modal
+        visible={addPassengerVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setAddPassengerVisible(false)}
+      >
         <View style={styles.modalBackdrop}>
-          <View style={styles.rechargeBox}>
+          <View style={styles.modalContentBox}>
             <View style={styles.modalHeaderRow}>
-              <Text style={styles.modalHeaderTitle}>Add Passenger</Text>
+              <Text style={styles.modalHeaderTitle}>
+                {editingPassengerId ? 'Edit Passenger' : 'Add Passenger'}
+              </Text>
               <TouchableOpacity onPress={() => setAddPassengerVisible(false)}>
                 <Ionicons name="close" size={22} color="#64748b" />
               </TouchableOpacity>
             </View>
+
             <Text style={styles.fieldLabel}>Passenger Full Name</Text>
-            <TextInput style={styles.fieldInput} value={pName} onChangeText={setPName} placeholder="Enter Full Name" />
+            <TextInput
+              style={styles.fieldInput}
+              value={pName}
+              onChangeText={setPName}
+              placeholder="e.g. Akbar Khan"
+              placeholderTextColor="#94a3b8"
+            />
+
             <View style={styles.formRowGap10}>
               <View style={styles.flexOne}>
                 <Text style={styles.fieldLabel}>Age</Text>
-                <TextInput style={styles.fieldInput} keyboardType="numeric" value={pAge} onChangeText={setPAge} placeholder="Age" maxLength={3} />
+                <TextInput
+                  style={styles.fieldInput}
+                  keyboardType="numeric"
+                  value={pAge}
+                  onChangeText={setPAge}
+                  placeholder="Age"
+                  maxLength={3}
+                  placeholderTextColor="#94a3b8"
+                />
               </View>
+
               <View style={styles.flexOne}>
                 <Text style={styles.fieldLabel}>Gender</Text>
                 <View style={styles.genderRow}>
-                  {(['M', 'F', 'T'] as const).map(g => (
-                    <TouchableOpacity key={g} style={[styles.genderBtn, pGender === g && styles.genderBtnActive]} onPress={() => setPGender(g)}>
-                      <Text style={[styles.genderText, pGender === g && styles.genderTextActive]}>{g}</Text>
+                  {(['M', 'F', 'T'] as const).map((g) => (
+                    <TouchableOpacity
+                      key={g}
+                      style={[styles.genderBtn, pGender === g && styles.genderBtnActive]}
+                      onPress={() => setPGender(g)}
+                    >
+                      <Text style={[styles.genderText, pGender === g && styles.genderTextActive]}>
+                        {g}
+                      </Text>
                     </TouchableOpacity>
                   ))}
                 </View>
               </View>
             </View>
-            <TouchableOpacity style={styles.confirmRechargeBtn} onPress={handleAddPassenger}>
-              <Text style={styles.confirmRechargeText}>Save Passenger</Text>
+
+            {/* Food Preference Selection */}
+            <Text style={styles.fieldLabel}>Food Preference</Text>
+            <View style={styles.foodPrefRow}>
+              {['Veg', 'No Food', 'Diabetic Veg'].map((food) => (
+                <TouchableOpacity
+                  key={food}
+                  style={[styles.foodPrefBtn, pFood === food && styles.foodPrefBtnActive]}
+                  onPress={() => setPFood(food)}
+                >
+                  <Text style={[styles.foodPrefText, pFood === food && styles.foodPrefTextActive]}>
+                    {food}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <TouchableOpacity style={styles.confirmBtn} onPress={handleSavePassenger}>
+              <Text style={styles.confirmBtnText}>Save Passenger</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
-      <Modal visible={modalVisible} transparent animationType="fade" onRequestClose={() => setModalVisible(false)}>
+      {/* ─── MODAL: Recharge R-Wallet ─────────────────────────────── */}
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}
+      >
         <View style={styles.modalBackdrop}>
-          <View style={styles.rechargeBox}>
+          <View style={styles.modalContentBox}>
             <View style={styles.modalHeaderRow}>
               <Text style={styles.modalHeaderTitle}>Recharge R-Wallet</Text>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
                 <Ionicons name="close" size={22} color="#64748b" />
               </TouchableOpacity>
             </View>
+
             <Text style={styles.modalSub}>Enter amount to add to your Indian Railways wallet:</Text>
             <View style={styles.amountInputRow}>
               <Text style={styles.rupeePrefix}>₹</Text>
-              <TextInput style={styles.amountInput} keyboardType="numeric" value={amount} onChangeText={setAmount} placeholder="100" />
+              <TextInput
+                style={styles.amountInput}
+                keyboardType="numeric"
+                value={amount}
+                onChangeText={setAmount}
+                placeholder="100"
+                placeholderTextColor="#94a3b8"
+              />
             </View>
+
             <View style={styles.quickPillsRow}>
               {['100', '250', '500', '1000'].map((p) => (
-                <TouchableOpacity key={`quick-pill-${p}`} style={[styles.quickPill, amount === p && styles.quickPillActive]} onPress={() => setAmount(p)}>
-                  <Text style={[styles.quickPillText, amount === p && styles.quickPillTextActive]}>+₹{p}</Text>
+                <TouchableOpacity
+                  key={`quick-pill-${p}`}
+                  style={[styles.quickPill, amount === p && styles.quickPillActive]}
+                  onPress={() => setAmount(p)}
+                >
+                  <Text style={[styles.quickPillText, amount === p && styles.quickPillTextActive]}>
+                    +₹{p}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
-            <TouchableOpacity style={[styles.confirmRechargeBtn, recharging && { opacity: 0.7 }]} onPress={handleAddMoney} disabled={recharging}>
-              {recharging ? <ActivityIndicator color="#fff" /> : <Text style={styles.confirmRechargeText}>Proceed to Pay ₹{amount || '0'}</Text>}
+
+            <TouchableOpacity
+              style={[styles.confirmBtn, recharging && styles.opacity7]}
+              onPress={handleAddMoney}
+              disabled={recharging}
+            >
+              {recharging ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.confirmBtnText}>Proceed to Pay ₹{amount || '0'}</Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
-      <Modal visible={editModalVisible} transparent animationType="fade" onRequestClose={() => setEditModalVisible(false)}>
+      {/* ─── MODAL: Edit Profile ───────────────────────────────────── */}
+      <Modal
+        visible={editModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setEditModalVisible(false)}
+      >
         <View style={styles.modalBackdrop}>
-          <View style={styles.rechargeBox}>
+          <View style={styles.modalContentBox}>
             <View style={styles.modalHeaderRow}>
               <Text style={styles.modalHeaderTitle}>Edit Profile</Text>
               <TouchableOpacity onPress={() => setEditModalVisible(false)}>
                 <Ionicons name="close" size={22} color="#64748b" />
               </TouchableOpacity>
             </View>
+
             <Text style={styles.fieldLabel}>Full Name</Text>
-            <TextInput style={styles.fieldInput} value={editName} onChangeText={setEditName} placeholder="Your Name" />
+            <TextInput
+              style={styles.fieldInput}
+              value={editName}
+              onChangeText={setEditName}
+              placeholder="Your Name"
+              placeholderTextColor="#94a3b8"
+            />
+
             <Text style={styles.fieldLabel}>Mobile Number (for SMS & Ticket Booking)</Text>
             <View style={styles.mobileInputRow}>
               <Text style={styles.countryCode}>+91</Text>
-              <TextInput style={styles.mobileInput} keyboardType="phone-pad" value={editMobile} onChangeText={setEditMobile} placeholder="10-digit mobile" maxLength={10} />
+              <TextInput
+                style={styles.mobileInput}
+                keyboardType="phone-pad"
+                value={editMobile}
+                onChangeText={setEditMobile}
+                placeholder="10-digit mobile"
+                maxLength={10}
+                placeholderTextColor="#94a3b8"
+              />
             </View>
-            <TouchableOpacity style={[styles.confirmRechargeBtn, savingProfile && { opacity: 0.7 }]} onPress={handleSaveProfile} disabled={savingProfile}>
-              {savingProfile ? <ActivityIndicator color="#fff" /> : <Text style={styles.confirmRechargeText}>Save Profile</Text>}
+
+            <TouchableOpacity
+              style={[styles.confirmBtn, savingProfile && styles.opacity7]}
+              onPress={handleSaveProfile}
+              disabled={savingProfile}
+            >
+              {savingProfile ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.confirmBtnText}>Save Profile</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ─── MODAL: View Details ───────────────────────────────────── */}
+      <Modal
+        visible={viewDetailsVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setViewDetailsVisible(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalContentBox}>
+            <View style={styles.modalHeaderRow}>
+              <Text style={styles.modalHeaderTitle}>Passenger Details</Text>
+              <TouchableOpacity onPress={() => setViewDetailsVisible(false)}>
+                <Ionicons name="close" size={22} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.detailsRow}>
+              <Text style={styles.detailsKey}>Name:</Text>
+              <Text style={styles.detailsVal}>{userName}</Text>
+            </View>
+            <View style={styles.detailsRow}>
+              <Text style={styles.detailsKey}>Mobile:</Text>
+              <Text style={styles.detailsVal}>+91 {user?.mobile || '9876543210'}</Text>
+            </View>
+            <View style={styles.detailsRow}>
+              <Text style={styles.detailsKey}>R-Wallet:</Text>
+              <Text style={styles.detailsVal}>₹ {walletAmount}</Text>
+            </View>
+            <View style={styles.detailsRow}>
+              <Text style={styles.detailsKey}>Profile Status:</Text>
+              <Text style={[styles.detailsVal, { color: '#16a34a' }]}>100% Completed</Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.confirmBtn}
+              onPress={() => setViewDetailsVisible(false)}
+            >
+              <Text style={styles.confirmBtnText}>Close</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -366,228 +708,640 @@ export const ProfileScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
-  
-  headerBg: {
-    backgroundColor: '#e4f7fc',
-    paddingHorizontal: 10,
+  container: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+  },
+  scrollContent: {
     paddingBottom: 24,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+  },
+
+  /* 1. Header Banner */
+  headerBanner: {
+    backgroundColor: '#e4f7fc',
+    paddingHorizontal: 16,
+    paddingBottom: 48,
+    borderBottomLeftRadius: 36,
+    borderBottomRightRadius: 36,
     alignItems: 'center',
-    marginBottom: 10,
-    position: 'relative'
+    position: 'relative',
+    marginBottom: 20,
   },
   backBtn: {
     position: 'absolute',
-    left: 10,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#fff',
+    left: 16,
+    top: 14,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    borderWidth: 1.5,
+    borderColor: '#5caee6',
+    backgroundColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 2,
     shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
-    shadowOffset: { width: 0, height: 1 }
+    elevation: 2,
   },
-  avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#4ea8e9',
+  avatarContainer: {
+    width: 74,
+    height: 74,
+    borderRadius: 37,
+    backgroundColor: '#3ca8eb',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 6,
-    marginTop: 4,
+    marginTop: 8,
+    marginBottom: 8,
+    shadowColor: '#3ca8eb',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  nameText: {
-    fontSize: 16,
-    fontWeight: '700',
+  userNameText: {
+    fontSize: 18,
+    fontFamily: 'Montserrat_700Bold',
     color: '#0f172a',
     marginBottom: 4,
+    letterSpacing: 0.2,
   },
-  actionsRow: {
+  detailsActionRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
   },
   actionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingVertical: 4,
+    paddingHorizontal: 6,
   },
-  actionText: {
-    fontSize: 12,
-    fontWeight: '600',
+  actionBtnText: {
+    fontSize: 13.5,
+    fontFamily: 'Montserrat_600SemiBold',
     color: '#0066ff',
-    marginLeft: 3,
+    marginLeft: 4,
   },
-  divider: {
+  actionDivider: {
     color: '#94a3b8',
-    marginHorizontal: 8,
-    fontSize: 12,
+    marginHorizontal: 6,
+    fontSize: 13,
   },
 
+  /* R-Wallet Floating Card */
   walletCard: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    marginHorizontal: 10,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#f1f5f9',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.03,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 1 },
-    padding: 10,
-    paddingHorizontal: 10,
+    position: 'absolute',
+    bottom: -24,
+    left: 16,
+    right: 16,
+    backgroundColor: '#ffffff',
+    borderRadius: 30,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: -30, 
-    zIndex: 2,
-  },
-  walletLeft: { flexDirection: 'row', alignItems: 'center' },
-  walletIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#22c55e', justifyContent: 'center', alignItems: 'center', marginRight: 10 },
-  walletTexts: { justifyContent: 'center' },
-  walletLabel: { fontSize: 11, color: '#64748b', fontWeight: '500' },
-  walletAmt: { fontSize: 14, color: '#0f172a', fontWeight: '700' },
-  walletRight: { flexDirection: 'row', alignItems: 'center' },
-  addBtnBlue: { backgroundColor: '#0066ff', paddingVertical: 7, paddingHorizontal: 16, borderRadius: 16 },
-  addBtnBlueText: { color: '#fff', fontSize: 11.5, fontWeight: '700' },
-
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    marginHorizontal: 10,
-    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
     borderWidth: 1,
     borderColor: '#f1f5f9',
-    elevation: 2,
-    padding: 12,
   },
-  cardTitle: { fontSize: 12.5, fontWeight: '600', color: '#334155', marginBottom: 8 },
-  progressRow: { flexDirection: 'row', alignItems: 'center' },
-  progressBg: { flex: 1, height: 4, backgroundColor: '#e2e8f0', borderRadius: 2, overflow: 'hidden', marginRight: 10 },
-  progressFill: { width: '100%', height: '100%', backgroundColor: '#22c55e' },
-  progressText: { fontSize: 12, fontWeight: '700', color: '#0f172a' },
+  walletLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  walletTextCol: {
+    marginLeft: 12,
+  },
+  walletLabel: {
+    fontSize: 12,
+    fontFamily: 'Montserrat_500Medium',
+    color: '#64748b',
+  },
+  walletAmount: {
+    fontSize: 17.5,
+    fontFamily: 'Montserrat_700Bold',
+    color: '#0f3a4e',
+    marginTop: 1,
+  },
+  walletRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  walletRefreshBtn: {
+    padding: 6,
+    marginRight: 8,
+  },
+  walletAddBtn: {
+    backgroundColor: '#0066ff',
+    borderRadius: 20,
+    paddingHorizontal: 22,
+    paddingVertical: 8,
+  },
+  walletAddBtnText: {
+    color: '#ffffff',
+    fontSize: 13.5,
+    fontFamily: 'Montserrat_600SemiBold',
+  },
 
-  passContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    marginHorizontal: 10,
-    marginBottom: 10,
+  /* 2. Progress Card */
+  progressCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#f1f5f9',
-    elevation: 2,
+    borderColor: '#e2e8f0',
+    padding: 14,
+    marginHorizontal: 16,
+    marginTop: 14,
+  },
+  progressTitle: {
+    fontSize: 14.5,
+    fontFamily: 'Montserrat_600SemiBold',
+    color: '#334155',
+    marginBottom: 8,
+  },
+  progressBarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  progressBarBg: {
+    flex: 1,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#e2e8f0',
+    marginRight: 12,
     overflow: 'hidden',
   },
-  passHeader: { backgroundColor: '#fff6eb', padding: 10, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  passHeaderLeft: { flexDirection: 'row', alignItems: 'center' },
-  passHeaderTitle: { fontSize: 12.5, fontWeight: '700', color: '#0f172a' },
-  passHeaderSub: { fontSize: 10.5, fontWeight: '500', color: '#64748b' },
-  passHeaderRight: { flexDirection: 'row', alignItems: 'center' },
-  addBtnOrange: { backgroundColor: '#fbb756', paddingVertical: 6, paddingHorizontal: 14, borderRadius: 16 },
-  addBtnOrangeText: { color: '#fff', fontSize: 11.5, fontWeight: '700' },
-  passList: { paddingHorizontal: 12 },
-  emptyPass: { paddingVertical: 18, alignItems: 'center' },
-  emptyPassText: { color: '#94a3b8', fontSize: 12 },
-  passItem: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  pInfo: { flexDirection: 'row', alignItems: 'center' },
-  pAvatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#ffedd5', justifyContent: 'center', alignItems: 'center', marginRight: 10 },
-  pDetails: { justifyContent: 'center' },
-  pNameRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 2 },
-  pName: { fontSize: 13, fontWeight: '700', color: '#334155', marginRight: 4 },
-  pSub: { fontSize: 11, color: '#94a3b8', fontWeight: '500' },
-  pActions: { flexDirection: 'row', alignItems: 'center' },
-
-  genderBtn: { flex: 1, paddingVertical: 8, alignItems: 'center', borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8, backgroundColor: '#f8fafc' },
-  genderBtnActive: { borderColor: '#0066ff', backgroundColor: '#dbeafe' },
-  genderText: { fontSize: 12, fontWeight: '600', color: '#64748b' },
-  genderTextActive: { color: '#0066ff' },
-
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginHorizontal: 8,
-    marginBottom: 14,
+  progressBarFill: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#22c55e',
+    borderRadius: 3,
   },
-  gridBox: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
+  progressPercentText: {
+    fontSize: 15,
+    fontFamily: 'Montserrat_700Bold',
+    color: '#1e293b',
+  },
+
+  /* 3. Saved Passengers Card */
+  passengersCard: {
+    backgroundColor: '#fffdfa',
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#f1f5f9',
-    paddingVertical: 10,
-    paddingHorizontal: 6,
-    alignItems: 'center',
-    marginHorizontal: 4,
-    marginBottom: 8,
-    elevation: 1,
+    borderColor: '#fed7aa',
+    marginHorizontal: 16,
+    marginTop: 14,
+    overflow: 'hidden',
   },
-  gridIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
+  passHeader: {
+    backgroundColor: '#ffedd5',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  passHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  passHeaderTextCol: {
+    marginLeft: 10,
+  },
+  passHeaderTitle: {
+    fontSize: 14.5,
+    fontFamily: 'Montserrat_700Bold',
+    color: '#1e293b',
+  },
+  passHeaderSub: {
+    fontSize: 11.5,
+    fontFamily: 'Montserrat_400Regular',
+    color: '#64748b',
+    marginTop: 1,
+  },
+  passHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  passRefreshBtn: {
+    padding: 6,
+    marginRight: 8,
+  },
+  passAddBtn: {
+    backgroundColor: '#f5a623',
+    borderRadius: 18,
+    paddingHorizontal: 20,
+    paddingVertical: 7,
+  },
+  passAddBtnText: {
+    color: '#ffffff',
+    fontSize: 13.5,
+    fontFamily: 'Montserrat_600SemiBold',
+  },
+  passengersList: {
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+  },
+  passengerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#fef3c7',
+  },
+  noBorderBottom: {
+    borderBottomWidth: 0,
+  },
+  pLeftCol: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  pAvatarBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#ffedd5',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 4,
+    marginRight: 12,
   },
-  gridCyan: { backgroundColor: '#cffafe' },
-  gridGreen: { backgroundColor: '#dcfce7' },
-  gridPurple: { backgroundColor: '#f3e8ff' },
-  gridOrange: { backgroundColor: '#ffedd5' },
-  gridYellow: { backgroundColor: '#fef08a' },
-  gridText: { fontSize: 10.5, fontWeight: '600', color: '#1e293b', textAlign: 'center', lineHeight: 13 },
+  pInfoCol: {
+    flex: 1,
+  },
+  pNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  pNameText: {
+    fontSize: 14.5,
+    fontFamily: 'Montserrat_600SemiBold',
+    color: '#1e293b',
+    marginRight: 6,
+  },
+  pSubRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  pSubText: {
+    fontSize: 11.5,
+    fontFamily: 'Montserrat_400Regular',
+    color: '#64748b',
+  },
+  verifiedCheck: {
+    marginLeft: 4,
+  },
+  pActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  pActionBtn: {
+    padding: 6,
+    marginLeft: 6,
+  },
+  emptyContainer: {
+    paddingVertical: 20,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 13,
+    fontFamily: 'Montserrat_400Regular',
+    color: '#94a3b8',
+    textAlign: 'center',
+  },
 
+  /* Food Badge */
+  foodBadgeContainer: {
+    width: 14,
+    height: 14,
+    borderWidth: 1.5,
+    borderRadius: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+  },
+  foodBadgeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+
+  /* 4. 6-Feature Grid Cards */
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    marginTop: 14,
+  },
+  gridCard: {
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+    minHeight: 96,
+  },
+  gridCardCyan: {
+    backgroundColor: '#e6f7fc',
+  },
+  gridCardGreen: {
+    backgroundColor: '#eafbe9',
+  },
+  gridCardPink: {
+    backgroundColor: '#fdf2f8',
+  },
+  gridCardBlue: {
+    backgroundColor: '#eaf6fd',
+  },
+  gridCardPeach: {
+    backgroundColor: '#fef3e7',
+  },
+  gridCardGrey: {
+    backgroundColor: '#f0f5f0',
+  },
+  gridIconWrap: {
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  gridCardTitle: {
+    fontSize: 12.5,
+    fontFamily: 'Montserrat_600SemiBold',
+    color: '#0e2468',
+    textAlign: 'center',
+    lineHeight: 16,
+  },
+
+  /* Biometric Toggle */
+  bioToggleContainer: {
+    width: 46,
+    height: 24,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 3,
+  },
+  bioToggleOn: {
+    backgroundColor: '#0066ff',
+    justifyContent: 'space-between',
+  },
+  bioToggleOff: {
+    backgroundColor: '#cbd5e1',
+    justifyContent: 'flex-start',
+  },
+  bioToggleText: {
+    color: '#ffffff',
+    fontSize: 10.5,
+    fontFamily: 'Montserrat_700Bold',
+    marginLeft: 5,
+  },
+  bioToggleKnob: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#ffffff',
+  },
+
+  /* 5. Logout Button */
   logoutBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#fca5a5',
-    borderRadius: 14,
+    marginHorizontal: 16,
+    marginTop: 6,
     paddingVertical: 12,
-    marginHorizontal: 12,
-    elevation: 1,
+    backgroundColor: '#fee2e2',
+    borderRadius: 12,
   },
-  logoutText: { color: '#ef4444', fontSize: 15, fontWeight: '700', marginLeft: 6 },
+  logoutText: {
+    color: '#ef4444',
+    fontSize: 14,
+    fontFamily: 'Montserrat_600SemiBold',
+    marginLeft: 6,
+  },
 
-  // Modals
-  modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 },
-  rechargeBox: { backgroundColor: '#fff', width: '100%', maxWidth: 420, borderRadius: 20, padding: 20, elevation: 5 },
-  modalHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  modalHeaderTitle: { fontSize: 18, fontWeight: '700', color: '#1e293b' },
-  modalSub: { fontSize: 13, color: '#64748b', marginBottom: 16 },
-  amountInputRow: { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: '#0066ff', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 8, marginBottom: 14 },
-  rupeePrefix: { fontSize: 24, fontWeight: '700', color: '#0066ff', marginRight: 8 },
-  amountInput: { flex: 1, fontSize: 22, fontWeight: '700', color: '#1e293b' },
-  quickPillsRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },
-  quickPill: { flex: 1, backgroundColor: '#f1f5f9', paddingVertical: 8, borderRadius: 8, alignItems: 'center', marginHorizontal: 3 },
-  quickPillActive: { backgroundColor: '#dbeafe', borderWidth: 1, borderColor: '#0066ff' },
-  quickPillText: { fontSize: 13, fontWeight: '600', color: '#475569' },
-  quickPillTextActive: { color: '#0066ff' },
-  confirmRechargeBtn: { backgroundColor: '#0066ff', borderRadius: 14, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
-  confirmRechargeText: { color: '#fff', fontSize: 16, fontWeight: '700' },
-  
-  fieldLabel: { fontSize: 13, fontWeight: '600', color: '#475569', marginBottom: 6, marginTop: 12 },
-  fieldInput: { backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, color: '#1e293b' },
-  mobileInputRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 10, paddingHorizontal: 12, marginBottom: 18 },
-  countryCode: { fontSize: 15, fontWeight: '700', color: '#64748b', marginRight: 8 },
-  mobileInput: { flex: 1, fontSize: 15, color: '#1e293b', paddingVertical: 10 },
-  scrollContent: { paddingBottom: 40 },
-  mr8: { marginRight: 8 },
-  ml8: { marginLeft: 8 },
-  mr10: { marginRight: 10 },
-  pSubRow: { flexDirection: 'row', alignItems: 'center' },
-  ml3: { marginLeft: 3 },
-  formRowGap10: { flexDirection: 'row', gap: 10 },
-  flexOne: { flex: 1 },
-  genderRow: { flexDirection: 'row', gap: 6, marginTop: 4 },
-  noBorderBottom: { borderBottomWidth: 0 },
-  linkRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  linkLeft: { flexDirection: 'row', alignItems: 'center' },
-  linkText: { fontSize: 14, fontWeight: '600', color: '#1e293b', marginLeft: 10 },
+  /* Modal Common */
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContentBox: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 20,
+    width: '100%',
+    maxWidth: 380,
+  },
+  modalHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalHeaderTitle: {
+    fontSize: 17,
+    fontFamily: 'Montserrat_700Bold',
+    color: '#0f172a',
+  },
+  fieldLabel: {
+    fontSize: 13,
+    fontFamily: 'Montserrat_600SemiBold',
+    color: '#475569',
+    marginBottom: 6,
+    marginTop: 8,
+  },
+  fieldInput: {
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    fontFamily: 'Montserrat_500Medium',
+    color: '#0f172a',
+  },
+  formRowGap10: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  flexOne: {
+    flex: 1,
+  },
+  genderRow: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  genderBtn: {
+    flex: 1,
+    height: 42,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+  },
+  genderBtnActive: {
+    backgroundColor: '#0066ff',
+    borderColor: '#0066ff',
+  },
+  genderText: {
+    fontSize: 14,
+    fontFamily: 'Montserrat_600SemiBold',
+    color: '#475569',
+  },
+  genderTextActive: {
+    color: '#ffffff',
+  },
+  foodPrefRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 4,
+    marginBottom: 12,
+  },
+  foodPrefBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+  },
+  foodPrefBtnActive: {
+    backgroundColor: '#f5a623',
+    borderColor: '#f5a623',
+  },
+  foodPrefText: {
+    fontSize: 12,
+    fontFamily: 'Montserrat_600SemiBold',
+    color: '#475569',
+  },
+  foodPrefTextActive: {
+    color: '#ffffff',
+  },
+  confirmBtn: {
+    backgroundColor: '#0066ff',
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  confirmBtnText: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontFamily: 'Montserrat_600SemiBold',
+  },
+  modalSub: {
+    fontSize: 13,
+    fontFamily: 'Montserrat_400Regular',
+    color: '#64748b',
+    marginBottom: 12,
+  },
+  amountInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#0066ff',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    marginBottom: 12,
+  },
+  rupeePrefix: {
+    fontSize: 22,
+    fontFamily: 'Montserrat_700Bold',
+    color: '#0066ff',
+    marginRight: 6,
+  },
+  amountInput: {
+    flex: 1,
+    fontSize: 22,
+    fontFamily: 'Montserrat_700Bold',
+    color: '#0f172a',
+    padding: 0,
+  },
+  quickPillsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  quickPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: '#f1f5f9',
+  },
+  quickPillActive: {
+    backgroundColor: '#e0f2fe',
+    borderWidth: 1,
+    borderColor: '#0066ff',
+  },
+  quickPillText: {
+    fontSize: 12.5,
+    fontFamily: 'Montserrat_600SemiBold',
+    color: '#475569',
+  },
+  quickPillTextActive: {
+    color: '#0066ff',
+  },
+  mobileInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+  },
+  countryCode: {
+    fontSize: 14,
+    fontFamily: 'Montserrat_600SemiBold',
+    color: '#64748b',
+    marginRight: 8,
+  },
+  mobileInput: {
+    flex: 1,
+    paddingVertical: 10,
+    fontSize: 14,
+    fontFamily: 'Montserrat_500Medium',
+    color: '#0f172a',
+  },
+  detailsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  detailsKey: {
+    fontSize: 13.5,
+    fontFamily: 'Montserrat_500Medium',
+    color: '#64748b',
+  },
+  detailsVal: {
+    fontSize: 13.5,
+    fontFamily: 'Montserrat_600SemiBold',
+    color: '#0f172a',
+  },
+  opacity7: {
+    opacity: 0.7,
+  },
 });

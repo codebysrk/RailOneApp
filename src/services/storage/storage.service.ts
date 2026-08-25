@@ -89,7 +89,20 @@ export const StorageService = {
   getSavedPassengers: async (): Promise<SavedPassenger[]> => {
     try {
       const data = await safeGetItem(KEYS.SAVED_PASSENGERS);
-      return data ? JSON.parse(data) : [];
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+      const DEFAULT_PASSENGERS: SavedPassenger[] = [
+        { id: '1', name: 'Akbar Khan', age: 45, gender: 'M', berthPreference: 'WS', foodPreference: 'Veg' },
+        { id: '2', name: 'Bano Begam', age: 51, gender: 'F', berthPreference: 'WS', foodPreference: 'No Food', verified: true },
+        { id: '3', name: 'Islam Khan', age: 53, gender: 'M', berthPreference: 'NC', foodPreference: 'No Food' },
+        { id: '4', name: 'Shabnam Khan', age: 29, gender: 'F', berthPreference: 'WS', foodPreference: 'Veg' },
+        { id: '5', name: 'Shahrukh Khan', age: 26, gender: 'M', berthPreference: 'NC', foodPreference: 'No Food', verified: true },
+        { id: '6', name: 'Shivam Tomar', age: 24, gender: 'M', berthPreference: 'NC', foodPreference: 'Diabetic Veg', verified: true },
+      ];
+      await safeSetItem(KEYS.SAVED_PASSENGERS, JSON.stringify(DEFAULT_PASSENGERS));
+      return DEFAULT_PASSENGERS;
     } catch {
       return [];
     }
