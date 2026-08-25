@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -84,11 +84,16 @@ export const AdminScreen = () => {
   const [selectedUserForTopUp, setSelectedUserForTopUp] = useState<any | null>(null);
   const [customTopUpAmount, setCustomTopUpAmount] = useState('500');
 
+  // User-Wise Ticket Modal State
+  const [selectedUserForTickets, setSelectedUserForTickets] = useState<any | null>(null);
+  const [userTicketsSearch, setUserTicketsSearch] = useState('');
+
   // ─── 3. Global Bookings State ──────────────────────────────────
   const [allBookings, setAllBookings] = useState<any[]>([]);
   const [loadingBookings, setLoadingBookings] = useState(false);
   const [bookingSearchQuery, setBookingSearchQuery] = useState('');
   const [bookingStatusFilter, setBookingStatusFilter] = useState<'all' | 'upcoming' | 'completed' | 'cancelled'>('all');
+  const [selectedUserFilterId, setSelectedUserFilterId] = useState<string | 'all'>('all');
 
   useEffect(() => {
     loadAllData();
@@ -122,6 +127,27 @@ export const AdminScreen = () => {
     triggerHaptic('light');
     loadAllData();
   };
+
+  // Map of userId -> User object for rapid lookups
+  const userMap = useMemo(() => {
+    const map = new Map<string, any>();
+    usersList.forEach((u) => {
+      const uid = u.id || u.uid;
+      if (uid) map.set(uid, u);
+    });
+    return map;
+  }, [usersList]);
+
+  // Map of userId -> count of bookings
+  const userBookingCountMap = useMemo(() => {
+    const map = new Map<string, number>();
+    allBookings.forEach((b) => {
+      if (b.userId) {
+        map.set(b.userId, (map.get(b.userId) || 0) + 1);
+      }
+    });
+    return map;
+  }, [allBookings]);
 
   const generateRandomPassword = () => {
     triggerHaptic('light');
@@ -315,19 +341,52 @@ export const AdminScreen = () => {
 
   // Filtered Bookings
   const filteredBookings = allBookings.filter((b) => {
+    const user = userMap.get(b.userId);
+    const userName = user?.name?.toLowerCase() || '';
+    const userEmail = user?.email?.toLowerCase() || '';
+
     const matchesQuery =
       b.pnr?.toLowerCase().includes(bookingSearchQuery.toLowerCase()) ||
       b.ticketId?.toLowerCase().includes(bookingSearchQuery.toLowerCase()) ||
       b.source?.toLowerCase().includes(bookingSearchQuery.toLowerCase()) ||
       b.dest?.toLowerCase().includes(bookingSearchQuery.toLowerCase()) ||
-      b.userId?.toLowerCase().includes(bookingSearchQuery.toLowerCase());
+      b.userId?.toLowerCase().includes(bookingSearchQuery.toLowerCase()) ||
+      userName.includes(bookingSearchQuery.toLowerCase()) ||
+      userEmail.includes(bookingSearchQuery.toLowerCase());
 
     if (!matchesQuery) return false;
+    if (selectedUserFilterId !== 'all' && b.userId !== selectedUserFilterId) return false;
     if (bookingStatusFilter === 'upcoming') return b.status === 'upcoming';
     if (bookingStatusFilter === 'completed') return b.status === 'completed';
     if (bookingStatusFilter === 'cancelled') return b.status === 'cancelled';
     return true;
   });
+
+  // User-Specific Tickets for the Modal
+  const userSpecificTickets = useMemo(() => {
+    if (!selectedUserForTickets) return [];
+    const uid = selectedUserForTickets.id || selectedUserForTickets.uid;
+    return allBookings
+      .filter((b) => b.userId === uid)
+      .filter((b) => {
+        if (!userTicketsSearch) return true;
+        const q = userTicketsSearch.toLowerCase();
+        return (
+          b.ticketId?.toLowerCase().includes(q) ||
+          b.pnr?.toLowerCase().includes(q) ||
+          b.source?.toLowerCase().includes(q) ||
+          b.dest?.toLowerCase().includes(q)
+        );
+      });
+  }, [selectedUserForTickets, allBookings, userTicketsSearch]);
+
+  const userTotalSpent = useMemo(() => {
+    if (!selectedUserForTickets) return 0;
+    const uid = selectedUserForTickets.id || selectedUserForTickets.uid;
+    return allBookings
+      .filter((b) => b.userId === uid && b.status !== 'cancelled')
+      .reduce((sum, b) => sum + (parseFloat(b.fare) || 0), 0);
+  }, [selectedUserForTickets, allBookings]);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -458,7 +517,7 @@ export const AdminScreen = () => {
               color={activeTab === 'bookings' ? '#ffffff' : '#64748b'}
             />
             <Text style={[styles.segmentText, activeTab === 'bookings' && styles.segmentTextActive]}>
-              Tickets
+              Tickets ({allBookings.length})
             </Text>
           </TouchableOpacity>
         </View>
@@ -520,7 +579,7 @@ export const AdminScreen = () => {
                   <Ionicons name="ticket-outline" size={18} color="#9333ea" />
                 </View>
                 <Text style={styles.quickCardTitle}>Tickets</Text>
-                <Text style={styles.quickCardSub}>Inspect all</Text>
+                <Text style={styles.quickCardSub}>User-wise & all</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -592,7 +651,7 @@ export const AdminScreen = () => {
           </ScrollView>
         )}
 
-        {/* ─── TAB 2: USER DIRECTORY ───────────────────────────────── */}
+        {/* ─── TAB 2: USER DIRECTORY (WITH USER TICKETS BUTTON) ────── */}
         {activeTab === 'users' && (
           <View style={{ flex: 1, paddingHorizontal: 12, paddingTop: 8 }}>
             {/* Search Input */}
@@ -667,6 +726,9 @@ export const AdminScreen = () => {
                 renderItem={({ item }) => {
                   const isBlocked = item.status === 'disabled';
                   const isAdmin = item.role === 'admin';
+                  const uid = item.id || item.uid;
+                  const ticketCount = userBookingCountMap.get(uid) || 0;
+
                   return (
                     <View style={[styles.compactUserCard, isBlocked && styles.compactUserCardBlocked]}>
                       {/* Top Row: Avatar + Name + Role + Balance */}
@@ -699,32 +761,61 @@ export const AdminScreen = () => {
                         </View>
                       </View>
 
-                      {/* Bottom Action Row */}
+                      {/* Bottom Action Row with "View Tickets" button */}
                       <View style={styles.userCardFooter}>
+                        {/* 🎫 USER TICKETS INSPECTOR BUTTON */}
                         <TouchableOpacity
                           style={[
-                            styles.actionPill,
-                            isBlocked ? styles.actionPillUnblock : styles.actionPillBlock,
+                            styles.userTicketsPill,
+                            ticketCount > 0 ? styles.userTicketsPillActive : styles.userTicketsPillEmpty,
                           ]}
-                          onPress={() => handleToggleUserStatus(item)}
-                          disabled={statusUpdatingId === (item.id || item.uid)}
+                          onPress={() => {
+                            triggerHaptic('light');
+                            setUserTicketsSearch('');
+                            setSelectedUserForTickets(item);
+                          }}
                           activeOpacity={0.75}
                         >
+                          <Ionicons
+                            name="ticket"
+                            size={12}
+                            color={ticketCount > 0 ? '#0066ff' : '#94a3b8'}
+                            style={{ marginRight: 4 }}
+                          />
                           <Text
                             style={[
-                              styles.actionPillText,
-                              isBlocked ? styles.actionPillUnblockText : styles.actionPillBlockText,
+                              styles.userTicketsPillText,
+                              ticketCount > 0 ? styles.userTicketsPillTextActive : styles.userTicketsPillTextEmpty,
                             ]}
                           >
-                            {isBlocked ? '🟢 Unblock' : '🔴 Block'}
+                            {ticketCount} {ticketCount === 1 ? 'Ticket' : 'Tickets'}
                           </Text>
                         </TouchableOpacity>
 
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                           <TouchableOpacity
+                            style={[
+                              styles.actionPill,
+                              isBlocked ? styles.actionPillUnblock : styles.actionPillBlock,
+                            ]}
+                            onPress={() => handleToggleUserStatus(item)}
+                            disabled={statusUpdatingId === uid}
+                            activeOpacity={0.75}
+                          >
+                            <Text
+                              style={[
+                                styles.actionPillText,
+                                isBlocked ? styles.actionPillUnblockText : styles.actionPillBlockText,
+                              ]}
+                            >
+                              {isBlocked ? '🟢 Unblock' : '🔴 Block'}
+                            </Text>
+                          </TouchableOpacity>
+
+                          <TouchableOpacity
                             style={styles.topUpMicroChip}
                             onPress={() => handleTopUpAmount(item, 100)}
-                            disabled={toppingUpId === (item.id || item.uid)}
+                            disabled={toppingUpId === uid}
                             activeOpacity={0.75}
                           >
                             <Text style={styles.topUpMicroText}>+₹100</Text>
@@ -733,7 +824,7 @@ export const AdminScreen = () => {
                           <TouchableOpacity
                             style={styles.topUpMicroChip}
                             onPress={() => handleTopUpAmount(item, 500)}
-                            disabled={toppingUpId === (item.id || item.uid)}
+                            disabled={toppingUpId === uid}
                             activeOpacity={0.75}
                           >
                             <Text style={styles.topUpMicroText}>+₹500</Text>
@@ -945,14 +1036,14 @@ export const AdminScreen = () => {
           </ScrollView>
         )}
 
-        {/* ─── TAB 4: GLOBAL BOOKINGS ──────────────────────────────── */}
+        {/* ─── TAB 4: GLOBAL & USER-FILTERED BOOKINGS ──────────────── */}
         {activeTab === 'bookings' && (
           <View style={{ flex: 1, paddingHorizontal: 12, paddingTop: 8 }}>
             <View style={styles.searchBar}>
               <Ionicons name="search" size={15} color="#94a3b8" style={{ marginRight: 6 }} />
               <TextInput
                 style={styles.searchInput}
-                placeholder="Search UTS code, PNR, Station..."
+                placeholder="Search UTS code, Passenger, Station..."
                 placeholderTextColor="#94a3b8"
                 value={bookingSearchQuery}
                 onChangeText={setBookingSearchQuery}
@@ -965,10 +1056,64 @@ export const AdminScreen = () => {
               )}
             </View>
 
+            {/* Horizontal Filter Bar: Filter by specific user */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={[styles.chipsScroll, { marginBottom: 6 }]}>
+              <TouchableOpacity
+                style={[
+                  styles.chipBtn,
+                  selectedUserFilterId === 'all' && styles.chipBtnActive,
+                ]}
+                onPress={() => {
+                  triggerHaptic('light');
+                  setSelectedUserFilterId('all');
+                }}
+                activeOpacity={0.75}
+              >
+                <Text
+                  style={[
+                    styles.chipBtnText,
+                    selectedUserFilterId === 'all' && styles.chipBtnTextActive,
+                  ]}
+                >
+                  All Passengers ({allBookings.length})
+                </Text>
+              </TouchableOpacity>
+
+              {usersList.map((u) => {
+                const uid = u.id || u.uid;
+                const count = userBookingCountMap.get(uid) || 0;
+                if (count === 0) return null;
+                const isSelected = selectedUserFilterId === uid;
+                return (
+                  <TouchableOpacity
+                    key={uid}
+                    style={[
+                      styles.chipBtn,
+                      isSelected && styles.chipBtnActive,
+                    ]}
+                    onPress={() => {
+                      triggerHaptic('light');
+                      setSelectedUserFilterId(uid);
+                    }}
+                    activeOpacity={0.75}
+                  >
+                    <Text
+                      style={[
+                        styles.chipBtnText,
+                        isSelected && styles.chipBtnTextActive,
+                      ]}
+                    >
+                      👤 {u.name ? u.name.split(' ')[0] : 'User'} ({count})
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+
             {/* Status Filter Chips */}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsScroll}>
               {[
-                { id: 'all', label: 'All' },
+                { id: 'all', label: 'All Status' },
                 { id: 'upcoming', label: 'Upcoming ⏳' },
                 { id: 'completed', label: 'Completed ✅' },
                 { id: 'cancelled', label: 'Cancelled ❌' },
@@ -1015,73 +1160,248 @@ export const AdminScreen = () => {
                     <Text style={styles.emptyTitle}>No bookings found</Text>
                   </View>
                 }
-                renderItem={({ item }) => (
-                  <View style={styles.compactBookingCard}>
-                    <View style={styles.bookingCardHeader}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={styles.bookingUtsCode}>
-                          UTS: {item.ticketId || item.pnr || 'XMSQEB'}
-                        </Text>
-                        <View
-                          style={[
-                            styles.bookingStatusTag,
-                            item.status === 'upcoming' && { backgroundColor: '#fef3c7' },
-                            item.status === 'completed' && { backgroundColor: '#dcfce7' },
-                            item.status === 'cancelled' && { backgroundColor: '#ffe4e6' },
-                          ]}
-                        >
-                          <Text
+                renderItem={({ item }) => {
+                  const passenger = userMap.get(item.userId);
+                  return (
+                    <View style={styles.compactBookingCard}>
+                      <View style={styles.bookingCardHeader}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <Text style={styles.bookingUtsCode}>
+                            UTS: {item.ticketId || item.pnr || 'XMSQEB'}
+                          </Text>
+                          <View
                             style={[
-                              styles.bookingStatusTagText,
-                              item.status === 'upcoming' && { color: '#b45309' },
-                              item.status === 'completed' && { color: '#15803d' },
-                              item.status === 'cancelled' && { color: '#be123c' },
+                              styles.bookingStatusTag,
+                              item.status === 'upcoming' && { backgroundColor: '#fef3c7' },
+                              item.status === 'completed' && { backgroundColor: '#dcfce7' },
+                              item.status === 'cancelled' && { backgroundColor: '#ffe4e6' },
                             ]}
                           >
-                            {(item.status || 'upcoming').toUpperCase()}
-                          </Text>
+                            <Text
+                              style={[
+                                styles.bookingStatusTagText,
+                                item.status === 'upcoming' && { color: '#b45309' },
+                                item.status === 'completed' && { color: '#15803d' },
+                                item.status === 'cancelled' && { color: '#be123c' },
+                              ]}
+                            >
+                              {(item.status || 'upcoming').toUpperCase()}
+                            </Text>
+                          </View>
                         </View>
+                        <Text style={styles.bookingFareNum}>₹{item.fare}</Text>
                       </View>
-                      <Text style={styles.bookingFareNum}>₹{item.fare}</Text>
-                    </View>
 
-                    {/* Route Line */}
-                    <View style={styles.compactRouteRow}>
-                      <Text style={styles.routeStation}>
-                        {item.sourceCode || (item.source && item.source.substring(0, 4)) || 'SRC'}
-                      </Text>
-                      <View style={styles.routeLineWrapper}>
-                        <Text style={styles.routeDistance}>{item.distance || '---'}</Text>
-                        <View style={styles.routeBar} />
+                      {/* Route Line */}
+                      <View style={styles.compactRouteRow}>
+                        <Text style={styles.routeStation}>
+                          {item.sourceCode || (item.source && item.source.substring(0, 4)) || 'SRC'}
+                        </Text>
+                        <View style={styles.routeLineWrapper}>
+                          <Text style={styles.routeDistance}>{item.distance || '---'}</Text>
+                          <View style={styles.routeBar} />
+                        </View>
+                        <Text style={styles.routeStation}>
+                          {item.destCode || (item.dest && item.dest.substring(0, 4)) || 'DST'}
+                        </Text>
                       </View>
-                      <Text style={styles.routeStation}>
-                        {item.destCode || (item.dest && item.dest.substring(0, 4)) || 'DST'}
-                      </Text>
-                    </View>
 
-                    {/* Footer */}
-                    <View style={styles.compactBookingFooter}>
-                      <Text style={styles.bookingMetaText}>
-                        📅 {item.date || item.journeyDate || '---'} • {item.passengers || '1 Adult'}
-                      </Text>
-
-                      {item.status === 'upcoming' && (
+                      {/* Passenger Name & UID Link */}
+                      <View style={styles.passengerMetaRow}>
                         <TouchableOpacity
-                          style={styles.cancelPill}
-                          onPress={() => handleCancelTicket(item)}
-                          activeOpacity={0.75}
+                          style={{ flexDirection: 'row', alignItems: 'center' }}
+                          onPress={() => {
+                            if (passenger) {
+                              triggerHaptic('light');
+                              setUserTicketsSearch('');
+                              setSelectedUserForTickets(passenger);
+                            }
+                          }}
+                          activeOpacity={0.7}
                         >
-                          <Text style={styles.cancelPillText}>Cancel</Text>
+                          <Ionicons name="person-circle" size={14} color="#0066ff" style={{ marginRight: 4 }} />
+                          <Text style={styles.passengerNameLink}>
+                            {passenger?.name || passenger?.displayName || item.userId?.substring(0, 10) || 'Passenger'}
+                          </Text>
                         </TouchableOpacity>
-                      )}
+
+                        <Text style={styles.bookingMetaText}>
+                          📅 {item.date || item.journeyDate || '---'}
+                        </Text>
+                      </View>
+
+                      {/* Footer */}
+                      <View style={styles.compactBookingFooter}>
+                        <Text style={styles.bookingMetaText}>
+                          {item.passengers || '1 Adult'} • {item.trainType || 'Unreserved'}
+                        </Text>
+
+                        {item.status === 'upcoming' && (
+                          <TouchableOpacity
+                            style={styles.cancelPill}
+                            onPress={() => handleCancelTicket(item)}
+                            activeOpacity={0.75}
+                          >
+                            <Text style={styles.cancelPillText}>Cancel</Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
                     </View>
-                  </View>
-                )}
+                  );
+                }}
               />
             )}
           </View>
         )}
       </KeyboardAvoidingView>
+
+      {/* ─── 🎫 USER-WISE TICKETS MODAL (VIEW TICKETS BY USER) ─────── */}
+      <Modal
+        visible={!!selectedUserForTickets}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setSelectedUserForTickets(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.userTicketsModalBox}>
+            {/* Modal Header */}
+            <View style={styles.userTicketsModalHeader}>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Text style={styles.userTicketsModalTitle} numberOfLines={1}>
+                    {selectedUserForTickets?.name || selectedUserForTickets?.displayName || 'Passenger'}
+                  </Text>
+                  <View style={[styles.roleMicroTag, selectedUserForTickets?.role === 'admin' ? styles.roleAdminTag : styles.roleUserTag]}>
+                    <Text style={[styles.roleMicroTagText, selectedUserForTickets?.role === 'admin' ? styles.roleAdminText : styles.roleUserText]}>
+                      {(selectedUserForTickets?.role || 'USER').toUpperCase()}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.userTicketsModalSub} numberOfLines={1}>
+                  {selectedUserForTickets?.email} {selectedUserForTickets?.mobile ? `• 📱 ${selectedUserForTickets?.mobile}` : ''}
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={styles.modalCloseBtn}
+                onPress={() => setSelectedUserForTickets(null)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="close" size={20} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            {/* User Stats Strip */}
+            <View style={styles.userModalStatsStrip}>
+              <View style={styles.userModalStatCell}>
+                <Text style={styles.userModalStatLabel}>TOTAL BOOKED</Text>
+                <Text style={styles.userModalStatVal}>{userSpecificTickets.length} Tickets</Text>
+              </View>
+              <View style={styles.ribbonDivider} />
+              <View style={styles.userModalStatCell}>
+                <Text style={styles.userModalStatLabel}>TOTAL SPENT</Text>
+                <Text style={[styles.userModalStatVal, { color: '#16a34a' }]}>₹{userTotalSpent.toFixed(2)}</Text>
+              </View>
+              <View style={styles.ribbonDivider} />
+              <View style={styles.userModalStatCell}>
+                <Text style={styles.userModalStatLabel}>WALLET</Text>
+                <Text style={[styles.userModalStatVal, { color: '#0066ff' }]}>₹{(selectedUserForTickets?.wallet || 0).toFixed(0)}</Text>
+              </View>
+            </View>
+
+            {/* Quick Search within this User's tickets */}
+            {userSpecificTickets.length > 2 && (
+              <View style={[styles.searchBar, { marginTop: 8, marginBottom: 8 }]}>
+                <Ionicons name="search" size={14} color="#94a3b8" style={{ marginRight: 6 }} />
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Filter this user's tickets..."
+                  placeholderTextColor="#94a3b8"
+                  value={userTicketsSearch}
+                  onChangeText={setUserTicketsSearch}
+                  autoCapitalize="none"
+                />
+              </View>
+            )}
+
+            {/* User Ticket Cards List */}
+            <FlatList
+              data={userSpecificTickets}
+              keyExtractor={(item) => item.id || item.bookingId || item.pnr}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 20, paddingTop: 6 }}
+              ListEmptyComponent={
+                <View style={styles.centerBox}>
+                  <Ionicons name="ticket-outline" size={36} color="#cbd5e1" />
+                  <Text style={styles.emptyTitle}>No tickets found for this passenger</Text>
+                  <Text style={styles.emptySubtitle}>User hasn't booked any unreserved tickets yet.</Text>
+                </View>
+              }
+              renderItem={({ item }) => (
+                <View style={styles.userModalTicketCard}>
+                  <View style={styles.bookingCardHeader}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Text style={styles.bookingUtsCode}>
+                        UTS: {item.ticketId || item.pnr || 'XMSQEB'}
+                      </Text>
+                      <View
+                        style={[
+                          styles.bookingStatusTag,
+                          item.status === 'upcoming' && { backgroundColor: '#fef3c7' },
+                          item.status === 'completed' && { backgroundColor: '#dcfce7' },
+                          item.status === 'cancelled' && { backgroundColor: '#ffe4e6' },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.bookingStatusTagText,
+                            item.status === 'upcoming' && { color: '#b45309' },
+                            item.status === 'completed' && { color: '#15803d' },
+                            item.status === 'cancelled' && { color: '#be123c' },
+                          ]}
+                        >
+                          {(item.status || 'upcoming').toUpperCase()}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={styles.bookingFareNum}>₹{item.fare}</Text>
+                  </View>
+
+                  {/* Route */}
+                  <View style={styles.compactRouteRow}>
+                    <Text style={styles.routeStation}>
+                      {item.sourceCode || (item.source && item.source.substring(0, 4)) || 'SRC'}
+                    </Text>
+                    <View style={styles.routeLineWrapper}>
+                      <Text style={styles.routeDistance}>{item.distance || '---'}</Text>
+                      <View style={styles.routeBar} />
+                    </View>
+                    <Text style={styles.routeStation}>
+                      {item.destCode || (item.dest && item.dest.substring(0, 4)) || 'DST'}
+                    </Text>
+                  </View>
+
+                  <View style={styles.compactBookingFooter}>
+                    <Text style={styles.bookingMetaText}>
+                      📅 {item.date || item.journeyDate || '---'} • {item.passengers || '1 Adult'}
+                    </Text>
+
+                    {item.status === 'upcoming' && (
+                      <TouchableOpacity
+                        style={styles.cancelPill}
+                        onPress={() => handleCancelTicket(item)}
+                        activeOpacity={0.75}
+                      >
+                        <Text style={styles.cancelPillText}>Cancel Ticket</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                </View>
+              )}
+            />
+          </View>
+        </View>
+      </Modal>
 
       {/* ─── Custom Top-Up Modal ─────────────────────────────────── */}
       <Modal
@@ -1488,6 +1808,32 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderColor: '#f1f5f9',
   },
+  userTicketsPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 3.5,
+    borderRadius: 5,
+    borderWidth: 1,
+  },
+  userTicketsPillActive: {
+    backgroundColor: '#eff6ff',
+    borderColor: '#bfdbfe',
+  },
+  userTicketsPillEmpty: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#e2e8f0',
+  },
+  userTicketsPillText: {
+    fontSize: 10,
+    fontFamily: 'Montserrat_700Bold',
+  },
+  userTicketsPillTextActive: {
+    color: '#0066ff',
+  },
+  userTicketsPillTextEmpty: {
+    color: '#94a3b8',
+  },
   actionPill: {
     paddingHorizontal: 7,
     paddingVertical: 3,
@@ -1744,6 +2090,18 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: '#cbd5e1',
   },
+  passengerMetaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 2,
+    marginBottom: 4,
+  },
+  passengerNameLink: {
+    fontSize: 11,
+    fontFamily: 'Montserrat_700Bold',
+    color: '#0066ff',
+  },
   compactBookingFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1772,7 +2130,8 @@ const styles = StyleSheet.create({
   centerBox: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 40,
+    paddingTop: 30,
+    paddingBottom: 20,
   },
   centerText: {
     fontSize: 11.5,
@@ -1786,12 +2145,82 @@ const styles = StyleSheet.create({
     color: '#64748b',
     marginTop: 6,
   },
+  emptySubtitle: {
+    fontSize: 11,
+    fontFamily: 'Montserrat_400Regular',
+    color: '#94a3b8',
+    marginTop: 2,
+    textAlign: 'center',
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
+    padding: 16,
+  },
+  userTicketsModalBox: {
+    width: '100%',
+    maxHeight: '85%',
+    backgroundColor: '#ffffff',
+    borderRadius: 14,
+    padding: 14,
+  },
+  userTicketsModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderColor: '#f1f5f9',
+  },
+  userTicketsModalTitle: {
+    fontSize: 15,
+    fontFamily: 'Montserrat_700Bold',
+    color: '#0f172a',
+  },
+  userTicketsModalSub: {
+    fontSize: 11,
+    fontFamily: 'Montserrat_400Regular',
+    color: '#64748b',
+    marginTop: 2,
+  },
+  modalCloseBtn: {
+    padding: 4,
+  },
+  userModalStatsStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    borderRadius: 8,
+    marginTop: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  userModalStatCell: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  userModalStatLabel: {
+    fontSize: 8,
+    fontFamily: 'Montserrat_700Bold',
+    color: '#64748b',
+  },
+  userModalStatVal: {
+    fontSize: 12.5,
+    fontFamily: 'Montserrat_800ExtraBold',
+    color: '#0f172a',
+    marginTop: 1,
+  },
+  userModalTicketCard: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 8,
+    padding: 9,
+    marginBottom: 7,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
   compactModalBox: {
     width: '100%',
