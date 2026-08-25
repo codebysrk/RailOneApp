@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
-import { View, ActivityIndicator, Platform, StyleSheet } from 'react-native';
+import React from 'react';
+import { View, StyleSheet, Platform } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from '@/context/AuthContext';
 import { LoginScreen, UnreservedScreen, BookingConfigScreen, TicketScreen, NotificationScreen, LanguageScreen } from '@/screens';
-import { MenuDrawer } from '@/components/common/MenuDrawer';
 import { BottomTabNavigator } from '@/navigation/BottomTabNavigator';
 import { RootStackParamList } from '@/types/navigation';
 
@@ -12,7 +11,6 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export const AppNavigator: React.FC = () => {
   const { user, loading } = useAuth();
-  const [menuVisible, setMenuVisible] = useState(false);
 
   if (loading) {
     return <View style={styles.splashHolder} />;
@@ -35,9 +33,7 @@ export const AppNavigator: React.FC = () => {
           <Stack.Screen name="Login" component={LoginScreen} options={{ animation: 'fade' }} />
         ) : (
           <>
-            <Stack.Screen name="Main" options={{ animation: 'fade' }}>
-              {() => <BottomTabNavigator onMenuPress={() => setMenuVisible(true)} />}
-            </Stack.Screen>
+            <Stack.Screen name="Main" component={BottomTabNavigator} options={{ animation: 'fade' }} />
             <Stack.Screen name="Unreserved" component={UnreservedScreen} />
             <Stack.Screen name="BookingConfig" component={BookingConfigScreen} />
             <Stack.Screen
@@ -69,8 +65,6 @@ export const AppNavigator: React.FC = () => {
           </>
         )}
       </Stack.Navigator>
-
-      {user && <MenuDrawer visible={menuVisible} onClose={() => setMenuVisible(false)} />}
     </NavigationContainer>
   );
 };
@@ -81,4 +75,3 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
   },
 });
-
