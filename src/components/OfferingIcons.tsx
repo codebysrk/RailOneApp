@@ -100,19 +100,72 @@ export const OrderFoodIcon = ({ color = '#33385d', size = 32 }: { color?: string
   </Svg>
 );
 
-export const FileRefundIcon = ({ color = '#374151', size = 32 }: { color?: string; size?: number }) => (
-  <Svg width={size} height={size} viewBox="0 0 36 36" fill="none">
-    {/* Base Ticket */}
-    <Path
-      d="M7 11C7 9.89543 7.89543 9 9 9H27C28.1046 9 29 9.89543 29 11V14C27.8954 14 27 14.8954 27 16C27 17.1046 27.8954 18 29 18V21C29 22.1046 28.1046 23 27 23H9C7.89543 23 7 22.1046 7 21V18C8.10457 18 9 17.1046 9 16C9 14.8954 8.10457 14 7 14V11Z"
-      fill={color}
-    />
-    {/* Cancellation Cross Circle Badge */}
-    <Circle cx="22" cy="12" r="4.5" fill="#ffffff" stroke={color} strokeWidth="1.5" />
-    <Path d="M20.2 10.2L23.8 13.8" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
-    <Path d="M23.8 10.2L20.2 13.8" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
-  </Svg>
-);
+export const FileRefundIcon = ({
+  color = '#474747',
+  bgColor = '#eaeaea',
+  size = 30,
+}: {
+  color?: string;
+  bgColor?: string;
+  size?: number;
+}) => {
+  const maskId = useId ? `refund_cut_${useId().replace(/:/g, '_')}` : 'refund_cut';
+  return (
+    <Svg width={size} height={size} viewBox="0 0 100 68" fill="none">
+      <Defs>
+        <Mask id={maskId}>
+          <Rect x="0" y="0" width="100" height="68" fill="#ffffff" />
+          <Circle cx="5" cy="34" r="11" fill="#000000" />
+          <Circle cx="95" cy="34" r="11" fill="#000000" />
+          <Circle cx="70" cy="18" r="17" fill="#000000" />
+        </Mask>
+      </Defs>
+
+      {/* Ticket Outer Rim / Border Layer */}
+      <Rect
+        x="5"
+        y="5"
+        width="90"
+        height="58"
+        rx="10"
+        ry="10"
+        fill={color}
+        mask={`url(#${maskId})`}
+      />
+
+      {/* Inner Ticket Body */}
+      <Rect
+        x="11"
+        y="11"
+        width="78"
+        height="46"
+        rx="6"
+        ry="6"
+        fill={bgColor}
+        mask={`url(#${maskId})`}
+      />
+
+      {/* Left Side Solid Block Color Fill */}
+      <Path
+        d="M 11,11 L 28,11 L 28,57 L 11,57 Z"
+        fill={color}
+        mask={`url(#${maskId})`}
+      />
+
+      {/* The 'X' Cancellation Badge Background Circle */}
+      <Circle cx="70" cy="18" r="13" fill={color} />
+
+      {/* The Cancellation Cross ('X') */}
+      <Path
+        d="M 64,12 L 76,24 M 76,12 L 64,24"
+        stroke={bgColor}
+        strokeWidth="3.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+};
 
 export const RailMadadIcon = ({ color = '#f43f5e', size = 31 }: { color?: string; size?: number }) => (
   <MaterialIcons name="handshake" size={size} color={color} />

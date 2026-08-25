@@ -116,7 +116,7 @@ export const HomeScreen = () => {
       case "food":
         return <OrderFoodIcon color={color} size={30} />;
       case "refund":
-        return <FileRefundIcon color={color} size={30} />;
+        return <FileRefundIcon color={color} size={30} bgColor="#eaeaea" />;
       case "madad":
         return <RailMadadIcon color={color} size={30} />;
       case "waves":
