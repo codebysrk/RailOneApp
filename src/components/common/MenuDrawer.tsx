@@ -15,7 +15,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "@/context/AuthContext";
 import { AppAlert } from "@/context/AlertContext";
@@ -203,30 +203,35 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
     {
       id: "support",
       label: "Help & Support",
-      icon: "headset" as const,
+      iconType: "material" as const,
+      icon: "support-agent" as const,
       onPress: () => showInfoAlert("Help & Support", "RailMadad helpline: Dial 139 for 24x7 Indian Railways passenger assistance."),
     },
     {
       id: "about",
       label: "About",
+      iconType: "ion" as const,
       icon: "information-circle" as const,
       onPress: () => showInfoAlert("About RailOne", `RailOne v${UpdateService.getCurrentVersion()}\nIndian Railways official mobile ticketing companion.`),
     },
     {
       id: "rate",
       label: "Rate Us",
+      iconType: "ion" as const,
       icon: "thumbs-up" as const,
       onPress: () => showInfoAlert("Rate Us", "Thank you for using RailOne! Rating options will open in Play Store."),
     },
     {
       id: "share",
       label: "Share",
+      iconType: "ion" as const,
       icon: "share-social" as const,
       onPress: handleShare,
     },
     {
       id: "logout",
       label: "Log Out",
+      iconType: "ion" as const,
       icon: "log-out" as const,
       onPress: handleLogout,
     },
@@ -295,12 +300,21 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
                     activeOpacity={0.6}
                     onPress={item.onPress}
                   >
-                    <Ionicons
-                      name={item.icon}
-                      size={21}
-                      color="#818cf8"
-                      style={styles.menuIcon}
-                    />
+                    {item.iconType === "material" ? (
+                      <MaterialIcons
+                        name={item.icon as any}
+                        size={22}
+                        color="#818cf8"
+                        style={styles.menuIcon}
+                      />
+                    ) : (
+                      <Ionicons
+                        name={item.icon as any}
+                        size={21}
+                        color="#818cf8"
+                        style={styles.menuIcon}
+                      />
+                    )}
                     <Text style={styles.menuLabel}>{item.label}</Text>
                   </TouchableOpacity>
                 ))}

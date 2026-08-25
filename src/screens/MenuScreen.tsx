@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "@/context/AuthContext";
 import { AppAlert } from "@/context/AlertContext";
@@ -19,7 +19,8 @@ import { UpdateModal, FocusAwareStatusBar } from "@/components/common";
 type MenuItem = {
   id: string;
   label: string;
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: string;
+  iconType?: "ion" | "material";
   onPress?: () => void;
 };
 
@@ -64,14 +65,14 @@ export const MenuScreen = () => {
   };
 
   const menuItems: MenuItem[] = [
-    { id: "1", label: "Show/Hide Services", icon: "bookmark" },
-    { id: "2", label: "Check for Updates", icon: "cloud-download", onPress: handleCheckForUpdates },
-    { id: "3", label: "FAQs", icon: "chatbubble-ellipses" },
-    { id: "4", label: "Help & Support", icon: "headset" },
-    { id: "5", label: "About", icon: "information-circle" },
-    { id: "6", label: "Rate Us", icon: "thumbs-up" },
-    { id: "7", label: "Share", icon: "share-social", onPress: handleShare },
-    { id: "8", label: "Log Out", icon: "log-out", onPress: handleLogout },
+    { id: "1", label: "Show/Hide Services", icon: "bookmark", iconType: "ion" },
+    { id: "2", label: "Check for Updates", icon: "cloud-download", iconType: "ion", onPress: handleCheckForUpdates },
+    { id: "3", label: "FAQs", icon: "chatbubble-ellipses", iconType: "ion" },
+    { id: "4", label: "Help & Support", icon: "support-agent", iconType: "material" },
+    { id: "5", label: "About", icon: "information-circle", iconType: "ion" },
+    { id: "6", label: "Rate Us", icon: "thumbs-up", iconType: "ion" },
+    { id: "7", label: "Share", icon: "share-social", iconType: "ion", onPress: handleShare },
+    { id: "8", label: "Log Out", icon: "log-out", iconType: "ion", onPress: handleLogout },
   ];
 
   const userName = user?.name || "Passenger";
@@ -117,12 +118,21 @@ export const MenuScreen = () => {
               activeOpacity={0.65}
               onPress={item.onPress}
             >
-              <Ionicons
-                name={item.icon}
-                size={22}
-                color="#818cf8"
-                style={styles.menuIcon}
-              />
+              {item.iconType === "material" ? (
+                <MaterialIcons
+                  name={item.icon as any}
+                  size={23}
+                  color="#818cf8"
+                  style={styles.menuIcon}
+                />
+              ) : (
+                <Ionicons
+                  name={item.icon as any}
+                  size={22}
+                  color="#818cf8"
+                  style={styles.menuIcon}
+                />
+              )}
               <Text style={styles.menuLabel}>{item.label}</Text>
             </TouchableOpacity>
           ))}
