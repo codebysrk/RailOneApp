@@ -334,9 +334,8 @@ export const TicketScreen = () => {
   const qrUri = useMemo(() => {
     const qrSecurityDigest = [
       `CRIS//IR-UTS//V5.2.0//SECURE-QR`,
-      `PNR:${pnr}`,
-      `TID:${ticketId}`,
-      `TRN:${ticketData?.train || "12279-TAJ-EXP"}`,
+      `UTS_TID:${ticketId}`,
+      `TRN:${ticketData?.train || "UNRESERVED-EXP"}`,
       `SRC:${source}`,
       `DST:${dest}`,
       `VIA:${via}`,
@@ -362,7 +361,6 @@ export const TicketScreen = () => {
       qrSecurityDigest,
     )}&ecc=M&margin=1`;
   }, [
-    pnr,
     ticketId,
     source,
     dest,
@@ -395,7 +393,7 @@ export const TicketScreen = () => {
           onPress: async () => {
             try {
               await Share.share({
-                message: `RailOne UTS Journey Ticket\nPNR: ${pnr}\nTicket ID: ${ticketId}\nRoute: ${source} -> ${dest}\nFare: ₹${fare}\nValid: ${validTillNumeric}`,
+                message: `RailOne UTS Journey Ticket\nTicket ID (UTS): ${ticketId}\nRoute: ${source} -> ${dest}\nFare: ₹${fare}\nValid Till: ${validTillNumeric}`,
               });
             } catch {}
           },

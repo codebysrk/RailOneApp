@@ -75,15 +75,22 @@ export const TicketCard: React.FC<TicketCardProps> = ({
         onPress={onOpen}
         style={styles.topSection}
       >
-        {/* Row 1: Badge & PNR */}
+        {/* Row 1: Badge & Identifier (UTS No for Unreserved, PNR for Reserved) */}
         <View style={styles.row1}>
           <View style={styles.badge}>
             <Text style={styles.badgeText}>{badgeText}</Text>
           </View>
-          <Text style={styles.pnrContainer}>
-            <Text style={styles.pnrLabel}>PNR: </Text>
-            <Text style={styles.pnrValue}>{ticket.pnr}</Text>
-          </Text>
+          {ticket.moduleType === "UNRESERVED" || ticket.moduleType === "PLATFORM" || !ticket.pnr ? (
+            <Text style={styles.pnrContainer}>
+              <Text style={styles.pnrLabel}>UTS No: </Text>
+              <Text style={styles.pnrValue}>{ticket.ticketId || ticket.id || "---"}</Text>
+            </Text>
+          ) : (
+            <Text style={styles.pnrContainer}>
+              <Text style={styles.pnrLabel}>PNR: </Text>
+              <Text style={styles.pnrValue}>{ticket.pnr}</Text>
+            </Text>
+          )}
         </View>
 
         {/* Row 2: Train No & Journey Date */}

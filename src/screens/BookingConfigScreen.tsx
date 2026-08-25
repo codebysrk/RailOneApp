@@ -151,7 +151,7 @@ export const BookingConfigScreen = () => {
 
     const newTicket = {
       id: Date.now().toString(),
-      pnr: '21' + Math.floor(10000000 + Math.random() * 90000000),
+      pnr: '',
       ticketId: 'XMSQEB' + Math.floor(1000 + Math.random() * 9000),
       // FIX M7: removed hardcoded "12279 (TAJ EXPRESS)" — use generic label
       train: 'Unreserved Express',
