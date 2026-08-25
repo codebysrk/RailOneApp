@@ -37,20 +37,25 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
 
   useEffect(() => {
     if (visible) {
+      translateX.setValue(drawerWidth);
       Animated.spring(translateX, {
         toValue: 0,
         useNativeDriver: true,
-        damping: 20,
+        damping: 22,
         stiffness: 140,
-      }).start();
-    } else {
-      Animated.timing(translateX, {
-        toValue: drawerWidth,
-        duration: 200,
-        useNativeDriver: true,
       }).start();
     }
   }, [visible, drawerWidth]);
+
+  const handleClose = () => {
+    Animated.timing(translateX, {
+      toValue: drawerWidth,
+      duration: 180,
+      useNativeDriver: true,
+    }).start(() => {
+      onClose();
+    });
+  };
 
   const handleShare = async () => {
     try {
@@ -67,7 +72,7 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
         text: "Log Out",
         style: "destructive",
         onPress: async () => {
-          onClose();
+          handleClose();
           await logout();
         },
       },
@@ -83,7 +88,7 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
       label: "Select Language",
       icon: "language",
       onPress: () => {
-        onClose();
+        handleClose();
         navigation.navigate("Language");
       },
     },
@@ -95,22 +100,33 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
     { id: "7", label: "Log Out", icon: "log-out", onPress: handleLogout },
   ];
 
-  const userName = user?.name || "Passenger";
+  const userName = user?.name || "Shahrukh";
   const walletBalance = user?.wallet !== undefined ? user.wallet.toFixed(2) : "0.00";
 
   return (
     <Modal
       transparent
       visible={visible}
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
       animationType="none"
     >
-      <TouchableWithoutFeedback onPress={onClose}>
+      <TouchableWithoutFeedback onPress={handleClose}>
         <View style={styles.backdrop} />
       </TouchableWithoutFeedback>
 
       <Animated.View style={[styles.drawer, { width: drawerWidth, transform: [{ translateX }] }]}>
         <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+          {/* Close Header Bar */}
+          <View style={styles.drawerTopBar}>
+            <TouchableOpacity
+              style={styles.closeCircleBtn}
+              onPress={handleClose}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="close" size={22} color="#0066ff" />
+            </TouchableOpacity>
+          </View>
+
           <ScrollView
             contentContainerStyle={styles.scroll}
             showsVerticalScrollIndicator={false}
@@ -118,7 +134,7 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
             {/* ─── 1. Top Profile Header Card ─────────────────────────── */}
             <View style={styles.profileHeaderCard}>
               <View style={styles.avatarCircle}>
-                <Ionicons name="person" size={50} color="#b8e6fe" />
+                <Ionicons name="person" size={48} color="#b8e6fe" />
               </View>
               <Text style={styles.userName}>{userName}</Text>
             </View>
@@ -127,14 +143,14 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
             <View style={styles.walletCard}>
               <View style={styles.walletLeft}>
                 <View style={styles.walletIconBox}>
-                  <Ionicons name="wallet" size={24} color="#818cf8" />
+                  <Ionicons name="wallet" size={24} color="#22c55e" />
                 </View>
                 <View style={styles.walletTextContainer}>
                   <Text style={styles.walletLabel}>R-Wallet</Text>
                   <Text style={styles.walletBalance}>₹ {walletBalance}</Text>
                 </View>
               </View>
-              <TouchableOpacity style={styles.addMoneyBtn} activeOpacity={0.85}>
+              <TouchableOpacity style={styles.addMoneyBtn} activeOpacity={0.85} onPress={handleClose}>
                 <Text style={styles.addMoneyText}>Add Money</Text>
               </TouchableOpacity>
             </View>
@@ -148,19 +164,16 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
                   activeOpacity={0.65}
                   onPress={item.onPress}
                 >
-                  <Ionicons
-                    name={item.icon}
-                    size={22}
-                    color="#818cf8"
-                    style={styles.menuIcon}
-                  />
+                  <View style={styles.menuIcon}>
+                    <Ionicons name={item.icon} size={22} color="#0066ff" />
+                  </View>
                   <Text style={styles.menuLabel}>{item.label}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            {/* ─── 4. Footer Version ──────────────────────────────────── */}
-            <Text style={styles.version}>V-2.1.62-231</Text>
+            {/* ─── 4. App Version ─────────────────────────────────────── */}
+            <Text style={styles.version}>Version 1.0.0</Text>
           </ScrollView>
         </SafeAreaView>
       </Animated.View>
@@ -175,7 +188,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    backgroundColor: "rgba(0, 0, 0, 0.45)",
   },
   drawer: {
     position: "absolute",
@@ -183,8 +196,8 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: "#ffffff",
-    borderTopLeftRadius: 32,
-    borderBottomLeftRadius: 32,
+    borderTopLeftRadius: 28,
+    borderBottomLeftRadius: 28,
     shadowColor: "#000",
     shadowOpacity: 0.2,
     shadowRadius: 20,
@@ -194,35 +207,50 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
+  drawerTopBar: {
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 4,
+    alignItems: 'flex-start',
+  },
+  closeCircleBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1.2,
+    borderColor: '#bfdbfe',
+    backgroundColor: '#ffffff',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   scroll: {
     paddingHorizontal: 16,
-    paddingTop: 12,
+    paddingTop: 6,
     paddingBottom: 28,
   },
 
   /* Profile Header */
   profileHeaderCard: {
     backgroundColor: "#eef2ff",
-    borderRadius: 24,
+    borderRadius: 20,
     alignItems: "center",
-    paddingVertical: 26,
+    paddingVertical: 22,
     paddingHorizontal: 16,
-    marginBottom: 16,
+    marginBottom: 14,
   },
   avatarCircle: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: "#38bdf8",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 14,
+    marginBottom: 10,
   },
   userName: {
-    fontSize: 20,
-    fontWeight: "700",
+    fontSize: 18,
+    fontFamily: "Montserrat_700Bold",
     color: "#0f172a",
-    letterSpacing: -0.2,
   },
 
   /* R-Wallet Card */
@@ -231,10 +259,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: "#eef2ff",
-    borderRadius: 24,
+    borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    marginBottom: 20,
+    marginBottom: 16,
   },
   walletLeft: {
     flexDirection: "row",
@@ -252,54 +280,53 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   walletLabel: {
-    fontSize: 12.5,
+    fontSize: 12,
+    fontFamily: "Montserrat_500Medium",
     color: "#334155",
-    fontWeight: "500",
     marginBottom: 1,
   },
   walletBalance: {
-    fontSize: 18,
-    fontWeight: "800",
+    fontSize: 17,
+    fontFamily: "Montserrat_700Bold",
     color: "#0f172a",
   },
   addMoneyBtn: {
     backgroundColor: "#0066ff",
-    borderRadius: 22,
-    paddingHorizontal: 18,
-    paddingVertical: 9,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
   addMoneyText: {
     color: "#ffffff",
-    fontSize: 13.5,
-    fontWeight: "700",
+    fontSize: 13,
+    fontFamily: "Montserrat_600SemiBold",
   },
 
   /* Menu List */
   menuList: {
-    paddingHorizontal: 6,
-    marginBottom: 20,
+    paddingHorizontal: 4,
+    marginBottom: 16,
   },
   menuRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 13,
+    paddingVertical: 12,
   },
   menuIcon: {
     width: 32,
     marginRight: 12,
   },
   menuLabel: {
-    fontSize: 15.5,
-    fontWeight: "600",
+    fontSize: 15,
+    fontFamily: "Montserrat_600SemiBold",
     color: "#1e293b",
-    letterSpacing: -0.1,
   },
 
   /* Version */
   version: {
     textAlign: "center",
-    fontSize: 13,
-    fontWeight: "500",
+    fontSize: 12.5,
+    fontFamily: "Montserrat_500Medium",
     color: "#94a3b8",
     marginTop: 10,
   },

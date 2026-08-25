@@ -60,16 +60,14 @@ export const BottomTabNavigator: React.FC<BottomTabsProps> = ({ onMenuPress }) =
       <Tab.Screen
         name="MenuTab"
         component={MenuScreen}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            onMenuPress();
+          },
+        }}
         options={{
           title: 'Menu',
-          tabBarButton: (props) => (
-            <TouchableOpacity
-              {...(props as any)}
-              activeOpacity={0.7}
-              onPress={onMenuPress}
-              style={props.style}
-            />
-          ),
         }}
       />
     </Tab.Navigator>
