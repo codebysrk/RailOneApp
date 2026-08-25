@@ -106,21 +106,21 @@ export const HomeScreen = () => {
   const renderOfferingIcon = (type: string, color: string) => {
     switch (type) {
       case "search":
-        return <SearchTrainsIcon color={color} size={33} />;
+        return <SearchTrainsIcon color={color} size={30} />;
       case "pnr":
-        return <PNRStatusIcon color={color} size={35} />;
+        return <PNRStatusIcon color={color} size={31} />;
       case "coach":
-        return <CoachPositionIcon color={color} size={34} />;
+        return <CoachPositionIcon color={color} size={30} />;
       case "track":
-        return <TrackYourTrainIcon color={color} size={34} />;
+        return <TrackYourTrainIcon color={color} size={30} />;
       case "food":
-        return <OrderFoodIcon color={color} size={34} />;
+        return <OrderFoodIcon color={color} size={30} />;
       case "refund":
-        return <FileRefundIcon color={color} size={34} />;
+        return <FileRefundIcon color={color} size={30} />;
       case "madad":
-        return <RailMadadIcon color={color} size={33} />;
+        return <RailMadadIcon color={color} size={30} />;
       case "waves":
-        return <GoToWavesIcon color={color} size={34} />;
+        return <GoToWavesIcon color={color} size={30} />;
       default:
         return null;
     }
