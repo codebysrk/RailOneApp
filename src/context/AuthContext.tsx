@@ -24,15 +24,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = FirebaseService.onAuthStateChanged(async (firebaseUser: any) => {
-      if (firebaseUser) {
-        await loadProfile(firebaseUser);
-      } else {
-        setUser(null);
+    let isMounted = true;
+
+    // Watchdog timer: Guarantee splash screen dismissal even on slow network
+    const watchdog = setTimeout(() => {
+      if (isMounted) {
+        setLoading(false);
       }
-      setLoading(false);
+    }, 2200);
+
+    const unsubscribe = FirebaseService.onAuthStateChanged(async (firebaseUser: any) => {
+      try {
+        if (firebaseUser) {
+          await loadProfile(firebaseUser);
+        } else {
+          if (isMounted) setUser(null);
+        }
+      } catch (err) {
+        console.warn('AuthContext onAuthStateChanged error:', err);
+      } finally {
+        if (isMounted) {
+          clearTimeout(watchdog);
+          setLoading(false);
+        }
+      }
     });
+
     return () => {
+      isMounted = false;
+      clearTimeout(watchdog);
       if (typeof unsubscribe === 'function') {
         unsubscribe();
       }

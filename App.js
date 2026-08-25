@@ -123,12 +123,21 @@ function AppContent({ fontsLoaded }) {
     // Minimum animation time so the zoom-out animation plays gracefully
     const timer = setTimeout(() => {
       setMinTimerDone(true);
-    }, 1400);
+    }, 1200);
 
-    return () => clearTimeout(timer);
+    // Guaranteed failsafe timer: Dismiss splash after 2.5s maximum
+    const failsafeTimer = setTimeout(() => {
+      setMinTimerDone(true);
+      SplashScreen.hideAsync().catch(() => {});
+    }, 2500);
+
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(failsafeTimer);
+    };
   }, [scaleAnim, opacityAnim]);
 
-  const isAppReady = fontsLoaded && !authLoading && minTimerDone;
+  const isAppReady = (fontsLoaded && !authLoading && minTimerDone) || minTimerDone;
 
   useEffect(() => {
     if (isAppReady) {
