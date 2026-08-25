@@ -7,14 +7,14 @@ import {
   TouchableOpacity,
   Animated,
   Easing,
+  useWindowDimensions,
+  BackHandler,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { AppHeader } from '@/components/common';
+import { AppHeader, FocusAwareStatusBar } from '@/components/common';
 import { colors } from '@/theme/colors';
-import { spacing } from '@/theme/spacing';
 
 interface NotificationItem {
   id: string;
@@ -36,38 +36,46 @@ const mockNotifications: NotificationItem[] = [
 
 export const NotificationScreen: React.FC = () => {
   const navigation = useNavigation<any>();
+  const { width } = useWindowDimensions();
 
-  // Entrance slide from right + subtle fade
-  const translateX = useRef(new Animated.Value(45)).current;
+  // Entrance slide from right (width -> 0) + subtle fade (0 -> 1)
+  const translateX = useRef(new Animated.Value(width)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(translateX, {
         toValue: 0,
-        duration: 250,
+        duration: 260,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
       Animated.timing(opacity, {
         toValue: 1,
-        duration: 250,
+        duration: 220,
         useNativeDriver: true,
       }),
     ]).start();
-  }, []);
+
+    const onBackPress = () => {
+      handleBack();
+      return true;
+    };
+    const backSub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => backSub.remove();
+  }, [width]);
 
   const handleBack = () => {
     Animated.parallel([
       Animated.timing(translateX, {
-        toValue: 35,
-        duration: 180,
+        toValue: width,
+        duration: 220,
         easing: Easing.in(Easing.cubic),
         useNativeDriver: true,
       }),
       Animated.timing(opacity, {
         toValue: 0,
-        duration: 180,
+        duration: 200,
         useNativeDriver: true,
       }),
     ]).start(() => {
@@ -76,53 +84,72 @@ export const NotificationScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <Animated.View style={[styles.animatedWrapper, { opacity, transform: [{ translateX }] }]}>
-        {/* ─── Blue Header ────────────────────────────────────────────── */}
-        <AppHeader
-          title="Notification"
-          variant="blue"
-          onBack={handleBack}
-        />
+    <View style={styles.rootOverlay}>
+      <FocusAwareStatusBar backgroundColor="#0066ff" barStyle="light-content" />
 
-        <ScrollView
-          style={styles.content}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {mockNotifications.map((item) => (
-            <View key={`notif-${item.id}`} style={styles.notificationItem}>
-              {/* Header Row */}
-              <View style={styles.itemHeaderRow}>
-                <Text style={styles.itemTitle}>{item.title}</Text>
-                <TouchableOpacity activeOpacity={0.7} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                  <Ionicons name="ellipsis-horizontal" size={18} color="#94a3b8" />
-                </TouchableOpacity>
+      <Animated.View
+        style={[
+          styles.animatedContainer,
+          {
+            opacity,
+            transform: [{ translateX }],
+          },
+        ]}
+      >
+        <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+          {/* ─── Blue Header ────────────────────────────────────────────── */}
+          <AppHeader
+            title="Notification"
+            variant="blue"
+            onBack={handleBack}
+          />
+
+          <ScrollView
+            style={styles.content}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {mockNotifications.map((item) => (
+              <View key={`notif-${item.id}`} style={styles.notificationItem}>
+                {/* Header Row */}
+                <View style={styles.itemHeaderRow}>
+                  <Text style={styles.itemTitle}>{item.title}</Text>
+                  <TouchableOpacity activeOpacity={0.7} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                    <Ionicons name="ellipsis-horizontal" size={18} color="#94a3b8" />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Message Body */}
+                <Text style={styles.itemMessage}>{item.message}</Text>
+
+                {/* Timestamp */}
+                <Text style={styles.itemTimestamp}>{item.timestamp}</Text>
               </View>
-
-            {/* Message Body */}
-            <Text style={styles.itemMessage}>{item.message}</Text>
-
-            {/* Timestamp */}
-            <Text style={styles.itemTimestamp}>{item.timestamp}</Text>
-          </View>
-        ))}
-      </ScrollView>
-    </Animated.View>
-  </SafeAreaView>
+            ))}
+          </ScrollView>
+        </SafeAreaView>
+      </Animated.View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  rootOverlay: {
     flex: 1,
-    backgroundColor: '#0066ff',
+    backgroundColor: 'transparent',
     zIndex: 9999,
     elevation: 10,
   },
-  animatedWrapper: {
+  animatedContainer: {
     flex: 1,
+    backgroundColor: '#0066ff',
+    width: '100%',
+    height: '100%',
     zIndex: 9999,
+  },
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#0066ff',
   },
   content: {
     flex: 1,
@@ -163,4 +190,3 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
 });
-

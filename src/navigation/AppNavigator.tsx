@@ -52,22 +52,18 @@ export const AppNavigator: React.FC = () => {
               name="Notification"
               component={NotificationScreen}
               options={{
-                presentation: 'fullScreenModal',
-                animation: 'slide_from_right',
-                animationDuration: 260,
-                gestureEnabled: true,
-                fullScreenGestureEnabled: true,
+                presentation: 'transparentModal',
+                animation: 'none',
+                gestureEnabled: false,
               }}
             />
             <Stack.Screen
               name="Language"
               component={LanguageScreen}
               options={{
-                presentation: 'fullScreenModal',
-                animation: 'slide_from_right',
-                animationDuration: 260,
-                gestureEnabled: true,
-                fullScreenGestureEnabled: true,
+                presentation: 'transparentModal',
+                animation: 'none',
+                gestureEnabled: false,
               }}
             />
           </>

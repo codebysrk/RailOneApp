@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   Animated,
   Easing,
+  useWindowDimensions,
+  BackHandler,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -25,10 +27,11 @@ const LANGUAGE_OPTIONS: LanguageOption[] = [
 
 export const LanguageScreen: React.FC = () => {
   const navigation = useNavigation<any>();
+  const { width } = useWindowDimensions();
   const [selectedLang, setSelectedLang] = useState<string>('en');
 
-  // Entrance slide from right + subtle fade
-  const translateX = useRef(new Animated.Value(45)).current;
+  // Entrance slide from right (width -> 0) + subtle fade (0 -> 1)
+  const translateX = useRef(new Animated.Value(width)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -39,29 +42,36 @@ export const LanguageScreen: React.FC = () => {
     Animated.parallel([
       Animated.timing(translateX, {
         toValue: 0,
-        duration: 250,
+        duration: 260,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
       Animated.timing(opacity, {
         toValue: 1,
-        duration: 250,
+        duration: 220,
         useNativeDriver: true,
       }),
     ]).start();
-  }, []);
+
+    const onBackPress = () => {
+      handleClose();
+      return true;
+    };
+    const backSub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => backSub.remove();
+  }, [width]);
 
   const handleClose = () => {
     Animated.parallel([
       Animated.timing(translateX, {
-        toValue: 35,
-        duration: 180,
+        toValue: width,
+        duration: 220,
         easing: Easing.in(Easing.cubic),
         useNativeDriver: true,
       }),
       Animated.timing(opacity, {
         toValue: 0,
-        duration: 180,
+        duration: 200,
         useNativeDriver: true,
       }),
     ]).start(() => {
@@ -75,68 +85,84 @@ export const LanguageScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <View style={styles.rootOverlay}>
       <FocusAwareStatusBar backgroundColor="#eef2fa" barStyle="dark-content" />
 
-      <Animated.View style={[styles.animatedWrapper, { opacity, transform: [{ translateX }] }]}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.closeBtn}
-            onPress={handleClose}
-            activeOpacity={0.7}
-            accessibilityLabel="Close language selection"
-            accessibilityRole="button"
-          >
-            <Ionicons name="close" size={24} color="#3045b5" />
-          </TouchableOpacity>
+      <Animated.View
+        style={[
+          styles.animatedContainer,
+          {
+            opacity,
+            transform: [{ translateX }],
+          },
+        ]}
+      >
+        <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity
+              style={styles.closeBtn}
+              onPress={handleClose}
+              activeOpacity={0.7}
+              accessibilityLabel="Close language selection"
+              accessibilityRole="button"
+            >
+              <Ionicons name="close" size={24} color="#3045b5" />
+            </TouchableOpacity>
 
-          <Text style={styles.headerTitle}>Select Language</Text>
+            <Text style={styles.headerTitle}>Select Language</Text>
 
-          {/* Empty Spacer to center the title */}
-          <View style={styles.headerSpacer} />
-        </View>
+            {/* Empty Spacer to center the title */}
+            <View style={styles.headerSpacer} />
+          </View>
 
-        {/* Language Options List */}
-        <View style={styles.optionsList}>
-          {LANGUAGE_OPTIONS.map((item) => {
-            const isSelected = selectedLang === item.id;
-            return (
-              <TouchableOpacity
-                key={item.id}
-                style={styles.optionRow}
-                onPress={() => handleSelectLanguage(item.id)}
-                activeOpacity={0.7}
-                accessibilityRole="radio"
-                accessibilityState={{ checked: isSelected }}
-                accessibilityLabel={item.label}
-              >
-                {/* Radio Button */}
-                <View style={styles.radioOuterCircle}>
-                  {isSelected && <View style={styles.radioInnerDot} />}
-                </View>
+          {/* Language Options List */}
+          <View style={styles.optionsList}>
+            {LANGUAGE_OPTIONS.map((item) => {
+              const isSelected = selectedLang === item.id;
+              return (
+                <TouchableOpacity
+                  key={item.id}
+                  style={styles.optionRow}
+                  onPress={() => handleSelectLanguage(item.id)}
+                  activeOpacity={0.7}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: isSelected }}
+                  accessibilityLabel={item.label}
+                >
+                  {/* Radio Button */}
+                  <View style={styles.radioOuterCircle}>
+                    {isSelected && <View style={styles.radioInnerDot} />}
+                  </View>
 
-                {/* Language Name */}
-                <Text style={styles.optionLabel}>{item.label}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+                  {/* Language Name */}
+                  <Text style={styles.optionLabel}>{item.label}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </SafeAreaView>
       </Animated.View>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  rootOverlay: {
     flex: 1,
-    backgroundColor: '#eef2fa',
+    backgroundColor: 'transparent',
     zIndex: 9999,
     elevation: 10,
   },
-  animatedWrapper: {
+  animatedContainer: {
     flex: 1,
+    backgroundColor: '#eef2fa',
+    width: '100%',
+    height: '100%',
     zIndex: 9999,
+  },
+  safeArea: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
@@ -204,4 +230,3 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
 });
-
