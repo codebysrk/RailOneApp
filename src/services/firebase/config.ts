@@ -7,8 +7,7 @@ import {
 import { getReactNativePersistence } from 'firebase/auth';
 import {
   initializeFirestore,
-  persistentLocalCache,
-  persistentMultipleTabManager,
+  memoryLocalCache,
   getFirestore,
 } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -42,13 +41,11 @@ try {
   }
 }
 
-// Initialize Firestore with Persistent Offline Cache
+// Initialize Firestore with React Native optimized Memory Cache (eliminates IndexedDB warning)
 let firestoreInstance: any;
 try {
   firestoreInstance = initializeFirestore(app, {
-    localCache: persistentLocalCache({
-      tabManager: persistentMultipleTabManager(),
-    }),
+    localCache: memoryLocalCache(),
   });
 } catch {
   try {
