@@ -39,10 +39,10 @@ export const BottomTabNavigator: React.FC = () => {
             fontFamily: 'Montserrat_600SemiBold',
             fontSize: 10.5,
             letterSpacing: 0.1,
-            marginTop: 2,
+            marginTop: -1,
           },
           tabBarIconStyle: {
-            marginBottom: 0,
+            marginBottom: -1,
           },
           tabBarButton: (props) => (
             <TouchableOpacity
