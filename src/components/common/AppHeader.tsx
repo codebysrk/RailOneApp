@@ -24,6 +24,7 @@ export interface AppHeaderProps {
     onPress: () => void;
     size?: number;
     color?: string;
+    borderless?: boolean;
   };
   rightComponent?: React.ReactNode;
 }
@@ -42,9 +43,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   rightAction,
   rightComponent,
 }) => {
-  const isBlue = variant === 'blue';
-  const isSoft = variant === 'soft';
-
   let defaultBg = '#0066ff';
   let defaultTextColor = '#ffffff';
   let defaultSubColor = 'rgba(255,255,255,0.85)';
@@ -108,7 +106,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             accessibilityLabel="Close"
             accessibilityRole="button"
           >
-            <Ionicons name="close" size={22} color={finalIconColor} />
+            <Ionicons name="close" size={20} color={finalIconColor} />
           </TouchableOpacity>
         ) : (
           hasRight && <View style={styles.spacer38} />
@@ -151,14 +149,19 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           <View style={styles.rightWrap}>{rightComponent}</View>
         ) : rightAction ? (
           <TouchableOpacity
-            style={styles.rightActionBtn}
+            style={[
+              styles.circleBtn,
+              rightAction.borderless
+                ? styles.noBorder
+                : { borderColor: finalBorderColor, backgroundColor: defaultCircleBg },
+            ]}
             onPress={rightAction.onPress}
             activeOpacity={0.7}
             accessibilityRole="button"
           >
             <Ionicons
               name={rightAction.icon}
-              size={rightAction.size || 22}
+              size={rightAction.size || 20}
               color={rightAction.color || finalIconColor}
             />
           </TouchableOpacity>
@@ -191,8 +194,14 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 1,
   },
+  noBorder: {
+    borderWidth: 0,
+    elevation: 0,
+    shadowOpacity: 0,
+  },
   spacer38: {
     width: 38,
+    height: 38,
   },
   titleWrapper: {
     flex: 1,
@@ -220,13 +229,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0.1,
   },
   rightWrap: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  rightActionBtn: {
     width: 38,
     height: 38,
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
   },
 });
