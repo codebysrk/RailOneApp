@@ -8,6 +8,8 @@ import {
   Modal,
   TextInput,
   FlatList,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -399,82 +401,88 @@ export const UnreservedScreen = () => {
         onRequestClose={() => setPickerVisible(false)}
       >
         <SafeAreaView style={styles.modalSafe}>
-          <View style={styles.modalHeader}>
-            <TouchableOpacity
-              onPress={() => setPickerVisible(false)}
-              style={styles.modalCloseBtn}
-            >
-              <Ionicons name="close" size={20} color="#0066ff" />
-            </TouchableOpacity>
-            <View style={styles.modalTitleWrapper}>
-              <Text style={styles.modalTitle}>Search Station</Text>
-            </View>
-            <View style={styles.modalSpacer} />
-          </View>
-
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTargetLabel}>
-              {pickingTarget === "source" ? "Source" : "Destination"}
-            </Text>
-
-            <View style={styles.modalSearchBox}>
-              <Ionicons
-                name="search"
-                size={20}
-                color="#64748b"
-                style={styles.searchIcon}
-              />
-              <TextInput
-                style={styles.modalSearchInput}
-                placeholder="Select Station"
-                placeholderTextColor="#94a3b8"
-                value={searchQuery}
-                onChangeText={(text) => {
-                  setSearchQuery(text);
-                  loadStations(text);
-                }}
-                autoFocus
-              />
-              <MaterialIcons name="mic" size={24} color="#64748b" />
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+            style={{ flex: 1 }}
+          >
+            <View style={styles.modalHeader}>
+              <TouchableOpacity
+                onPress={() => setPickerVisible(false)}
+                style={styles.modalCloseBtn}
+              >
+                <Ionicons name="close" size={20} color="#0066ff" />
+              </TouchableOpacity>
+              <View style={styles.modalTitleWrapper}>
+                <Text style={styles.modalTitle}>Search Station</Text>
+              </View>
+              <View style={styles.modalSpacer} />
             </View>
 
-            <View style={styles.recentSearchesHeader}>
-              <Ionicons name="time-outline" size={16} color="#1e3a8a" />
-              <Text style={styles.recentSearchesLabel}>
-                Recent Station Searches
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTargetLabel}>
+                {pickingTarget === "source" ? "Source" : "Destination"}
               </Text>
-            </View>
 
-            <FlatList
-              data={stations}
-              keyExtractor={(item) => item.code}
-              ListEmptyComponent={
-                <View style={styles.emptyListWrap}>
-                  <Ionicons name="search-outline" size={38} color="#94a3b8" />
-                  <Text style={styles.emptyListText}>
-                    {searchQuery ? `No station found matching "${searchQuery}"` : "No stations available"}
-                  </Text>
-                </View>
-              }
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.stationItem}
-                  onPress={() => handleSelectStation(item)}
-                >
-                  <View style={styles.stationTextCol}>
-                    <Text
-                      style={styles.stationItemName}
-                    >{`${item.name} - ${item.code}`}</Text>
-                    <Text style={styles.stationItemSub}>
-                      {item.state || "MADHYA PRADESH"}
+              <View style={styles.modalSearchBox}>
+                <Ionicons
+                  name="search"
+                  size={20}
+                  color="#64748b"
+                  style={styles.searchIcon}
+                />
+                <TextInput
+                  style={styles.modalSearchInput}
+                  placeholder="Select Station"
+                  placeholderTextColor="#94a3b8"
+                  value={searchQuery}
+                  onChangeText={(text) => {
+                    setSearchQuery(text);
+                    loadStations(text);
+                  }}
+                  autoFocus
+                />
+                <MaterialIcons name="mic" size={24} color="#64748b" />
+              </View>
+
+              <View style={styles.recentSearchesHeader}>
+                <Ionicons name="time-outline" size={16} color="#1e3a8a" />
+                <Text style={styles.recentSearchesLabel}>
+                  Recent Station Searches
+                </Text>
+              </View>
+
+              <FlatList
+                data={stations}
+                keyExtractor={(item) => item.code}
+                keyboardShouldPersistTaps="handled"
+                ListEmptyComponent={
+                  <View style={styles.emptyListWrap}>
+                    <Ionicons name="search-outline" size={38} color="#94a3b8" />
+                    <Text style={styles.emptyListText}>
+                      {searchQuery ? `No station found matching "${searchQuery}"` : "No stations available"}
                     </Text>
                   </View>
-                  <Feather name="arrow-up-right" size={20} color="#94a3b8" />
-                </TouchableOpacity>
-              )}
-              contentContainerStyle={styles.stationListContent}
-            />
-          </View>
+                }
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.stationItem}
+                    onPress={() => handleSelectStation(item)}
+                  >
+                    <View style={styles.stationTextCol}>
+                      <Text
+                        style={styles.stationItemName}
+                      >{`${item.name} - ${item.code}`}</Text>
+                      <Text style={styles.stationItemSub}>
+                        {item.state || "MADHYA PRADESH"}
+                      </Text>
+                    </View>
+                    <Feather name="arrow-up-right" size={20} color="#94a3b8" />
+                  </TouchableOpacity>
+                )}
+                contentContainerStyle={styles.stationListContent}
+              />
+            </View>
+          </KeyboardAvoidingView>
         </SafeAreaView>
       </Modal>
     </SafeAreaView>

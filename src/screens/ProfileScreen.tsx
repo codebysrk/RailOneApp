@@ -9,6 +9,10 @@ import {
   TextInput,
   ActivityIndicator,
   useWindowDimensions,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -456,79 +460,84 @@ export const ProfileScreen = () => {
         animationType="slide"
         onRequestClose={() => setAddPassengerVisible(false)}
       >
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalContentBox}>
-            <View style={styles.modalHeaderRow}>
-              <Text style={styles.modalHeaderTitle}>
-                {editingPassengerId ? 'Edit Passenger' : 'Add Passenger'}
-              </Text>
-              <TouchableOpacity onPress={() => setAddPassengerVisible(false)}>
-                <Ionicons name="close" size={22} color="#64748b" />
-              </TouchableOpacity>
-            </View>
-
-            <Text style={styles.fieldLabel}>Passenger Full Name</Text>
-            <TextInput
-              style={styles.fieldInput}
-              value={pName}
-              onChangeText={setPName}
-              placeholder="e.g. Akbar Khan"
-              placeholderTextColor="#94a3b8"
-            />
-
-            <View style={styles.formRowGap10}>
-              <View style={styles.flexOne}>
-                <Text style={styles.fieldLabel}>Age</Text>
-                <TextInput
-                  style={styles.fieldInput}
-                  keyboardType="numeric"
-                  value={pAge}
-                  onChangeText={setPAge}
-                  placeholder="Age"
-                  maxLength={3}
-                  placeholderTextColor="#94a3b8"
-                />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.modalBackdrop}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.modalContentBox}>
+              <View style={styles.modalHeaderRow}>
+                <Text style={styles.modalHeaderTitle}>
+                  {editingPassengerId ? 'Edit Passenger' : 'Add Passenger'}
+                </Text>
+                <TouchableOpacity onPress={() => setAddPassengerVisible(false)}>
+                  <Ionicons name="close" size={22} color="#64748b" />
+                </TouchableOpacity>
               </View>
 
-              <View style={styles.flexOne}>
-                <Text style={styles.fieldLabel}>Gender</Text>
-                <View style={styles.genderRow}>
-                  {(['M', 'F', 'T'] as const).map((g) => (
-                    <TouchableOpacity
-                      key={g}
-                      style={[styles.genderBtn, pGender === g && styles.genderBtnActive]}
-                      onPress={() => setPGender(g)}
-                    >
-                      <Text style={[styles.genderText, pGender === g && styles.genderTextActive]}>
-                        {g}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+              <Text style={styles.fieldLabel}>Passenger Full Name</Text>
+              <TextInput
+                style={styles.fieldInput}
+                value={pName}
+                onChangeText={setPName}
+                placeholder="e.g. Akbar Khan"
+                placeholderTextColor="#94a3b8"
+              />
+
+              <View style={styles.formRowGap10}>
+                <View style={styles.flexOne}>
+                  <Text style={styles.fieldLabel}>Age</Text>
+                  <TextInput
+                    style={styles.fieldInput}
+                    keyboardType="numeric"
+                    value={pAge}
+                    onChangeText={setPAge}
+                    placeholder="Age"
+                    maxLength={3}
+                    placeholderTextColor="#94a3b8"
+                  />
+                </View>
+
+                <View style={styles.flexOne}>
+                  <Text style={styles.fieldLabel}>Gender</Text>
+                  <View style={styles.genderRow}>
+                    {(['M', 'F', 'T'] as const).map((g) => (
+                      <TouchableOpacity
+                        key={g}
+                        style={[styles.genderBtn, pGender === g && styles.genderBtnActive]}
+                        onPress={() => setPGender(g)}
+                      >
+                        <Text style={[styles.genderText, pGender === g && styles.genderTextActive]}>
+                          {g}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
                 </View>
               </View>
-            </View>
 
-            {/* Food Preference Selection */}
-            <Text style={styles.fieldLabel}>Food Preference</Text>
-            <View style={styles.foodPrefRow}>
-              {['Veg', 'No Food', 'Diabetic Veg'].map((food) => (
-                <TouchableOpacity
-                  key={food}
-                  style={[styles.foodPrefBtn, pFood === food && styles.foodPrefBtnActive]}
-                  onPress={() => setPFood(food)}
-                >
-                  <Text style={[styles.foodPrefText, pFood === food && styles.foodPrefTextActive]}>
-                    {food}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+              {/* Food Preference Selection */}
+              <Text style={styles.fieldLabel}>Food Preference</Text>
+              <View style={styles.foodPrefRow}>
+                {['Veg', 'No Food', 'Diabetic Veg'].map((food) => (
+                  <TouchableOpacity
+                    key={food}
+                    style={[styles.foodPrefBtn, pFood === food && styles.foodPrefBtnActive]}
+                    onPress={() => setPFood(food)}
+                  >
+                    <Text style={[styles.foodPrefText, pFood === food && styles.foodPrefTextActive]}>
+                      {food}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
 
-            <TouchableOpacity style={styles.confirmBtn} onPress={handleSavePassenger}>
-              <Text style={styles.confirmBtnText}>Save Passenger</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+              <TouchableOpacity style={styles.confirmBtn} onPress={handleSavePassenger}>
+                <Text style={styles.confirmBtnText}>Save Passenger</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* ─── MODAL: Recharge R-Wallet ─────────────────────────────── */}
@@ -538,55 +547,60 @@ export const ProfileScreen = () => {
         animationType="fade"
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalContentBox}>
-            <View style={styles.modalHeaderRow}>
-              <Text style={styles.modalHeaderTitle}>Recharge R-Wallet</Text>
-              <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <Ionicons name="close" size={22} color="#64748b" />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.modalBackdrop}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.modalContentBox}>
+              <View style={styles.modalHeaderRow}>
+                <Text style={styles.modalHeaderTitle}>Recharge R-Wallet</Text>
+                <TouchableOpacity onPress={() => setModalVisible(false)}>
+                  <Ionicons name="close" size={22} color="#64748b" />
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.modalSub}>Enter amount to add to your Indian Railways wallet:</Text>
+              <View style={styles.amountInputRow}>
+                <Text style={styles.rupeePrefix}>₹</Text>
+                <TextInput
+                  style={styles.amountInput}
+                  keyboardType="numeric"
+                  value={amount}
+                  onChangeText={setAmount}
+                  placeholder="100"
+                  placeholderTextColor="#94a3b8"
+                />
+              </View>
+
+              <View style={styles.quickPillsRow}>
+                {['100', '250', '500', '1000'].map((p) => (
+                  <TouchableOpacity
+                    key={`quick-pill-${p}`}
+                    style={[styles.quickPill, amount === p && styles.quickPillActive]}
+                    onPress={() => setAmount(p)}
+                  >
+                    <Text style={[styles.quickPillText, amount === p && styles.quickPillTextActive]}>
+                      +₹{p}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <TouchableOpacity
+                style={[styles.confirmBtn, recharging && styles.opacity7]}
+                onPress={handleAddMoney}
+                disabled={recharging}
+              >
+                {recharging ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.confirmBtnText}>Proceed to Pay ₹{amount || '0'}</Text>
+                )}
               </TouchableOpacity>
             </View>
-
-            <Text style={styles.modalSub}>Enter amount to add to your Indian Railways wallet:</Text>
-            <View style={styles.amountInputRow}>
-              <Text style={styles.rupeePrefix}>₹</Text>
-              <TextInput
-                style={styles.amountInput}
-                keyboardType="numeric"
-                value={amount}
-                onChangeText={setAmount}
-                placeholder="100"
-                placeholderTextColor="#94a3b8"
-              />
-            </View>
-
-            <View style={styles.quickPillsRow}>
-              {['100', '250', '500', '1000'].map((p) => (
-                <TouchableOpacity
-                  key={`quick-pill-${p}`}
-                  style={[styles.quickPill, amount === p && styles.quickPillActive]}
-                  onPress={() => setAmount(p)}
-                >
-                  <Text style={[styles.quickPillText, amount === p && styles.quickPillTextActive]}>
-                    +₹{p}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <TouchableOpacity
-              style={[styles.confirmBtn, recharging && styles.opacity7]}
-              onPress={handleAddMoney}
-              disabled={recharging}
-            >
-              {recharging ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.confirmBtnText}>Proceed to Pay ₹{amount || '0'}</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* ─── MODAL: Edit Profile ───────────────────────────────────── */}
@@ -596,51 +610,56 @@ export const ProfileScreen = () => {
         animationType="fade"
         onRequestClose={() => setEditModalVisible(false)}
       >
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalContentBox}>
-            <View style={styles.modalHeaderRow}>
-              <Text style={styles.modalHeaderTitle}>Edit Profile</Text>
-              <TouchableOpacity onPress={() => setEditModalVisible(false)}>
-                <Ionicons name="close" size={22} color="#64748b" />
-              </TouchableOpacity>
-            </View>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.modalBackdrop}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.modalContentBox}>
+              <View style={styles.modalHeaderRow}>
+                <Text style={styles.modalHeaderTitle}>Edit Profile</Text>
+                <TouchableOpacity onPress={() => setEditModalVisible(false)}>
+                  <Ionicons name="close" size={22} color="#64748b" />
+                </TouchableOpacity>
+              </View>
 
-            <Text style={styles.fieldLabel}>Full Name</Text>
-            <TextInput
-              style={styles.fieldInput}
-              value={editName}
-              onChangeText={setEditName}
-              placeholder="Your Name"
-              placeholderTextColor="#94a3b8"
-            />
-
-            <Text style={styles.fieldLabel}>Mobile Number (for SMS & Ticket Booking)</Text>
-            <View style={styles.mobileInputRow}>
-              <Text style={styles.countryCode}>+91</Text>
+              <Text style={styles.fieldLabel}>Full Name</Text>
               <TextInput
-                style={styles.mobileInput}
-                keyboardType="phone-pad"
-                value={editMobile}
-                onChangeText={setEditMobile}
-                placeholder="10-digit mobile"
-                maxLength={10}
+                style={styles.fieldInput}
+                value={editName}
+                onChangeText={setEditName}
+                placeholder="Your Name"
                 placeholderTextColor="#94a3b8"
               />
-            </View>
 
-            <TouchableOpacity
-              style={[styles.confirmBtn, savingProfile && styles.opacity7]}
-              onPress={handleSaveProfile}
-              disabled={savingProfile}
-            >
-              {savingProfile ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.confirmBtnText}>Save Profile</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
+              <Text style={styles.fieldLabel}>Mobile Number (for SMS & Ticket Booking)</Text>
+              <View style={styles.mobileInputRow}>
+                <Text style={styles.countryCode}>+91</Text>
+                <TextInput
+                  style={styles.mobileInput}
+                  keyboardType="phone-pad"
+                  value={editMobile}
+                  onChangeText={setEditMobile}
+                  placeholder="10-digit mobile"
+                  maxLength={10}
+                  placeholderTextColor="#94a3b8"
+                />
+              </View>
+
+              <TouchableOpacity
+                style={[styles.confirmBtn, savingProfile && styles.opacity7]}
+                onPress={handleSaveProfile}
+                disabled={savingProfile}
+              >
+                {savingProfile ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.confirmBtnText}>Save Profile</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* ─── MODAL: View Details ───────────────────────────────────── */}

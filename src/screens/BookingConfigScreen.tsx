@@ -6,6 +6,10 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -199,151 +203,158 @@ export const BookingConfigScreen = () => {
         onBack={() => navigation.goBack()}
       />
 
-      <View style={styles.mainWrapper}>
-        <View style={styles.stationRow}>
-          <View style={styles.stationCol}>
-            <Text style={styles.stationName} numberOfLines={1}>{srcName}</Text>
-            <Text style={styles.stationCode}>{srcCode}</Text>
-          </View>
-          <View style={styles.arrowWrapper}>
-            <Ionicons name="arrow-forward" size={18} color="#94a3b8" />
-          </View>
-          <View style={[styles.stationCol, styles.stationColRight]}>
-            <Text style={[styles.stationName, styles.stationNameRight]} numberOfLines={1}>{dstName}</Text>
-            <Text style={[styles.stationCode, styles.stationCodeRight]}>{dstCode}</Text>
-          </View>
-        </View>
-
-        <View style={styles.formContainer}>
-          <View>
-            <Text style={styles.sectionLabel}>Train Type</Text>
-            <View style={styles.trainPillsRow}>
-              {trainTypeOptions.map((opt, idx) => {
-                const isSelected = trainType === opt.id;
-                const isLast = idx === trainTypeOptions.length - 1;
-                return (
-                  <TouchableOpacity
-                    key={opt.id}
-                    style={[
-                      styles.trainPill,
-                      isLast && styles.pillLast,
-                      isSelected ? styles.pillActive : styles.pillInactive,
-                      opt.hasDropdown && styles.pillWithDropdown,
-                    ]}
-                    onPress={() => setTrainType(opt.id)}
-                    activeOpacity={0.8}
-                  >
-                    <Text
-                      style={[
-                        styles.pillText,
-                        isSelected ? styles.pillTextActive : styles.pillTextInactive,
-                      ]}
-                      numberOfLines={1}
-                    >
-                      {opt.label}
-                    </Text>
-                    {opt.hasDropdown && (
-                      <Ionicons
-                        name="chevron-down"
-                        size={15}
-                        color={isSelected ? '#ffffff' : '#0066ff'}
-                        style={styles.dropdownIcon}
-                      />
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-
-          <View>
-            <Text style={styles.sectionLabel}>Ticket Type</Text>
-            <View style={styles.pillsRow}>
-              {ticketTypeOptions.map((opt) => {
-                const isSelected = ticketType === opt.id;
-                return (
-                  <TouchableOpacity key={opt.id} style={[styles.pill, isSelected ? styles.pillActive : styles.pillInactive]} onPress={() => setTicketType(opt.id)} activeOpacity={0.8}>
-                    <Text style={[styles.pillText, isSelected ? styles.pillTextActive : styles.pillTextInactive]}>{opt.label}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-
-          <View style={styles.stepperCard}>
-            <Text style={styles.stepperLabel}>Adult</Text>
-            <View style={styles.stepperControls}>
-              <TouchableOpacity onPress={() => adults > 1 && setAdults(adults - 1)} disabled={adults <= 1}><Ionicons name="remove" size={24} color="#0066ff" /></TouchableOpacity>
-              <View style={styles.stepperBadge}><Text style={styles.stepperBadgeText}>{adults}</Text></View>
-              <TouchableOpacity onPress={() => adults < 4 && setAdults(adults + 1)} disabled={adults >= 4}><Ionicons name="add" size={24} color="#0066ff" /></TouchableOpacity>
-            </View>
-          </View>
-
-          <View style={[styles.stepperCard, styles.childStepperCard]}>
-            <Text style={styles.stepperLabel}>Child</Text>
-            <View style={styles.stepperControls}>
-              <TouchableOpacity onPress={() => child > 0 && setChild(child - 1)} disabled={child <= 0}><Ionicons name="remove" size={24} color="#0066ff" /></TouchableOpacity>
-              <View style={styles.stepperBadge}><Text style={styles.stepperBadgeText}>{child}</Text></View>
-              <TouchableOpacity onPress={() => child < 4 && setChild(child + 1)} disabled={child >= 4}><Ionicons name="add" size={24} color="#0066ff" /></TouchableOpacity>
-            </View>
-          </View>
-          <Text style={styles.helperText}>Aged between 5 and 12 years on the day of Travel</Text>
-
-          <View>
-            <Text style={styles.sectionLabel}>Class</Text>
-            <View style={styles.pillsRow}>
-              {classOptions.map((opt) => {
-                const isSelected = classType === opt.id;
-                return (
-                  <TouchableOpacity key={opt.id} style={[styles.pill, isSelected ? styles.pillActive : styles.pillInactive]} onPress={() => setClassType(opt.id)} activeOpacity={0.8}>
-                    <Text style={[styles.pillText, isSelected ? styles.pillTextActive : styles.pillTextInactive]}>{opt.label}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-
-          <TouchableOpacity style={styles.concessionRow} onPress={() => setConcession(!concession)} activeOpacity={0.8}>
-            <View style={[styles.radioCircle, concession && styles.radioCircleActive]}>{concession && <View style={styles.radioInnerDot} />}</View>
-            <Text style={styles.concessionLabel}>Avail Concession</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <View style={styles.footer}>
-        <View style={styles.fareRow}>
-          <View style={styles.fareLeft}>
-            <FareTicketIcon size={30} color="#0066ff" />
-            <Text style={styles.fareTitle}>Fare</Text>
-          </View>
-          <TouchableOpacity style={styles.fareRight} onPress={handleFareDoubleTap} activeOpacity={0.8}>
-            {isEditingFare ? (
-              <View style={styles.fareEditRow}>
-                <Text style={styles.fareAmountText}>₹ </Text>
-                <TextInput style={styles.fareInput} value={typedFareInput} onChangeText={setTypedFareInput} keyboardType="numeric" autoFocus onBlur={() => handleSaveCustomFare(typedFareInput)} onSubmitEditing={() => handleSaveCustomFare(typedFareInput)} selectTextOnFocus />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.mainWrapper}>
+            <View style={styles.stationRow}>
+              <View style={styles.stationCol}>
+                <Text style={styles.stationName} numberOfLines={1}>{srcName}</Text>
+                <Text style={styles.stationCode}>{srcCode}</Text>
               </View>
-            ) : (
-              <Text style={styles.fareAmountText}>₹ {totalFare.toFixed(0)}</Text>
-            )}
-            <View style={styles.fareBadge}><Text style={styles.fareBadgeText}>Fare Breakup</Text></View>
-          </TouchableOpacity>
-        </View>
+              <View style={styles.arrowWrapper}>
+                <Ionicons name="arrow-forward" size={18} color="#94a3b8" />
+              </View>
+              <View style={[styles.stationCol, styles.stationColRight]}>
+                <Text style={[styles.stationName, styles.stationNameRight]} numberOfLines={1}>{dstName}</Text>
+                <Text style={[styles.stationCode, styles.stationCodeRight]}>{dstCode}</Text>
+              </View>
+            </View>
 
-        <View style={styles.bookBtnWrapper}>
-          <TouchableOpacity
-            style={[styles.bookBtn, isBooking && { opacity: 0.7 }]}
-            onPress={handleBookNow}
-            activeOpacity={0.85}
-            disabled={isBooking}
-          >
-            {isBooking ? (
-              <ActivityIndicator color="#ffffff" />
-            ) : (
-              <Text style={styles.bookBtnText}>Book Now</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </View>
+            <View style={styles.formContainer}>
+              <View>
+                <Text style={styles.sectionLabel}>Train Type</Text>
+                <View style={styles.trainPillsRow}>
+                  {trainTypeOptions.map((opt, idx) => {
+                    const isSelected = trainType === opt.id;
+                    const isLast = idx === trainTypeOptions.length - 1;
+                    return (
+                      <TouchableOpacity
+                        key={opt.id}
+                        style={[
+                          styles.trainPill,
+                          isLast && styles.pillLast,
+                          isSelected ? styles.pillActive : styles.pillInactive,
+                          opt.hasDropdown && styles.pillWithDropdown,
+                        ]}
+                        onPress={() => setTrainType(opt.id)}
+                        activeOpacity={0.8}
+                      >
+                        <Text
+                          style={[
+                            styles.pillText,
+                            isSelected ? styles.pillTextActive : styles.pillTextInactive,
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {opt.label}
+                        </Text>
+                        {opt.hasDropdown && (
+                          <Ionicons
+                            name="chevron-down"
+                            size={15}
+                            color={isSelected ? '#ffffff' : '#0066ff'}
+                            style={styles.dropdownIcon}
+                          />
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+              <View>
+                <Text style={styles.sectionLabel}>Ticket Type</Text>
+                <View style={styles.pillsRow}>
+                  {ticketTypeOptions.map((opt) => {
+                    const isSelected = ticketType === opt.id;
+                    return (
+                      <TouchableOpacity key={opt.id} style={[styles.pill, isSelected ? styles.pillActive : styles.pillInactive]} onPress={() => setTicketType(opt.id)} activeOpacity={0.8}>
+                        <Text style={[styles.pillText, isSelected ? styles.pillTextActive : styles.pillTextInactive]}>{opt.label}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+              <View style={styles.stepperCard}>
+                <Text style={styles.stepperLabel}>Adult</Text>
+                <View style={styles.stepperControls}>
+                  <TouchableOpacity onPress={() => adults > 1 && setAdults(adults - 1)} disabled={adults <= 1}><Ionicons name="remove" size={24} color="#0066ff" /></TouchableOpacity>
+                  <View style={styles.stepperBadge}><Text style={styles.stepperBadgeText}>{adults}</Text></View>
+                  <TouchableOpacity onPress={() => adults < 4 && setAdults(adults + 1)} disabled={adults >= 4}><Ionicons name="add" size={24} color="#0066ff" /></TouchableOpacity>
+                </View>
+              </View>
+
+              <View style={[styles.stepperCard, styles.childStepperCard]}>
+                <Text style={styles.stepperLabel}>Child</Text>
+                <View style={styles.stepperControls}>
+                  <TouchableOpacity onPress={() => child > 0 && setChild(child - 1)} disabled={child <= 0}><Ionicons name="remove" size={24} color="#0066ff" /></TouchableOpacity>
+                  <View style={styles.stepperBadge}><Text style={styles.stepperBadgeText}>{child}</Text></View>
+                  <TouchableOpacity onPress={() => child < 4 && setChild(child + 1)} disabled={child >= 4}><Ionicons name="add" size={24} color="#0066ff" /></TouchableOpacity>
+                </View>
+              </View>
+              <Text style={styles.helperText}>Aged between 5 and 12 years on the day of Travel</Text>
+
+              <View>
+                <Text style={styles.sectionLabel}>Class</Text>
+                <View style={styles.pillsRow}>
+                  {classOptions.map((opt) => {
+                    const isSelected = classType === opt.id;
+                    return (
+                      <TouchableOpacity key={opt.id} style={[styles.pill, isSelected ? styles.pillActive : styles.pillInactive]} onPress={() => setClassType(opt.id)} activeOpacity={0.8}>
+                        <Text style={[styles.pillText, isSelected ? styles.pillTextActive : styles.pillTextInactive]}>{opt.label}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+              <TouchableOpacity style={styles.concessionRow} onPress={() => setConcession(!concession)} activeOpacity={0.8}>
+                <View style={[styles.radioCircle, concession && styles.radioCircleActive]}>{concession && <View style={styles.radioInnerDot} />}</View>
+                <Text style={styles.concessionLabel}>Avail Concession</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.footer}>
+              <View style={styles.fareRow}>
+                <View style={styles.fareLeft}>
+                  <FareTicketIcon size={30} color="#0066ff" />
+                  <Text style={styles.fareTitle}>Fare</Text>
+                </View>
+                <TouchableOpacity style={styles.fareRight} onPress={handleFareDoubleTap} activeOpacity={0.8}>
+                  {isEditingFare ? (
+                    <View style={styles.fareEditRow}>
+                      <Text style={styles.fareAmountText}>₹ </Text>
+                      <TextInput style={styles.fareInput} value={typedFareInput} onChangeText={setTypedFareInput} keyboardType="numeric" autoFocus onBlur={() => handleSaveCustomFare(typedFareInput)} onSubmitEditing={() => handleSaveCustomFare(typedFareInput)} selectTextOnFocus />
+                    </View>
+                  ) : (
+                    <Text style={styles.fareAmountText}>₹ {totalFare.toFixed(0)}</Text>
+                  )}
+                  <View style={styles.fareBadge}><Text style={styles.fareBadgeText}>Fare Breakup</Text></View>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.bookBtnWrapper}>
+                <TouchableOpacity
+                  style={[styles.bookBtn, isBooking && { opacity: 0.7 }]}
+                  onPress={handleBookNow}
+                  activeOpacity={0.85}
+                  disabled={isBooking}
+                >
+                  {isBooking ? (
+                    <ActivityIndicator color="#ffffff" />
+                  ) : (
+                    <Text style={styles.bookBtnText}>Book Now</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
