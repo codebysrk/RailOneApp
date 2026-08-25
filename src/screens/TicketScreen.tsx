@@ -33,43 +33,31 @@ import { RailwayDistanceEngine } from "@/services/RailwayDistanceEngine";
 const CELL_HEIGHT = 46;
 
 const ReverseSlidingBlock = React.memo(({ value }: { value: string }) => {
-  const [currentVal, setCurrentVal] = useState(value);
+  const [displayVal, setDisplayVal] = useState(value);
   const [prevVal, setPrevVal] = useState<string | null>(null);
   const anim = useRef(new Animated.Value(0)).current;
-  const isMountedRef = useRef(true);
+  const currentValRef = useRef(value);
 
   useEffect(() => {
-    isMountedRef.current = true;
-    return () => {
-      isMountedRef.current = false;
-      anim.stopAnimation();
-    };
-  }, [anim]);
-
-  useEffect(() => {
-    if (value !== currentVal) {
-      setPrevVal(currentVal);
-      setCurrentVal(value);
+    if (value !== currentValRef.current) {
+      const oldVal = currentValRef.current;
+      currentValRef.current = value;
+      setPrevVal(oldVal);
+      setDisplayVal(value);
       anim.setValue(0);
 
-      const animation = Animated.timing(anim, {
+      Animated.timing(anim, {
         toValue: 1,
-        duration: 520,
+        duration: 480,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
-      });
-
-      animation.start(({ finished }) => {
-        if (finished && isMountedRef.current) {
+      }).start(({ finished }) => {
+        if (finished) {
           setPrevVal(null);
         }
       });
-
-      return () => {
-        animation.stop();
-      };
     }
-  }, [value, currentVal, anim]);
+  }, [value, anim]);
 
   // Jata hua digit: moves down from 0 to +46 (exits at bottom)
   const outgoingTranslateY = anim.interpolate({
@@ -111,7 +99,7 @@ const ReverseSlidingBlock = React.memo(({ value }: { value: string }) => {
         ]}
       >
         <Text numberOfLines={1} style={styles.timerDigital}>
-          {currentVal}
+          {displayVal}
         </Text>
       </Animated.View>
     </View>
