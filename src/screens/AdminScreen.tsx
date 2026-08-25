@@ -79,6 +79,7 @@ export const AdminScreen = () => {
   const [userRoleFilter, setUserRoleFilter] = useState<'all' | 'active' | 'disabled' | 'admin' | 'user'>('all');
   const [toppingUpId, setToppingUpId] = useState<string | null>(null);
   const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
 
   // Custom Top-Up Modal State
   const [selectedUserForTopUp, setSelectedUserForTopUp] = useState<any | null>(null);
@@ -88,7 +89,12 @@ export const AdminScreen = () => {
   const [selectedUserForTickets, setSelectedUserForTickets] = useState<any | null>(null);
   const [userTicketsSearch, setUserTicketsSearch] = useState('');
 
-  // ─── 3. Global Bookings State ──────────────────────────────────
+  // ─── 3. Deleted Users Audit Logs State ─────────────────────────
+  const [deletedLogs, setDeletedLogs] = useState<any[]>([]);
+  const [showDeletedLogsModal, setShowDeletedLogsModal] = useState(false);
+  const [loadingLogs, setLoadingLogs] = useState(false);
+
+  // ─── 4. Global Bookings State ──────────────────────────────────
   const [allBookings, setAllBookings] = useState<any[]>([]);
   const [loadingBookings, setLoadingBookings] = useState(false);
   const [bookingSearchQuery, setBookingSearchQuery] = useState('');
@@ -104,14 +110,16 @@ export const AdminScreen = () => {
     setLoadingUsers(true);
     setLoadingBookings(true);
     try {
-      const [statsData, usersData, bookingsData] = await Promise.all([
+      const [statsData, usersData, bookingsData, logsData] = await Promise.all([
         FirebaseService.getAdminStatistics(),
         FirebaseService.getAllUsers(),
         FirebaseService.getAllBookings(),
+        FirebaseService.getDeletedUsersLogs().catch(() => []),
       ]);
       setStats(statsData);
       setUsersList(usersData);
       setAllBookings(bookingsData);
+      setDeletedLogs(logsData);
     } catch (err) {
       console.warn('Error loading admin data:', err);
     } finally {
@@ -263,6 +271,80 @@ export const AdminScreen = () => {
       ],
       'confirm'
     );
+  };
+
+  const handleDeleteUser = (targetUser: any) => {
+    triggerHaptic('medium');
+    const uid = targetUser.id || targetUser.uid;
+    const currentAdminUid = currentAdmin?.uid;
+
+    if (uid === currentAdminUid) {
+      AppAlert.show('Action Blocked', 'You cannot delete your own logged-in Admin account.', undefined, 'error');
+      return;
+    }
+
+    AppAlert.show(
+      'Delete User & Create Log? ⚠️',
+      `Are you sure you want to delete ${targetUser.name || targetUser.email}?\n\nThis will remove the user profile from database and save an Audit Log with UID: ${uid} so you can also remove them from Firebase Authentication.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete & Log',
+          style: 'destructive',
+          onPress: async () => {
+            setDeletingUserId(uid);
+            try {
+              await FirebaseService.deleteUserAndLog(targetUser, currentAdmin);
+              triggerHaptic('success');
+              setUsersList((prev) => prev.filter((u) => (u.id || u.uid) !== uid));
+              
+              // Refresh logs
+              const updatedLogs = await FirebaseService.getDeletedUsersLogs();
+              setDeletedLogs(updatedLogs);
+
+              const updatedStats = await FirebaseService.getAdminStatistics();
+              setStats(updatedStats);
+
+              AppAlert.show(
+                'User Deleted & Logged ✅',
+                `User removed from Firestore.\n\nAudit log saved with UID: ${uid}\nCheck "Deleted Logs" tab to view details for Firebase Auth removal.`,
+                undefined,
+                'success'
+              );
+            } catch (err: any) {
+              AppAlert.show('Deletion Failed', err?.message || 'Could not delete user.', undefined, 'error');
+            } finally {
+              setDeletingUserId(null);
+            }
+          },
+        },
+      ],
+      'confirm'
+    );
+  };
+
+  const handleShareOrCopyUid = async (log: any) => {
+    triggerHaptic('light');
+    try {
+      await Share.share({
+        title: `Deleted User Auth Record (${log.email})`,
+        message: `RailOne Deleted User Auth Record:\n\nUID: ${log.uid}\nName: ${log.name}\nEmail: ${log.email}\nDeleted At: ${log.deletedAt}\nDeleted By: ${log.deletedByAdminEmail}\n\nPaste this UID into Firebase Console > Authentication to delete the Auth record.`,
+      });
+    } catch {}
+  };
+
+  const handleToggleAuthRemoved = async (log: any) => {
+    triggerHaptic('medium');
+    const newStatus = log.firebaseAuthStatus === 'auth_removed' ? 'pending_auth_removal' : 'auth_removed';
+    try {
+      await FirebaseService.updateDeletedUserAuthStatus(log.uid, newStatus);
+      triggerHaptic('success');
+      setDeletedLogs((prev) =>
+        prev.map((l) => (l.uid === log.uid ? { ...l, firebaseAuthStatus: newStatus } : l))
+      );
+    } catch (err: any) {
+      AppAlert.show('Update Failed', err?.message || 'Could not update status.', undefined, 'error');
+    }
   };
 
   const handleTopUpAmount = async (targetUser: any, amount: number) => {
@@ -584,14 +666,17 @@ export const AdminScreen = () => {
 
               <TouchableOpacity
                 style={styles.quickCard}
-                onPress={onRefresh}
+                onPress={() => {
+                  triggerHaptic('light');
+                  setShowDeletedLogsModal(true);
+                }}
                 activeOpacity={0.8}
               >
-                <View style={[styles.quickIconBox, { backgroundColor: '#fef3c7' }]}>
-                  <Ionicons name="sync" size={17} color="#d97706" />
+                <View style={[styles.quickIconBox, { backgroundColor: '#fee2e2' }]}>
+                  <Feather name="trash-2" size={17} color="#b91c1c" />
                 </View>
-                <Text style={styles.quickCardTitle}>Sync</Text>
-                <Text style={styles.quickCardSub}>Live refresh</Text>
+                <Text style={styles.quickCardTitle}>Deleted</Text>
+                <Text style={styles.quickCardSub}>{deletedLogs.length} Logs</Text>
               </TouchableOpacity>
             </View>
 
@@ -638,38 +723,60 @@ export const AdminScreen = () => {
               </View>
             </View>
 
-            {/* Compact Security / Status Bar */}
-            <View style={styles.securityStrip}>
-              <MaterialCommunityIcons name="shield-check" size={18} color="#0066ff" />
+            {/* Compact Security & Audit Log Banner */}
+            <TouchableOpacity
+              style={styles.securityStrip}
+              onPress={() => {
+                triggerHaptic('light');
+                setShowDeletedLogsModal(true);
+              }}
+              activeOpacity={0.8}
+            >
+              <MaterialCommunityIcons name="file-document-outline" size={20} color="#0066ff" />
               <View style={{ flex: 1, marginLeft: 8 }}>
-                <Text style={styles.securityTitle}>Two-Role Security Active</Text>
+                <Text style={styles.securityTitle}>Deleted Users Audit Logs ({deletedLogs.length})</Text>
                 <Text style={styles.securitySubtitle}>
-                  Admin & User permissions strictly verified on Firestore server.
+                  View deleted accounts UIDs to remove them from Firebase Auth.
                 </Text>
               </View>
-            </View>
+              <Ionicons name="chevron-forward" size={16} color="#94a3b8" />
+            </TouchableOpacity>
           </ScrollView>
         )}
 
-        {/* ─── TAB 2: USER DIRECTORY (WITH USER TICKETS BUTTON) ────── */}
+        {/* ─── TAB 2: USER DIRECTORY (WITH DELETE & AUDIT LOG ACCESS) ─ */}
         {activeTab === 'users' && (
           <View style={{ flex: 1, paddingHorizontal: 12, paddingTop: 8 }}>
-            {/* Search Input */}
-            <View style={styles.searchBar}>
-              <Ionicons name="search" size={15} color="#94a3b8" style={{ marginRight: 6 }} />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Search name, mobile, email..."
-                placeholderTextColor="#94a3b8"
-                value={userSearchQuery}
-                onChangeText={setUserSearchQuery}
-                autoCapitalize="none"
-              />
-              {userSearchQuery.length > 0 && (
-                <TouchableOpacity onPress={() => setUserSearchQuery('')}>
-                  <Ionicons name="close-circle" size={16} color="#94a3b8" />
-                </TouchableOpacity>
-              )}
+            {/* Search Input & Deleted Logs Shortcut Button */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+              <View style={[styles.searchBar, { flex: 1, marginBottom: 0 }]}>
+                <Ionicons name="search" size={15} color="#94a3b8" style={{ marginRight: 6 }} />
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Search name, mobile, email..."
+                  placeholderTextColor="#94a3b8"
+                  value={userSearchQuery}
+                  onChangeText={setUserSearchQuery}
+                  autoCapitalize="none"
+                />
+                {userSearchQuery.length > 0 && (
+                  <TouchableOpacity onPress={() => setUserSearchQuery('')}>
+                    <Ionicons name="close-circle" size={16} color="#94a3b8" />
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              <TouchableOpacity
+                style={styles.deletedLogsPill}
+                onPress={() => {
+                  triggerHaptic('light');
+                  setShowDeletedLogsModal(true);
+                }}
+                activeOpacity={0.8}
+              >
+                <Feather name="trash-2" size={12} color="#b91c1c" style={{ marginRight: 3 }} />
+                <Text style={styles.deletedLogsPillText}>Logs ({deletedLogs.length})</Text>
+              </TouchableOpacity>
             </View>
 
             {/* Micro Filter Chips */}
@@ -728,6 +835,7 @@ export const AdminScreen = () => {
                   const isAdmin = item.role === 'admin';
                   const uid = item.id || item.uid;
                   const ticketCount = userBookingCountMap.get(uid) || 0;
+                  const isCurrentAdmin = uid === currentAdmin?.uid;
 
                   return (
                     <View style={[styles.compactUserCard, isBlocked && styles.compactUserCardBlocked]}>
@@ -761,7 +869,7 @@ export const AdminScreen = () => {
                         </View>
                       </View>
 
-                      {/* Bottom Action Row with "View Tickets" button */}
+                      {/* Bottom Action Row with "View Tickets", Status, Topup & Delete */}
                       <View style={styles.userCardFooter}>
                         {/* 🎫 USER TICKETS INSPECTOR BUTTON */}
                         <TouchableOpacity
@@ -837,6 +945,22 @@ export const AdminScreen = () => {
                           >
                             <Ionicons name="add" size={13} color="#475569" />
                           </TouchableOpacity>
+
+                          {/* 🗑️ DELETE USER ACTION BUTTON */}
+                          {!isCurrentAdmin && (
+                            <TouchableOpacity
+                              style={styles.deleteUserBtn}
+                              onPress={() => handleDeleteUser(item)}
+                              disabled={deletingUserId === uid}
+                              activeOpacity={0.75}
+                            >
+                              {deletingUserId === uid ? (
+                                <ActivityIndicator size="small" color="#b91c1c" />
+                              ) : (
+                                <Feather name="trash-2" size={13} color="#b91c1c" />
+                              )}
+                            </TouchableOpacity>
+                          )}
                         </View>
                       </View>
                     </View>
@@ -1255,7 +1379,111 @@ export const AdminScreen = () => {
         )}
       </KeyboardAvoidingView>
 
-      {/* ─── 🎫 USER-WISE TICKETS MODAL (VIEW TICKETS BY USER) ─────── */}
+      {/* ─── 📋 DELETED USERS AUDIT LOGS MODAL ──────────────────────── */}
+      <Modal
+        visible={showDeletedLogsModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowDeletedLogsModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.logsModalBox}>
+            <View style={styles.userTicketsModalHeader}>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Feather name="trash-2" size={16} color="#b91c1c" style={{ marginRight: 6 }} />
+                  <Text style={styles.userTicketsModalTitle}>Deleted Users Audit Logs</Text>
+                </View>
+                <Text style={styles.userTicketsModalSub}>
+                  Copy UIDs to delete corresponding Firebase Auth accounts.
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={styles.modalCloseBtn}
+                onPress={() => setShowDeletedLogsModal(false)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="close" size={20} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            <FlatList
+              data={deletedLogs}
+              keyExtractor={(item) => item.id || item.uid}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 20, paddingTop: 10 }}
+              ListEmptyComponent={
+                <View style={styles.centerBox}>
+                  <Feather name="shield" size={36} color="#cbd5e1" />
+                  <Text style={styles.emptyTitle}>No deleted users logged</Text>
+                  <Text style={styles.emptySubtitle}>All registered accounts are currently active in Firestore.</Text>
+                </View>
+              }
+              renderItem={({ item }) => {
+                const isAuthRemoved = item.firebaseAuthStatus === 'auth_removed';
+                return (
+                  <View style={styles.logCard}>
+                    <View style={styles.logCardHeader}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.logNameText}>{item.name || 'Unnamed'}</Text>
+                        <Text style={styles.logEmailText}>{item.email || 'No email'}</Text>
+                      </View>
+                      <TouchableOpacity
+                        style={[
+                          styles.authStatusBadge,
+                          isAuthRemoved ? styles.authStatusBadgeDone : styles.authStatusBadgePending,
+                        ]}
+                        onPress={() => handleToggleAuthRemoved(item)}
+                        activeOpacity={0.8}
+                      >
+                        <Text
+                          style={[
+                            styles.authStatusBadgeText,
+                            isAuthRemoved ? styles.authStatusBadgeDoneText : styles.authStatusBadgePendingText,
+                          ]}
+                        >
+                          {isAuthRemoved ? 'Auth Removed ✅' : 'Auth Pending ⚠️'}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    {/* UID Box with Share/Copy */}
+                    <View style={styles.uidContainer}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.uidLabel}>FIREBASE AUTH UID:</Text>
+                        <Text style={styles.uidValueText} numberOfLines={1} selectable>
+                          {item.uid}
+                        </Text>
+                      </View>
+                      <TouchableOpacity
+                        style={styles.uidCopyBtn}
+                        onPress={() => handleShareOrCopyUid(item)}
+                        activeOpacity={0.75}
+                      >
+                        <Ionicons name="copy-outline" size={13} color="#0066ff" style={{ marginRight: 3 }} />
+                        <Text style={styles.uidCopyBtnText}>Share/Copy</Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    {/* Log Meta Details */}
+                    <View style={styles.logFooterRow}>
+                      <Text style={styles.logMetaDetail}>
+                        📅 {item.deletedAt ? new Date(item.deletedAt).toLocaleString('en-IN') : 'Recently'}
+                      </Text>
+                      <Text style={styles.logMetaDetail}>
+                        👤 By: {item.deletedByAdminEmail ? item.deletedByAdminEmail.split('@')[0] : 'Admin'}
+                      </Text>
+                    </View>
+                  </View>
+                );
+              }}
+            />
+          </View>
+        </View>
+      </Modal>
+
+      {/* ─── 🎫 USER-WISE TICKETS MODAL ─────────────────────────────── */}
       <Modal
         visible={!!selectedUserForTickets}
         transparent
@@ -1703,6 +1931,22 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat_500Medium',
     color: '#0f172a',
   },
+  deletedLogsPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fee2e2',
+    paddingHorizontal: 9,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginLeft: 6,
+    borderWidth: 1,
+    borderColor: '#fecaca',
+  },
+  deletedLogsPillText: {
+    fontSize: 11,
+    fontFamily: 'Montserrat_700Bold',
+    color: '#b91c1c',
+  },
   chipsScroll: {
     flexDirection: 'row',
     marginBottom: 8,
@@ -1868,6 +2112,17 @@ const styles = StyleSheet.create({
     fontSize: 9.5,
     fontFamily: 'Montserrat_700Bold',
     color: '#0066ff',
+  },
+  deleteUserBtn: {
+    backgroundColor: '#fee2e2',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 4.5,
+    marginLeft: 5,
+    borderWidth: 1,
+    borderColor: '#fecaca',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   compactFormCard: {
     backgroundColor: '#ffffff',
@@ -2221,6 +2476,106 @@ const styles = StyleSheet.create({
     marginBottom: 7,
     borderWidth: 1,
     borderColor: '#e2e8f0',
+  },
+  logsModalBox: {
+    width: '100%',
+    maxHeight: '88%',
+    backgroundColor: '#ffffff',
+    borderRadius: 14,
+    padding: 14,
+  },
+  logCard: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 9,
+    padding: 10,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  logCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  logNameText: {
+    fontSize: 13,
+    fontFamily: 'Montserrat_700Bold',
+    color: '#0f172a',
+  },
+  logEmailText: {
+    fontSize: 11,
+    fontFamily: 'Montserrat_400Regular',
+    color: '#64748b',
+  },
+  authStatusBadge: {
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 5,
+  },
+  authStatusBadgePending: {
+    backgroundColor: '#fef3c7',
+  },
+  authStatusBadgeDone: {
+    backgroundColor: '#dcfce7',
+  },
+  authStatusBadgeText: {
+    fontSize: 9.5,
+    fontFamily: 'Montserrat_700Bold',
+  },
+  authStatusBadgePendingText: {
+    color: '#b45309',
+  },
+  authStatusBadgeDoneText: {
+    color: '#15803d',
+  },
+  uidContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#ffffff',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    marginVertical: 4,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  uidLabel: {
+    fontSize: 7.5,
+    fontFamily: 'Montserrat_700Bold',
+    color: '#94a3b8',
+  },
+  uidValueText: {
+    fontSize: 10.5,
+    fontFamily: 'Montserrat_700Bold',
+    color: '#0066ff',
+  },
+  uidCopyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#eff6ff',
+    paddingHorizontal: 7,
+    paddingVertical: 3.5,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+  },
+  uidCopyBtnText: {
+    fontSize: 9.5,
+    fontFamily: 'Montserrat_700Bold',
+    color: '#0066ff',
+  },
+  logFooterRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  logMetaDetail: {
+    fontSize: 9,
+    fontFamily: 'Montserrat_500Medium',
+    color: '#64748b',
   },
   compactModalBox: {
     width: '100%',

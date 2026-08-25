@@ -12,6 +12,7 @@ import {
   onSnapshot,
   serverTimestamp,
   runTransaction,
+  deleteDoc,
 } from 'firebase/firestore';
 import { db } from '@/services/firebase/config';
 import { StationModel, TrainModel, INITIAL_STATIONS, INITIAL_TRAINS } from '@/services/firebase/seed';
@@ -90,6 +91,54 @@ export const FirebaseFirestoreService = {
     const userRef = doc(db, 'users', uid);
     return updateDoc(userRef, {
       status,
+      updatedAt: serverTimestamp(),
+    });
+  },
+
+  deleteUserAndLog: async (targetUser: any, adminUser: any) => {
+    const uid = targetUser.id || targetUser.uid;
+    if (!uid) throw new Error('Invalid user ID for deletion');
+
+    // 1. Write comprehensive audit log to deleted_users collection
+    const logRef = doc(db, 'deleted_users', uid);
+    await setDoc(logRef, {
+      uid,
+      email: targetUser.email || 'No email',
+      name: targetUser.name || targetUser.displayName || 'Unnamed User',
+      mobile: targetUser.mobile || '',
+      role: targetUser.role || 'user',
+      walletBalanceAtDeletion: targetUser.wallet || 0,
+      deletedByAdminId: adminUser?.uid || adminUser?.id || 'admin',
+      deletedByAdminEmail: adminUser?.email || 'admin@railone.com',
+      deletedAt: new Date().toISOString(),
+      deletedAtTimestamp: serverTimestamp(),
+      firebaseAuthStatus: 'pending_auth_removal',
+      reason: 'Admin Manual Deletion',
+    });
+
+    // 2. Delete the user document from Firestore users collection
+    const userRef = doc(db, 'users', uid);
+    await deleteDoc(userRef);
+
+    return { success: true, uid, email: targetUser.email };
+  },
+
+  getDeletedUsersLogs: async () => {
+    const q = query(collection(db, 'deleted_users'), limit(50));
+    const snapshot = await getDocs(q);
+    const logs: any[] = [];
+    snapshot.forEach((docSnap) => {
+      logs.push({ id: docSnap.id, ...docSnap.data() });
+    });
+    // Sort client-side by deletedAt descending
+    return logs.sort((a, b) => (b.deletedAt || '').localeCompare(a.deletedAt || ''));
+  },
+
+  updateDeletedUserAuthStatus: async (uid: string, status: 'auth_removed' | 'pending_auth_removal') => {
+    const logRef = doc(db, 'deleted_users', uid);
+    return updateDoc(logRef, {
+      firebaseAuthStatus: status,
+      authRemovedAt: status === 'auth_removed' ? new Date().toISOString() : null,
       updatedAt: serverTimestamp(),
     });
   },

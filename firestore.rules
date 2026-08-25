@@ -69,5 +69,10 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow write: if isAdmin();
     }
+
+    // --- Deleted Users Audit Logs ----------------------------------
+    match /deleted_users/{logId} {
+      allow read, write: if isAdmin();
+    }
   }
 }
