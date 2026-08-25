@@ -112,24 +112,6 @@ export const LoginScreen = () => {
     );
   };
 
-  const handleResetPassword = () => {
-    if (!email.trim()) {
-      AppAlert.show(
-        "Reset Password",
-        "Please enter your registered email address first.",
-        undefined,
-        "warning"
-      );
-      return;
-    }
-    AppAlert.show(
-      "Verification Sent",
-      `Password reset instructions have been forwarded to ${email.trim()}.`,
-      undefined,
-      "success"
-    );
-  };
-
   const handleBiometricLogin = async () => {
     AppAlert.show(
       "Biometric Authentication",
@@ -227,20 +209,13 @@ export const LoginScreen = () => {
               </TouchableOpacity>
             </View>
 
-            {/* ─── 4. Forgot / Reset Password Row ────────────────────── */}
-            <View style={styles.linksRow}>
+            {/* ─── 4. Forgot Password Link ────────────────────────── */}
+            <View style={styles.forgotPasswordRow}>
               <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={handleForgotPassword}
               >
-                <Text style={styles.linkTextLeft}>Forgot Password?</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={handleResetPassword}
-              >
-                <Text style={styles.linkTextRight}>Reset Password?</Text>
+                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
               </TouchableOpacity>
             </View>
 
@@ -405,21 +380,14 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
 
-  /* 4. Links Row */
-  linksRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+  /* 4. Forgot Password Link */
+  forgotPasswordRow: {
+    alignItems: "flex-end",
     marginTop: 6,
     marginBottom: 36,
     paddingHorizontal: 2,
   },
-  linkTextLeft: {
-    fontSize: 13,
-    fontFamily: "Montserrat_700Bold",
-    color: "#0a3672",
-  },
-  linkTextRight: {
+  forgotPasswordText: {
     fontSize: 13,
     fontFamily: "Montserrat_700Bold",
     color: "#0a3672",
