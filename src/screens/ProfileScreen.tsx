@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
   useWindowDimensions,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Rect, Circle, Path } from 'react-native-svg';
 import { useAuth } from '@/context/AuthContext';
@@ -53,7 +53,6 @@ export const ProfileScreen = () => {
   const gridBoxWidth = (width - 44) / 3;
   const { user, logout, updateUserProfile, addWalletBalance } = useAuth();
   const navigation = useNavigation<any>();
-  const insets = useSafeAreaInsets();
 
   // Modals state
   const [modalVisible, setModalVisible] = useState(false);
@@ -197,15 +196,15 @@ export const ProfileScreen = () => {
   const walletAmount = user?.wallet !== undefined ? user.wallet.toFixed(2) : '0.00';
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <FocusAwareStatusBar backgroundColor="#e4f7fc" barStyle="dark-content" />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: 24 }]}
+        contentContainerStyle={styles.scrollContent}
       >
         {/* ─── 1. Curved Sky-Blue Header ───────────────────────────── */}
-        <View style={[styles.headerBanner, { paddingTop: Math.max(insets.top, 12) }]}>
+        <View style={styles.headerBanner}>
           {/* Back Circle Button */}
           <TouchableOpacity
             style={styles.backBtn}
@@ -703,23 +702,25 @@ export const ProfileScreen = () => {
           </View>
         </View>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#e4f7fc',
   },
   scrollContent: {
-    paddingBottom: 24,
+    backgroundColor: '#f8fafc',
+    paddingBottom: 28,
   },
 
   /* 1. Header Banner */
   headerBanner: {
     backgroundColor: '#e4f7fc',
     paddingHorizontal: 16,
+    paddingTop: 10,
     paddingBottom: 48,
     borderBottomLeftRadius: 36,
     borderBottomRightRadius: 36,
@@ -730,7 +731,7 @@ const styles = StyleSheet.create({
   backBtn: {
     position: 'absolute',
     left: 16,
-    top: 14,
+    top: 10,
     width: 38,
     height: 38,
     borderRadius: 19,
@@ -752,7 +753,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#3ca8eb',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: 4,
     marginBottom: 8,
     shadowColor: '#3ca8eb',
     shadowOffset: { width: 0, height: 4 },
