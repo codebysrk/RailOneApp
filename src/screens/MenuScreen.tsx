@@ -78,6 +78,10 @@ export const MenuScreen = () => {
 
   const userName = user?.name || "Passenger";
   const walletBalance = user?.wallet !== undefined ? user.wallet.toFixed(2) : "0.00";
+  const isAdmin =
+    user?.role === "admin" ||
+    user?.email?.toLowerCase().includes("admin") ||
+    user?.email?.toLowerCase() === "admin@railone.com";
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
@@ -111,7 +115,7 @@ export const MenuScreen = () => {
         </View>
 
         {/* ─── 2.5 Admin Panel Tile (Visible to Admin Only) ────────── */}
-        {user?.role === "admin" && (
+        {isAdmin && (
           <TouchableOpacity
             style={styles.adminBanner}
             onPress={() => {

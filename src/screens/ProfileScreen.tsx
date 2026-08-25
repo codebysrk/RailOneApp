@@ -22,6 +22,7 @@ import { AppAlert } from '@/context/AlertContext';
 import { useNavigation } from '@react-navigation/native';
 import { StorageService, SavedPassenger } from '@/services/storage/storage.service';
 import { FocusAwareStatusBar } from '@/components/common';
+import { triggerHaptic } from '@/utils/haptics';
 
 // Food Preference Badge (Indian Railways Veg / Non-Veg / No-Food icon)
 const FoodTypeBadge = ({ type = 'Veg' }: { type?: string }) => {
@@ -271,6 +272,38 @@ export const ProfileScreen = () => {
             </View>
           </View>
         </View>
+
+        {/* ─── Admin Quick Access Banner (Visible to Admin Only) ────── */}
+        {(user?.role === "admin" ||
+          user?.email?.toLowerCase().includes("admin") ||
+          user?.email?.toLowerCase() === "admin@railone.com") && (
+          <TouchableOpacity
+            style={styles.adminBanner}
+            onPress={() => {
+              triggerHaptic("medium");
+              navigation.navigate("Admin");
+            }}
+            activeOpacity={0.85}
+          >
+            <View style={styles.adminBannerLeft}>
+              <View style={styles.adminIconBox}>
+                <Ionicons name="shield-checkmark" size={22} color="#ffffff" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <Text style={styles.adminBannerTitle}>Admin Management</Text>
+                  <View style={styles.adminBadge}>
+                    <Text style={styles.adminBadgeText}>ADMIN</Text>
+                  </View>
+                </View>
+                <Text style={styles.adminBannerSubtitle}>
+                  Create user credentials & manage wallets
+                </Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#0066ff" />
+          </TouchableOpacity>
+        )}
 
         {/* ─── 2. Profile Complete Progress Card ───────────────────── */}
         <View style={styles.progressCard}>
@@ -851,6 +884,60 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 13.5,
     fontFamily: 'Montserrat_600SemiBold',
+  },
+
+  /* Admin Banner */
+  adminBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#eff6ff',
+    borderWidth: 1.5,
+    borderColor: '#93c5fd',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    marginHorizontal: 16,
+    marginTop: 34,
+    marginBottom: 0,
+  },
+  adminBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  adminIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#0066ff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  adminBannerTitle: {
+    fontSize: 14.5,
+    fontFamily: 'Montserrat_700Bold',
+    color: '#1e3a8a',
+  },
+  adminBadge: {
+    backgroundColor: '#dbeafe',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 5,
+    marginLeft: 6,
+  },
+  adminBadgeText: {
+    fontSize: 9.5,
+    fontFamily: 'Montserrat_800ExtraBold',
+    color: '#1d4ed8',
+    letterSpacing: 0.4,
+  },
+  adminBannerSubtitle: {
+    fontSize: 12,
+    fontFamily: 'Montserrat_500Medium',
+    color: '#64748b',
+    marginTop: 2,
   },
 
   /* 2. Progress Card */

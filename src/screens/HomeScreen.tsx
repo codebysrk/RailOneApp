@@ -28,6 +28,7 @@ import { colors } from "@/theme/colors";
 import { spacing, elevation } from "@/theme/spacing";
 import { FirebaseService, UpdateService, ReleaseInfo } from "@/services";
 import { useAuth } from "@/context/AuthContext";
+import { triggerHaptic } from "@/utils/haptics";
 import { UpdateModal, FocusAwareStatusBar } from "@/components/common";
 import { formatUpcomingDate } from "@/utils/date";
 import {
@@ -173,6 +174,38 @@ export const HomeScreen = () => {
         <Text style={styles.greeting}>
           Hi, {user?.name ? user.name.split(" ")[0] : "User"}!
         </Text>
+
+        {/* ─── Admin Quick Access Banner (Visible to Admin Only) ────── */}
+        {(user?.role === "admin" ||
+          user?.email?.toLowerCase().includes("admin") ||
+          user?.email?.toLowerCase() === "admin@railone.com") && (
+          <TouchableOpacity
+            style={styles.adminHomeCard}
+            onPress={() => {
+              triggerHaptic("medium");
+              navigation.navigate("Admin");
+            }}
+            activeOpacity={0.85}
+          >
+            <View style={styles.adminHomeLeft}>
+              <View style={styles.adminHomeIcon}>
+                <Ionicons name="shield-checkmark" size={20} color="#ffffff" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <Text style={styles.adminHomeTitle}>Admin Panel</Text>
+                  <View style={styles.adminBadge}>
+                    <Text style={styles.adminBadgeText}>ADMIN</Text>
+                  </View>
+                </View>
+                <Text style={styles.adminHomeSubtitle}>
+                  Create user credentials & manage wallets
+                </Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="#0066ff" />
+          </TouchableOpacity>
+        )}
 
         {/* ─── 1. Journey Planner ──────────────────────────────────── */}
         <Text style={styles.sectionTitle}>Journey Planner</Text>
@@ -926,5 +959,56 @@ const styles = StyleSheet.create({
   },
   socialIconBtnYt: {
     backgroundColor: "#ff0000",
+  },
+  adminHomeCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#eff6ff",
+    borderWidth: 1.5,
+    borderColor: "#93c5fd",
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginTop: 10,
+    marginBottom: 8,
+  },
+  adminHomeLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  adminHomeIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "#0066ff",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 10,
+  },
+  adminHomeTitle: {
+    fontSize: 14.5,
+    fontWeight: "700",
+    color: "#1e3a8a",
+  },
+  adminBadge: {
+    backgroundColor: "#dbeafe",
+    paddingHorizontal: 5,
+    paddingVertical: 1.5,
+    borderRadius: 4,
+    marginLeft: 6,
+  },
+  adminBadgeText: {
+    fontSize: 9,
+    fontWeight: "800",
+    color: "#1d4ed8",
+    letterSpacing: 0.3,
+  },
+  adminHomeSubtitle: {
+    fontSize: 11.5,
+    fontWeight: "500",
+    color: "#64748b",
+    marginTop: 1,
   },
 });
