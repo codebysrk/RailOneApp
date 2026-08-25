@@ -460,6 +460,37 @@ export const AdminScreen = () => {
     );
   };
 
+  const handleDeleteBooking = (booking: any) => {
+    triggerHaptic('medium');
+    const bookingId = booking.id || booking.bookingId;
+    AppAlert.show(
+      'Delete Ticket Permanently?',
+      `Permanently remove ticket ${booking.ticketId || booking.pnr || bookingId} from database?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await FirebaseService.deleteBooking(bookingId);
+              triggerHaptic('success');
+              setAllBookings((prev) =>
+                prev.filter((b) => (b.id || b.bookingId) !== bookingId)
+              );
+              AppAlert.show('Ticket Deleted', 'Ticket permanently removed from Firestore.', undefined, 'success');
+              const updatedStats = await FirebaseService.getAdminStatistics();
+              setStats(updatedStats);
+            } catch (err: any) {
+              AppAlert.show('Failed', err?.message || 'Could not delete ticket.', undefined, 'error');
+            }
+          },
+        },
+      ],
+      'confirm'
+    );
+  };
+
   // Filtered Users
   const filteredUsers = usersList.filter((u) => {
     const matchesQuery =
@@ -1414,15 +1445,26 @@ export const AdminScreen = () => {
                           {item.passengers || '1 Adult'} • {item.trainType || 'Unreserved'}
                         </Text>
 
-                        {item.status === 'upcoming' && (
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          {item.status === 'upcoming' && (
+                            <TouchableOpacity
+                              style={styles.cancelPill}
+                              onPress={() => handleCancelTicket(item)}
+                              activeOpacity={0.75}
+                            >
+                              <Text style={styles.cancelPillText}>Cancel</Text>
+                            </TouchableOpacity>
+                          )}
+
                           <TouchableOpacity
-                            style={styles.cancelPill}
-                            onPress={() => handleCancelTicket(item)}
+                            style={styles.deleteTicketPill}
+                            onPress={() => handleDeleteBooking(item)}
                             activeOpacity={0.75}
+                            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
                           >
-                            <Text style={styles.cancelPillText}>Cancel</Text>
+                            <Feather name="trash-2" size={12} color="#dc2626" />
                           </TouchableOpacity>
-                        )}
+                        </View>
                       </View>
                     </View>
                   );
@@ -2455,11 +2497,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
+    marginRight: 6,
   },
   cancelPillText: {
     fontSize: 9.5,
     fontFamily: 'Montserrat_700Bold',
     color: '#b91c1c',
+  },
+  deleteTicketPill: {
+    padding: 3,
+    backgroundColor: '#fef2f2',
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#fecaca',
   },
   centerBox: {
     alignItems: 'center',

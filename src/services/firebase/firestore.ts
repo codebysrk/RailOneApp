@@ -123,7 +123,15 @@ export const FirebaseFirestoreService = {
       await Promise.all(deletePromises);
     } catch {}
 
-    // 3. Delete the user document from Firestore users collection
+    // 3. Clean up any bookings belonging to this deleted user
+    try {
+      const bookingsQuery = query(collection(db, 'bookings'), where('userId', '==', uid));
+      const bookingsSnap = await getDocs(bookingsQuery);
+      const bookingDeletePromises = bookingsSnap.docs.map((d) => deleteDoc(d.ref));
+      await Promise.all(bookingDeletePromises);
+    } catch {}
+
+    // 4. Delete the user document from Firestore users collection
     const userRef = doc(db, 'users', uid);
     await deleteDoc(userRef);
 
@@ -311,6 +319,11 @@ export const FirebaseFirestoreService = {
     const bookings: any[] = [];
     snapshot.forEach((d) => bookings.push({ id: d.id, ...d.data() }));
     return bookings;
+  },
+
+  deleteBooking: async (bookingId: string) => {
+    const bookingRef = doc(db, 'bookings', bookingId);
+    return deleteDoc(bookingRef);
   },
 
   getAdminStatistics: async () => {
