@@ -12,6 +12,7 @@ export interface TicketData {
   id: string;
   pnr: string;
   ticketId?: string;
+  ticketType?: string;
   train: string;
   date: string;
   journeyDate?: string;
@@ -43,13 +44,13 @@ export const TicketCard: React.FC<TicketCardProps> = ({
 }) => {
   const isUpcoming = status === "upcoming";
   const isCompleted = status === "completed";
+  const isUnreserved = ticket.moduleType === "UNRESERVED" || !ticket.pnr;
 
-  const badgeText =
-    ticket.moduleType === "UNRESERVED"
-      ? "Unreserved"
-      : ticket.moduleType === "PLATFORM"
-        ? "Platform"
-        : "Reserved";
+  const badgeText = isUnreserved
+    ? "Unreserved"
+    : ticket.moduleType === "PLATFORM"
+      ? "Platform"
+      : "Reserved";
 
   const borderColor = isUpcoming
     ? "#eda36b"
@@ -62,13 +63,25 @@ export const TicketCard: React.FC<TicketCardProps> = ({
       ? "rgb(197, 224, 211)"
       : "rgb(244, 194, 194)";
 
-  const trainSpaceIndex = ticket.train.indexOf(" ");
+  const trainSpaceIndex = ticket.train ? ticket.train.indexOf(" ") : -1;
   const trainNo =
     trainSpaceIndex !== -1
       ? ticket.train.substring(0, trainSpaceIndex)
-      : ticket.train;
+      : ticket.train || "";
   const trainName =
     trainSpaceIndex !== -1 ? ticket.train.substring(trainSpaceIndex) : "";
+
+  const ticketTypeValue =
+    ticket.ticketType ||
+    (ticket.trainType === "SUPERFAST"
+      ? "SUPERFAST"
+      : ticket.trainType === "MAIL_EXP"
+        ? "MAIL / EXP"
+        : "JOURNEY");
+
+  const centerRouteText = isUnreserved && ticket.distance
+    ? `— ${ticket.distance.toLowerCase().includes("km") ? ticket.distance : `${ticket.distance} km`} —`
+    : ticket.duration || "4h:8m";
 
   return (
     <View style={[styles.card, { borderColor }]}>
@@ -78,14 +91,16 @@ export const TicketCard: React.FC<TicketCardProps> = ({
         onPress={onOpen}
         style={styles.topSection}
       >
-        {/* Row 1: Badge & Identifier (UTS No for Unreserved, PNR for Reserved) */}
+        {/* Row 1: Badge & Identifier */}
         <View style={styles.row1}>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{badgeText}</Text>
+          <View style={[styles.badge, isUnreserved && styles.unreservedBadge]}>
+            <Text style={[styles.badgeText, isUnreserved && styles.unreservedBadgeText]}>
+              {badgeText}
+            </Text>
           </View>
-          {ticket.moduleType === "UNRESERVED" || ticket.moduleType === "PLATFORM" || !ticket.pnr ? (
+          {isUnreserved ? (
             <Text style={styles.pnrContainer}>
-              <Text style={styles.pnrLabel}>UTS No: </Text>
+              <Text style={styles.pnrLabel}>UTS: </Text>
               <Text style={styles.pnrValue}>{ticket.ticketId || ticket.id || "---"}</Text>
             </Text>
           ) : (
@@ -96,32 +111,40 @@ export const TicketCard: React.FC<TicketCardProps> = ({
           )}
         </View>
 
-        {/* Row 2: Train No & Journey Date */}
+        {/* Row 2: Ticket Type / Train No & Booking / Journey Date */}
         <View style={styles.row2}>
           <View>
-            <Text style={styles.infoLabel}>Train No.</Text>
-            <Text style={styles.infoValue}>
-              {trainNo}
-              <Text style={styles.trainName}>{trainName}</Text>
+            <Text style={styles.infoLabel}>
+              {isUnreserved ? "Ticket Type" : "Train No."}
             </Text>
+            {isUnreserved ? (
+              <Text style={styles.infoValue}>{ticketTypeValue}</Text>
+            ) : (
+              <Text style={styles.infoValue}>
+                {trainNo}
+                <Text style={styles.trainName}>{trainName}</Text>
+              </Text>
+            )}
           </View>
           <View style={styles.rightAlign}>
-            <Text style={styles.infoLabel}>Journey Date</Text>
-            <Text style={styles.infoValue}>{formatJourneyDate(ticket.journeyDate || ticket.date)}</Text>
+            <Text style={styles.infoLabel}>
+              {isUnreserved ? "Booking Date" : "Journey Date"}
+            </Text>
+            <Text style={styles.infoValue}>
+              {formatJourneyDate(ticket.journeyDate || ticket.date)}
+            </Text>
           </View>
         </View>
 
-        {/* Row 3: Route & Duration */}
+        {/* Row 3: Route & Duration / Distance */}
         <View style={styles.row3}>
           <View style={styles.flex1}>
             <Text style={styles.stationText}>{ticket.source}</Text>
           </View>
           <View style={styles.durationContainer}>
-            <View style={styles.durationLine} />
-            <Text style={styles.durationText}>
-              {ticket.duration || "4h:8m"}
-            </Text>
-            <View style={styles.durationLine} />
+            {!isUnreserved && <View style={styles.durationLine} />}
+            <Text style={styles.durationText}>{centerRouteText}</Text>
+            {!isUnreserved && <View style={styles.durationLine} />}
           </View>
           <View style={[styles.flex1, styles.rightAlign]}>
             <Text style={[styles.stationText, styles.stationTextRight]}>
@@ -208,13 +231,19 @@ const styles = StyleSheet.create({
     backgroundColor: "#dcf4f8",
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 5,
+    borderRadius: 6,
   },
   badgeText: {
     color: "#0f8c9e",
     fontSize: 11,
     fontFamily: "Montserrat_700Bold",
     letterSpacing: 0.2,
+  },
+  unreservedBadge: {
+    backgroundColor: "#ede5f8",
+  },
+  unreservedBadgeText: {
+    color: "#9f45e8",
   },
   pnrContainer: {
     fontSize: 12,

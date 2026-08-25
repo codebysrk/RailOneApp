@@ -16,7 +16,7 @@ import { useAuth } from "@/context/AuthContext";
 import { AppHeader, TicketCard, TicketData } from "@/components/common";
 
 // Exact Sort Descending Header Icon from screenshot
-const HeaderSortIcon = ({ color = "#ffffff", size = 22 }: { color?: string; size?: number }) => (
+const HeaderSortIcon = ({ color = "#ffffff", size = 17.5 }: { color?: string; size?: number }) => (
   <FontAwesome5 name="sort-amount-down-alt" size={size} color={color} />
 );
 
@@ -184,8 +184,8 @@ export const BookingsScreen = () => {
         // FIX M3: use goBack() instead of navigate("HomeTab") to preserve stack history
         onBack={() => navigation.goBack()}
         rightComponent={
-          <TouchableOpacity activeOpacity={0.8}>
-            <HeaderSortIcon color="#ffffff" size={24} />
+          <TouchableOpacity activeOpacity={0.8} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <HeaderSortIcon color="#ffffff" size={17.5} />
           </TouchableOpacity>
         }
       />

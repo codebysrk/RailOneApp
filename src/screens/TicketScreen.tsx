@@ -174,10 +174,14 @@ export const TicketScreen = () => {
       });
       const timeFormatted = `${currentHour}:${currentMin}`;
 
-      let bDate =
-        ticketData?.bookingDateTime ||
-        ticketData?.date ||
-        `${dateFormatted}, ${timeFormatted}`;
+      let bDate = ticketData?.bookingDateTime;
+      if (!bDate && ticketData?.date) {
+        // If only date was provided, clean out any day name prefix
+        bDate = ticketData.date.replace(/^[A-Za-z]{3},\s*/, "");
+      }
+      if (!bDate) {
+        bDate = `${dateFormatted}, ${timeFormatted}`;
+      }
       if (bDate && !bDate.includes(":")) {
         bDate = `${bDate}, ${timeFormatted}`;
       }
