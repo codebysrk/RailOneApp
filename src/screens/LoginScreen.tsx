@@ -15,7 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuth } from "@/context/AuthContext";
 import { AppAlert } from "@/context/AlertContext";
-import { StorageService } from "@/services";
+import { FirebaseService, StorageService } from "@/services";
 import { FocusAwareStatusBar } from "@/components/common";
 
 export const LoginScreen = () => {
@@ -28,6 +28,7 @@ export const LoginScreen = () => {
   const [password, setPassword] = useState("");
 
   const [loading, setLoading] = useState(false);
+  const [resettingPassword, setResettingPassword] = useState(false);
   const [showPass, setShowPass] = useState(false);
 
   useEffect(() => {
@@ -60,27 +61,15 @@ export const LoginScreen = () => {
     setLoading(true);
     try {
       await login(email.trim(), password);
-      // Save last email
-      await StorageService.setLastUserEmail({ email: email.trim(), name: lastUserName });
-    } catch (e: any) {
-      let msg = e?.message || "Something went wrong.";
-      const code = e?.code || "";
-      if (
-        code === "auth/user-not-found" ||
-        code === "auth/wrong-password" ||
-        code === "auth/invalid-credential"
-      ) {
-        msg = "Invalid email or password.";
-      } else if (code === "auth/invalid-email") {
-        msg = "Please enter a valid email address.";
-      } else if (code === "auth/network-request-failed") {
-        msg = "Network error. Please check your internet connection.";
-      } else {
-        msg = msg
-          .replace(/Firebase:\s*/i, "")
-          .replace(/\[.*?\]\s*/, "")
-          .replace(/\(auth\/.*?\)\.?/, "")
-          .trim();
+      // Success is handled by onAuthStateChanged in AuthContext
+    } catch (err: any) {
+      let msg = err?.message || "Invalid credentials. Please try again.";
+      if (err?.code === "auth/invalid-credential" || err?.code === "auth/wrong-password" || err?.code === "auth/user-not-found") {
+        msg = "Incorrect email or password. Please verify and try again.";
+      } else if (err?.code === "auth/too-many-requests") {
+        msg = "Access temporarily locked due to too many failed attempts. Please try again later or reset password.";
+      } else if (err?.code === "auth/invalid-email") {
+        msg = "The email address entered is not valid.";
       }
       AppAlert.show("Login Failed", msg, undefined, "error");
     } finally {
@@ -94,22 +83,40 @@ export const LoginScreen = () => {
     setLastUserName("");
   };
 
-  const handleForgotPassword = () => {
-    if (!email.trim()) {
+  const handleForgotPassword = async () => {
+    const targetEmail = email.trim();
+    if (!targetEmail) {
       AppAlert.show(
-        "Reset Password",
-        "Please enter your email address in the field above to receive a reset link.",
+        "Email Required",
+        "Please enter your registered email address in the Email field to receive a password reset link.",
         undefined,
-        "info"
+        "warning"
       );
       return;
     }
-    AppAlert.show(
-      "Password Reset",
-      `A password reset link will be sent to ${email.trim()}.`,
-      undefined,
-      "info"
-    );
+
+    setResettingPassword(true);
+    try {
+      await FirebaseService.sendPasswordReset(targetEmail);
+      AppAlert.show(
+        "Reset Email Sent 📬",
+        `A password reset link has been successfully sent to:\n\n${targetEmail}\n\nPlease check your Inbox (and Spam/Junk folder) to set a new password.`,
+        undefined,
+        "success"
+      );
+    } catch (err: any) {
+      let msg = err?.message || "Could not send password reset email. Please try again.";
+      if (err?.code === "auth/user-not-found" || msg.includes("user-not-found")) {
+        msg = "No registered account found with this email address.";
+      } else if (err?.code === "auth/invalid-email" || msg.includes("invalid-email")) {
+        msg = "The email address entered is formatted incorrectly.";
+      } else if (err?.code === "auth/too-many-requests") {
+        msg = "Too many reset requests sent. Please wait a few moments before trying again.";
+      }
+      AppAlert.show("Password Reset Failed", msg, undefined, "error");
+    } finally {
+      setResettingPassword(false);
+    }
   };
 
   const handleBiometricLogin = async () => {
@@ -214,8 +221,11 @@ export const LoginScreen = () => {
               <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={handleForgotPassword}
+                disabled={resettingPassword}
               >
-                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+                <Text style={styles.forgotPasswordText}>
+                  {resettingPassword ? "Sending reset link..." : "Forgot Password?"}
+                </Text>
               </TouchableOpacity>
             </View>
 
