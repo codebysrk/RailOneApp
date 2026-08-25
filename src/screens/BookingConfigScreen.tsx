@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Path } from 'react-native-svg';
 import { FirebaseService, StorageService } from '@/services';
@@ -148,7 +149,7 @@ export const BookingConfigScreen = () => {
 
     // Canonical Journey Date in required format: "Day, DD Mon YY" (e.g. "Tue, 25 Aug 26")
     const canonicalJourneyDate = `${dayName}, ${currentDay} ${monthName} ${year2Digit}`;
-    const fullDateTime = `${dayName}, ${currentDay} ${monthName} ${currentYear}, ${timeFormatted}`;
+    const fullDateTime = `${currentDay} ${monthName} ${currentYear}, ${timeFormatted}`;
 
     const bookedOnStr = `${currentDay}/${currentMonth}/${currentYear} ${timeFormatted}`;
     const validTillStr = `${currentDay}/${currentMonth}/${currentYear} 23:59`;
@@ -193,6 +194,9 @@ export const BookingConfigScreen = () => {
       } else {
         await StorageService.saveBookedTicket(newTicket);
       }
+      try {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } catch {}
       navigation.navigate('Ticket', { ticket: newTicket, fromBooking: true });
     } catch (err: any) {
       // FIX C5: surface error to user (including insufficient wallet balance)

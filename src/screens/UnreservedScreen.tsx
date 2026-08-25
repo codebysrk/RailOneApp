@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -10,7 +10,9 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
+  Animated,
 } from "react-native";
+import * as Haptics from "expo-haptics";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, Feather, MaterialIcons } from "@expo/vector-icons";
@@ -116,6 +118,10 @@ export const UnreservedScreen = () => {
   };
 
   const handleSelectStation = (stn: StationModel) => {
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    } catch {}
+
     const label = `${stn.code} - ${stn.name}`;
     const opposing = pickingTarget === "source" ? dest : source;
     const opposingCode = opposing ? opposing.split(" - ")[0]?.trim() : "";
@@ -144,6 +150,10 @@ export const UnreservedScreen = () => {
   };
 
   const handleProceedToBook = () => {
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    } catch {}
+
     if (!source.trim() || !dest.trim()) {
       AppAlert.show(
         "Selection Required",
@@ -176,13 +186,34 @@ export const UnreservedScreen = () => {
     loadStations("");
   };
 
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+  const [rotated, setRotated] = useState(false);
+
   const handleSwapStations = () => {
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    } catch {}
+
+    const toValue = rotated ? 0 : 1;
+    Animated.spring(rotateAnim, {
+      toValue,
+      friction: 6,
+      tension: 40,
+      useNativeDriver: true,
+    }).start();
+    setRotated(!rotated);
+
     if (source || dest) {
       const temp = source;
       setSource(dest);
       setDest(temp);
     }
   };
+
+  const spin = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "180deg"],
+  });
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
@@ -292,7 +323,9 @@ export const UnreservedScreen = () => {
                     onPress={handleSwapStations}
                     activeOpacity={0.8}
                   >
-                    <MaterialIcons name="swap-vert" size={24} color="#0066ff" />
+                    <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                      <MaterialIcons name="swap-vert" size={24} color="#0066ff" />
+                    </Animated.View>
                   </TouchableOpacity>
                 </View>
 
