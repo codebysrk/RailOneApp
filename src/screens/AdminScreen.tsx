@@ -847,7 +847,7 @@ export const AdminScreen = () => {
                 <Ionicons name="search" size={15} color="#94a3b8" style={{ marginRight: 6 }} />
                 <TextInput
                   style={styles.searchInput}
-                  placeholder="Search name, mobile, email..."
+                  placeholder="Search users (name, mobile, email)..."
                   placeholderTextColor="#94a3b8"
                   value={userSearchQuery}
                   onChangeText={setUserSearchQuery}
@@ -1112,7 +1112,7 @@ export const AdminScreen = () => {
                 <Ionicons name="person-outline" size={15} color="#94a3b8" style={{ marginRight: 6 }} />
                 <TextInput
                   style={styles.formInput}
-                  placeholder="e.g. Rahul Sharma"
+                  placeholder="Enter full name"
                   placeholderTextColor="#94a3b8"
                   value={name}
                   onChangeText={(val) => {
@@ -1136,7 +1136,7 @@ export const AdminScreen = () => {
                 <Ionicons name="call-outline" size={15} color="#94a3b8" style={{ marginRight: 6 }} />
                 <TextInput
                   style={styles.formInput}
-                  placeholder="e.g. 9876543210"
+                  placeholder="Enter 10-digit mobile number"
                   placeholderTextColor="#94a3b8"
                   value={mobile}
                   onChangeText={setMobile}
@@ -1151,7 +1151,7 @@ export const AdminScreen = () => {
                 <Ionicons name="mail-outline" size={15} color="#94a3b8" style={{ marginRight: 6 }} />
                 <TextInput
                   style={styles.formInput}
-                  placeholder="e.g. rahul@railone.com"
+                  placeholder="Enter email address"
                   placeholderTextColor="#94a3b8"
                   value={email}
                   onChangeText={setEmail}
@@ -1174,7 +1174,7 @@ export const AdminScreen = () => {
                 <Ionicons name="lock-closed-outline" size={15} color="#94a3b8" style={{ marginRight: 6 }} />
                 <TextInput
                   style={styles.formInput}
-                  placeholder="Minimum 6 characters"
+                  placeholder="Enter password (min. 6 characters)"
                   placeholderTextColor="#94a3b8"
                   value={password}
                   onChangeText={setPassword}
@@ -1273,7 +1273,7 @@ export const AdminScreen = () => {
               <Ionicons name="search" size={15} color="#94a3b8" style={{ marginRight: 6 }} />
               <TextInput
                 style={styles.searchInput}
-                placeholder="Search UTS code, Passenger, Station..."
+                placeholder="Search tickets (UTS code, station, passenger)..."
                 placeholderTextColor="#94a3b8"
                 value={bookingSearchQuery}
                 onChangeText={setBookingSearchQuery}
@@ -1685,7 +1685,7 @@ export const AdminScreen = () => {
                 <Ionicons name="search" size={14} color="#94a3b8" style={{ marginRight: 6 }} />
                 <TextInput
                   style={styles.searchInput}
-                  placeholder="Filter this user's tickets..."
+                  placeholder="Search user's tickets (UTS code, station)..."
                   placeholderTextColor="#94a3b8"
                   value={userTicketsSearch}
                   onChangeText={setUserTicketsSearch}
@@ -1791,7 +1791,7 @@ export const AdminScreen = () => {
               <Text style={{ fontSize: 16, fontFamily: 'Montserrat_700Bold', color: '#16a34a', marginRight: 6 }}>₹</Text>
               <TextInput
                 style={styles.modalInput}
-                placeholder="Amount"
+                placeholder="Enter amount (₹)"
                 placeholderTextColor="#94a3b8"
                 value={customTopUpAmount}
                 onChangeText={setCustomTopUpAmount}
