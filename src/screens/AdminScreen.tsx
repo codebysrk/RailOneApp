@@ -125,7 +125,7 @@ export const AdminScreen = () => {
 
   const generateRandomPassword = () => {
     triggerHaptic('light');
-    const prefixes = ['Rail', 'Fast', 'Express', 'Track', 'Super', 'Ticket', 'Admin'];
+    const prefixes = ['Rail', 'Fast', 'Track', 'Super', 'Admin'];
     const randomPrefix = prefixes[Math.floor(Math.random() * prefixes.length)];
     const randomNum = Math.floor(1000 + Math.random() * 9000);
     setPassword(`${randomPrefix}@${randomNum}`);
@@ -179,7 +179,6 @@ export const AdminScreen = () => {
       setWalletAmount('250');
       setRole('user');
 
-      // Refresh list
       const updatedUsers = await FirebaseService.getAllUsers();
       setUsersList(updatedUsers);
       const updatedStats = await FirebaseService.getAdminStatistics();
@@ -206,11 +205,11 @@ export const AdminScreen = () => {
   const handleToggleUserStatus = (targetUser: any) => {
     triggerHaptic('medium');
     const newStatus = targetUser.status === 'disabled' ? 'active' : 'disabled';
-    const actionLabel = newStatus === 'disabled' ? 'Deactivate / Block' : 'Activate';
+    const actionLabel = newStatus === 'disabled' ? 'Block' : 'Activate';
 
     AppAlert.show(
       `${actionLabel} Account`,
-      `Are you sure you want to change ${targetUser.name || targetUser.email}'s account status to ${newStatus.toUpperCase()}?`,
+      `Are you sure you want to ${actionLabel.toLowerCase()} ${targetUser.name || targetUser.email}?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -225,7 +224,7 @@ export const AdminScreen = () => {
               setUsersList((prev) =>
                 prev.map((u) => ((u.id || u.uid) === uid ? { ...u, status: newStatus } : u))
               );
-              AppAlert.show('Status Updated', `User account is now ${newStatus.toUpperCase()}.`, undefined, 'success');
+              AppAlert.show('Status Updated', `User is now ${newStatus.toUpperCase()}.`, undefined, 'success');
               const updatedStats = await FirebaseService.getAdminStatistics();
               setStats(updatedStats);
             } catch (err: any) {
@@ -252,8 +251,8 @@ export const AdminScreen = () => {
       );
       triggerHaptic('success');
       AppAlert.show(
-        'Wallet Recharged! 💰',
-        `₹${amount} has been added to ${targetUser.name || targetUser.email}. New Balance: ₹${newBal.toFixed(2)}`,
+        'Wallet Recharged',
+        `₹${amount} added to ${targetUser.name || targetUser.email}. Balance: ₹${newBal.toFixed(2)}`,
         undefined,
         'success'
       );
@@ -272,11 +271,11 @@ export const AdminScreen = () => {
     triggerHaptic('medium');
     AppAlert.show(
       'Cancel Booking',
-      `Are you sure you want to cancel UTS ticket ${booking.ticketId || booking.pnr}? This will mark it as cancelled.`,
+      `Cancel UTS ticket ${booking.ticketId || booking.pnr}?`,
       [
         { text: 'No', style: 'cancel' },
         {
-          text: 'Cancel Ticket',
+          text: 'Cancel',
           style: 'destructive',
           onPress: async () => {
             const bookingId = booking.id || booking.bookingId;
@@ -286,11 +285,11 @@ export const AdminScreen = () => {
               setAllBookings((prev) =>
                 prev.map((b) => ((b.id || b.bookingId) === bookingId ? { ...b, status: 'cancelled' } : b))
               );
-              AppAlert.show('Ticket Cancelled', 'Booking status set to CANCELLED.', undefined, 'success');
+              AppAlert.show('Cancelled', 'Ticket cancelled.', undefined, 'success');
               const updatedStats = await FirebaseService.getAdminStatistics();
               setStats(updatedStats);
             } catch (err: any) {
-              AppAlert.show('Cancellation Failed', err?.message || 'Could not cancel ticket.', undefined, 'error');
+              AppAlert.show('Failed', err?.message || 'Could not cancel ticket.', undefined, 'error');
             }
           },
         },
@@ -332,142 +331,144 @@ export const AdminScreen = () => {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <FocusAwareStatusBar backgroundColor="#0f172a" barStyle="light-content" />
+      <FocusAwareStatusBar backgroundColor="#090d16" barStyle="light-content" />
 
-      {/* ─── Executive Admin Header ───────────────────────────────── */}
-      <View style={styles.headerHero}>
-        <View style={styles.headerTopRow}>
+      {/* ─── Modern Compact Header ────────────────────────────────── */}
+      <View style={styles.compactHeader}>
+        <View style={styles.headerRow}>
           <TouchableOpacity
-            style={styles.headerBackBtn}
+            style={styles.headerBackCircle}
             onPress={() => {
               triggerHaptic('light');
               navigation.goBack();
             }}
             activeOpacity={0.7}
           >
-            <Ionicons name="chevron-back" size={22} color="#ffffff" />
+            <Ionicons name="chevron-back" size={18} color="#cbd5e1" />
           </TouchableOpacity>
 
-          <View style={styles.headerTitleBox}>
-            <View style={styles.adminCrownBadge}>
-              <MaterialCommunityIcons name="shield-crown" size={16} color="#facc15" />
-              <Text style={styles.adminCrownText}>ADMIN CONSOLE</Text>
+          <View style={styles.headerCenter}>
+            <View style={styles.badgeRow}>
+              <View style={styles.liveDot} />
+              <Text style={styles.headerBadgeText}>ADMIN CONTROL</Text>
             </View>
-            <Text style={styles.headerEmail} numberOfLines={1}>
+            <Text style={styles.adminEmailText} numberOfLines={1}>
               {currentAdmin?.email || 'admin@railone.com'}
             </Text>
           </View>
 
           <TouchableOpacity
-            style={styles.headerRefreshBtn}
+            style={styles.headerSyncCircle}
             onPress={onRefresh}
             activeOpacity={0.7}
           >
-            <Ionicons name="refresh" size={20} color="#ffffff" />
+            <Ionicons name="refresh" size={16} color="#38bdf8" />
           </TouchableOpacity>
         </View>
 
-        {/* Hero KPI Summary Bar */}
-        <View style={styles.heroSummaryBar}>
-          <View style={styles.heroSummaryItem}>
-            <Text style={styles.heroSummaryLabel}>TOTAL REVENUE</Text>
-            <Text style={styles.heroSummaryValue}>
-              ₹{stats.totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 0 })}
+        {/* Compact KPI Ribbon */}
+        <View style={styles.kpiRibbon}>
+          <View style={styles.ribbonCell}>
+            <Text style={styles.ribbonLabel}>REVENUE</Text>
+            <Text style={styles.ribbonValue}>
+              ₹{stats.totalRevenue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
             </Text>
           </View>
-          <View style={styles.heroDivider} />
-          <View style={styles.heroSummaryItem}>
-            <Text style={styles.heroSummaryLabel}>USERS</Text>
-            <Text style={styles.heroSummaryValue}>{stats.totalUsers}</Text>
+          <View style={styles.ribbonDivider} />
+          <View style={styles.ribbonCell}>
+            <Text style={styles.ribbonLabel}>USERS</Text>
+            <Text style={styles.ribbonValue}>{stats.totalUsers}</Text>
           </View>
-          <View style={styles.heroDivider} />
-          <View style={styles.heroSummaryItem}>
-            <Text style={styles.heroSummaryLabel}>BOOKINGS</Text>
-            <Text style={styles.heroSummaryValue}>{stats.totalBookings}</Text>
+          <View style={styles.ribbonDivider} />
+          <View style={styles.ribbonCell}>
+            <Text style={styles.ribbonLabel}>BOOKINGS</Text>
+            <Text style={styles.ribbonValue}>{stats.totalBookings}</Text>
           </View>
         </View>
       </View>
 
-      {/* ─── Navigation Tabs Bar (4 Tabs) ─────────────────────────── */}
-      <View style={styles.navTabsBar}>
-        <TouchableOpacity
-          style={[styles.navTabBtn, activeTab === 'dashboard' && styles.navTabBtnActive]}
-          onPress={() => {
-            triggerHaptic('light');
-            setActiveTab('dashboard');
-          }}
-          activeOpacity={0.8}
-        >
-          <Ionicons
-            name="speedometer-outline"
-            size={18}
-            color={activeTab === 'dashboard' ? '#0066ff' : '#64748b'}
-          />
-          <Text style={[styles.navTabText, activeTab === 'dashboard' && styles.navTabTextActive]}>
-            Metrics
-          </Text>
-        </TouchableOpacity>
+      {/* ─── Ultra-Sleek Segmented Tabs (4 Compact Tabs) ──────────── */}
+      <View style={styles.tabsWrapper}>
+        <View style={styles.segmentedContainer}>
+          <TouchableOpacity
+            style={[styles.segmentBtn, activeTab === 'dashboard' && styles.segmentBtnActive]}
+            onPress={() => {
+              triggerHaptic('light');
+              setActiveTab('dashboard');
+            }}
+            activeOpacity={0.85}
+          >
+            <Ionicons
+              name={activeTab === 'dashboard' ? 'grid' : 'grid-outline'}
+              size={14}
+              color={activeTab === 'dashboard' ? '#ffffff' : '#64748b'}
+            />
+            <Text style={[styles.segmentText, activeTab === 'dashboard' && styles.segmentTextActive]}>
+              Metrics
+            </Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.navTabBtn, activeTab === 'users' && styles.navTabBtnActive]}
-          onPress={() => {
-            triggerHaptic('light');
-            setActiveTab('users');
-          }}
-          activeOpacity={0.8}
-        >
-          <Feather
-            name="users"
-            size={17}
-            color={activeTab === 'users' ? '#0066ff' : '#64748b'}
-          />
-          <Text style={[styles.navTabText, activeTab === 'users' && styles.navTabTextActive]}>
-            Users ({usersList.length})
-          </Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.segmentBtn, activeTab === 'users' && styles.segmentBtnActive]}
+            onPress={() => {
+              triggerHaptic('light');
+              setActiveTab('users');
+            }}
+            activeOpacity={0.85}
+          >
+            <Feather
+              name="users"
+              size={13}
+              color={activeTab === 'users' ? '#ffffff' : '#64748b'}
+            />
+            <Text style={[styles.segmentText, activeTab === 'users' && styles.segmentTextActive]}>
+              Users ({usersList.length})
+            </Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.navTabBtn, activeTab === 'create' && styles.navTabBtnActive]}
-          onPress={() => {
-            triggerHaptic('light');
-            setActiveTab('create');
-          }}
-          activeOpacity={0.8}
-        >
-          <Feather
-            name="user-plus"
-            size={17}
-            color={activeTab === 'create' ? '#0066ff' : '#64748b'}
-          />
-          <Text style={[styles.navTabText, activeTab === 'create' && styles.navTabTextActive]}>
-            + Provision
-          </Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.segmentBtn, activeTab === 'create' && styles.segmentBtnActive]}
+            onPress={() => {
+              triggerHaptic('light');
+              setActiveTab('create');
+            }}
+            activeOpacity={0.85}
+          >
+            <Feather
+              name="user-plus"
+              size={13}
+              color={activeTab === 'create' ? '#ffffff' : '#64748b'}
+            />
+            <Text style={[styles.segmentText, activeTab === 'create' && styles.segmentTextActive]}>
+              +Add
+            </Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.navTabBtn, activeTab === 'bookings' && styles.navTabBtnActive]}
-          onPress={() => {
-            triggerHaptic('light');
-            setActiveTab('bookings');
-          }}
-          activeOpacity={0.8}
-        >
-          <Ionicons
-            name="receipt-outline"
-            size={18}
-            color={activeTab === 'bookings' ? '#0066ff' : '#64748b'}
-          />
-          <Text style={[styles.navTabText, activeTab === 'bookings' && styles.navTabTextActive]}>
-            Bookings
-          </Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.segmentBtn, activeTab === 'bookings' && styles.segmentBtnActive]}
+            onPress={() => {
+              triggerHaptic('light');
+              setActiveTab('bookings');
+            }}
+            activeOpacity={0.85}
+          >
+            <Ionicons
+              name={activeTab === 'bookings' ? 'receipt' : 'receipt-outline'}
+              size={13}
+              color={activeTab === 'bookings' ? '#ffffff' : '#64748b'}
+            />
+            <Text style={[styles.segmentText, activeTab === 'bookings' && styles.segmentTextActive]}>
+              Tickets
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        {/* ─── TAB 1: METRICS & DASHBOARD ───────────────────────────── */}
+        {/* ─── TAB 1: METRICS / DASHBOARD ──────────────────────────── */}
         {activeTab === 'dashboard' && (
           <ScrollView
             style={styles.scroll}
@@ -475,138 +476,131 @@ export const AdminScreen = () => {
             showsVerticalScrollIndicator={false}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           >
-            {/* Quick Actions Grid */}
-            <Text style={styles.sectionHeaderTitle}>QUICK MANAGEMENT ACTIONS</Text>
-            <View style={styles.actionsGrid}>
+            {/* Quick Actions Strip */}
+            <View style={styles.quickGrid}>
               <TouchableOpacity
-                style={styles.actionCard}
+                style={styles.quickCard}
                 onPress={() => {
                   triggerHaptic('light');
                   setActiveTab('create');
                 }}
                 activeOpacity={0.8}
               >
-                <View style={[styles.actionIconBox, { backgroundColor: '#eff6ff' }]}>
-                  <Feather name="user-plus" size={22} color="#0066ff" />
+                <View style={[styles.quickIconBox, { backgroundColor: '#eff6ff' }]}>
+                  <Feather name="user-plus" size={17} color="#0066ff" />
                 </View>
-                <Text style={styles.actionCardTitle}>Create Account</Text>
-                <Text style={styles.actionCardSubtitle}>Add user or admin</Text>
+                <Text style={styles.quickCardTitle}>Add User</Text>
+                <Text style={styles.quickCardSub}>Create account</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.actionCard}
+                style={styles.quickCard}
                 onPress={() => {
                   triggerHaptic('light');
                   setActiveTab('users');
                 }}
                 activeOpacity={0.8}
               >
-                <View style={[styles.actionIconBox, { backgroundColor: '#f0fdf4' }]}>
-                  <Ionicons name="wallet-outline" size={22} color="#16a34a" />
+                <View style={[styles.quickIconBox, { backgroundColor: '#f0fdf4' }]}>
+                  <Ionicons name="wallet-outline" size={18} color="#16a34a" />
                 </View>
-                <Text style={styles.actionCardTitle}>Wallet Top-Up</Text>
-                <Text style={styles.actionCardSubtitle}>Credit user balances</Text>
+                <Text style={styles.quickCardTitle}>Recharge</Text>
+                <Text style={styles.quickCardSub}>User wallets</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.actionCard}
+                style={styles.quickCard}
                 onPress={() => {
                   triggerHaptic('light');
                   setActiveTab('bookings');
                 }}
                 activeOpacity={0.8}
               >
-                <View style={[styles.actionIconBox, { backgroundColor: '#faf5ff' }]}>
-                  <Ionicons name="ticket-outline" size={22} color="#9333ea" />
+                <View style={[styles.quickIconBox, { backgroundColor: '#faf5ff' }]}>
+                  <Ionicons name="ticket-outline" size={18} color="#9333ea" />
                 </View>
-                <Text style={styles.actionCardTitle}>Inspect Tickets</Text>
-                <Text style={styles.actionCardSubtitle}>View live bookings</Text>
+                <Text style={styles.quickCardTitle}>Tickets</Text>
+                <Text style={styles.quickCardSub}>Inspect all</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.actionCard}
+                style={styles.quickCard}
                 onPress={onRefresh}
                 activeOpacity={0.8}
               >
-                <View style={[styles.actionIconBox, { backgroundColor: '#fef3c7' }]}>
-                  <Ionicons name="sync-outline" size={22} color="#d97706" />
+                <View style={[styles.quickIconBox, { backgroundColor: '#fef3c7' }]}>
+                  <Ionicons name="sync" size={17} color="#d97706" />
                 </View>
-                <Text style={styles.actionCardTitle}>Sync Masters</Text>
-                <Text style={styles.actionCardSubtitle}>Refresh database</Text>
+                <Text style={styles.quickCardTitle}>Sync</Text>
+                <Text style={styles.quickCardSub}>Live refresh</Text>
               </TouchableOpacity>
             </View>
 
             {/* Performance KPI Cards */}
-            <Text style={styles.sectionHeaderTitle}>SYSTEM PERFORMANCE & STATUS</Text>
             <View style={styles.kpiRow}>
-              <View style={[styles.kpiBox, { backgroundColor: '#ffffff', borderColor: '#e2e8f0' }]}>
-                <View style={styles.kpiBoxHeader}>
-                  <Text style={styles.kpiBoxLabel}>REGISTERED PASSENGERS</Text>
-                  <Feather name="user-check" size={16} color="#0066ff" />
+              <View style={styles.kpiCard}>
+                <View style={styles.kpiCardHeader}>
+                  <Text style={styles.kpiCardLabel}>PASSENGERS</Text>
+                  <Feather name="users" size={13} color="#0066ff" />
                 </View>
-                <Text style={styles.kpiBoxValue}>{stats.totalUsers}</Text>
-                <View style={styles.kpiPillsRow}>
-                  <View style={[styles.miniStatusPill, { backgroundColor: '#dcfce7' }]}>
-                    <Text style={[styles.miniStatusPillText, { color: '#15803d' }]}>
-                      {stats.activeUsers} Active
+                <Text style={styles.kpiCardNum}>{stats.totalUsers}</Text>
+                <View style={styles.kpiTagsRow}>
+                  <View style={[styles.microTag, { backgroundColor: '#dcfce7' }]}>
+                    <Text style={[styles.microTagText, { color: '#15803d' }]}>
+                      {stats.activeUsers} Act
                     </Text>
                   </View>
-                  <View style={[styles.miniStatusPill, { backgroundColor: '#fee2e2' }]}>
-                    <Text style={[styles.miniStatusPillText, { color: '#b91c1c' }]}>
-                      {stats.disabledUsers} Blocked
+                  <View style={[styles.microTag, { backgroundColor: '#fee2e2' }]}>
+                    <Text style={[styles.microTagText, { color: '#b91c1c' }]}>
+                      {stats.disabledUsers} Blk
                     </Text>
                   </View>
                 </View>
               </View>
 
-              <View style={[styles.kpiBox, { backgroundColor: '#ffffff', borderColor: '#e2e8f0' }]}>
-                <View style={styles.kpiBoxHeader}>
-                  <Text style={styles.kpiBoxLabel}>BOOKINGS OVERVIEW</Text>
-                  <Ionicons name="train-outline" size={17} color="#16a34a" />
+              <View style={styles.kpiCard}>
+                <View style={styles.kpiCardHeader}>
+                  <Text style={styles.kpiCardLabel}>BOOKINGS</Text>
+                  <Ionicons name="ticket-outline" size={14} color="#16a34a" />
                 </View>
-                <Text style={styles.kpiBoxValue}>{stats.totalBookings}</Text>
-                <View style={styles.kpiPillsRow}>
-                  <View style={[styles.miniStatusPill, { backgroundColor: '#fef3c7' }]}>
-                    <Text style={[styles.miniStatusPillText, { color: '#b45309' }]}>
-                      {stats.upcomingBookings} Upcoming
+                <Text style={styles.kpiCardNum}>{stats.totalBookings}</Text>
+                <View style={styles.kpiTagsRow}>
+                  <View style={[styles.microTag, { backgroundColor: '#fef3c7' }]}>
+                    <Text style={[styles.microTagText, { color: '#b45309' }]}>
+                      {stats.upcomingBookings} Upc
                     </Text>
                   </View>
-                  <View style={[styles.miniStatusPill, { backgroundColor: '#ffe4e6' }]}>
-                    <Text style={[styles.miniStatusPillText, { color: '#be123c' }]}>
-                      {stats.cancelledBookings} Cancelled
+                  <View style={[styles.microTag, { backgroundColor: '#ffe4e6' }]}>
+                    <Text style={[styles.microTagText, { color: '#be123c' }]}>
+                      {stats.cancelledBookings} Cnl
                     </Text>
                   </View>
                 </View>
               </View>
             </View>
 
-            {/* Architecture Info Card */}
-            <View style={styles.architectureCard}>
-              <View style={styles.archCardHeader}>
-                <MaterialCommunityIcons name="shield-lock" size={24} color="#0066ff" />
-                <View style={{ marginLeft: 10 }}>
-                  <Text style={styles.archTitle}>Production Security Active</Text>
-                  <Text style={styles.archSubtitle}>Two-Role Authorization Model</Text>
-                </View>
+            {/* Compact Security / Status Bar */}
+            <View style={styles.securityStrip}>
+              <MaterialCommunityIcons name="shield-check" size={18} color="#0066ff" />
+              <View style={{ flex: 1, marginLeft: 8 }}>
+                <Text style={styles.securityTitle}>Two-Role Security Active</Text>
+                <Text style={styles.securitySubtitle}>
+                  Admin & User permissions strictly verified on Firestore server.
+                </Text>
               </View>
-              <Text style={styles.archBody}>
-                • All database operations are restricted strictly to Authenticated <Text style={{ fontWeight: '700' }}>Admin</Text> and <Text style={{ fontWeight: '700' }}>User</Text> roles.{'\n'}
-                • Role escalation is prevented server-side by declarative Firestore security rules.{'\n'}
-                • Digital wallet recharges and debits are tracked with atomic ledger transactions.
-              </Text>
             </View>
           </ScrollView>
         )}
 
-        {/* ─── TAB 2: USER DIRECTORY & MANAGEMENT ──────────────────── */}
+        {/* ─── TAB 2: USER DIRECTORY ───────────────────────────────── */}
         {activeTab === 'users' && (
-          <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 14 }}>
+          <View style={{ flex: 1, paddingHorizontal: 12, paddingTop: 8 }}>
             {/* Search Input */}
-            <View style={styles.searchBarBox}>
-              <Ionicons name="search" size={18} color="#94a3b8" style={{ marginRight: 8 }} />
+            <View style={styles.searchBar}>
+              <Ionicons name="search" size={15} color="#94a3b8" style={{ marginRight: 6 }} />
               <TextInput
-                style={styles.searchBarInput}
-                placeholder="Search by name, email, or mobile..."
+                style={styles.searchInput}
+                placeholder="Search name, mobile, email..."
                 placeholderTextColor="#94a3b8"
                 value={userSearchQuery}
                 onChangeText={setUserSearchQuery}
@@ -614,25 +608,25 @@ export const AdminScreen = () => {
               />
               {userSearchQuery.length > 0 && (
                 <TouchableOpacity onPress={() => setUserSearchQuery('')}>
-                  <Ionicons name="close-circle" size={18} color="#94a3b8" />
+                  <Ionicons name="close-circle" size={16} color="#94a3b8" />
                 </TouchableOpacity>
               )}
             </View>
 
-            {/* Filter Chips */}
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChipsRow}>
+            {/* Micro Filter Chips */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsScroll}>
               {[
-                { id: 'all', label: 'All Users' },
+                { id: 'all', label: 'All' },
                 { id: 'active', label: 'Active 🟢' },
                 { id: 'disabled', label: 'Blocked 🔴' },
                 { id: 'admin', label: 'Admins 👑' },
-                { id: 'user', label: 'Passengers 👤' },
+                { id: 'user', label: 'Users 👤' },
               ].map((chip) => (
                 <TouchableOpacity
                   key={chip.id}
                   style={[
-                    styles.filterChip,
-                    userRoleFilter === chip.id && styles.filterChipActive,
+                    styles.chipBtn,
+                    userRoleFilter === chip.id && styles.chipBtnActive,
                   ]}
                   onPress={() => {
                     triggerHaptic('light');
@@ -642,8 +636,8 @@ export const AdminScreen = () => {
                 >
                   <Text
                     style={[
-                      styles.filterChipText,
-                      userRoleFilter === chip.id && styles.filterChipTextActive,
+                      styles.chipBtnText,
+                      userRoleFilter === chip.id && styles.chipBtnTextActive,
                     ]}
                   >
                     {chip.label}
@@ -653,91 +647,64 @@ export const AdminScreen = () => {
             </ScrollView>
 
             {loadingUsers ? (
-              <View style={styles.loadingBox}>
-                <ActivityIndicator size="large" color="#0066ff" />
-                <Text style={styles.loadingText}>Fetching registered user directory...</Text>
+              <View style={styles.centerBox}>
+                <ActivityIndicator size="small" color="#0066ff" />
+                <Text style={styles.centerText}>Loading accounts...</Text>
               </View>
             ) : (
               <FlatList
                 data={filteredUsers}
                 keyExtractor={(item) => item.id || item.uid}
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 40 }}
+                contentContainerStyle={{ paddingBottom: 30 }}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
                 ListEmptyComponent={
-                  <View style={styles.emptyContainer}>
-                    <Feather name="users" size={44} color="#cbd5e1" />
-                    <Text style={styles.emptyTitle}>No matching accounts</Text>
-                    <Text style={styles.emptySubtitle}>Try changing your search or filter.</Text>
+                  <View style={styles.centerBox}>
+                    <Feather name="users" size={32} color="#cbd5e1" />
+                    <Text style={styles.emptyTitle}>No users match query</Text>
                   </View>
                 }
                 renderItem={({ item }) => {
                   const isBlocked = item.status === 'disabled';
-                  const isAdminRole = item.role === 'admin';
+                  const isAdmin = item.role === 'admin';
                   return (
-                    <View style={[styles.userCardItem, isBlocked && styles.userCardItemBlocked]}>
-                      <View style={styles.userCardTopRow}>
-                        <View
-                          style={[
-                            styles.userAvatar,
-                            isAdminRole && { backgroundColor: '#fef3c7' },
-                            isBlocked && { backgroundColor: '#f1f5f9' },
-                          ]}
-                        >
-                          <Text
-                            style={[
-                              styles.userAvatarText,
-                              isAdminRole && { color: '#b45309' },
-                              isBlocked && { color: '#94a3b8' },
-                            ]}
-                          >
+                    <View style={[styles.compactUserCard, isBlocked && styles.compactUserCardBlocked]}>
+                      {/* Top Row: Avatar + Name + Role + Balance */}
+                      <View style={styles.compactUserHeader}>
+                        <View style={[styles.miniAvatar, isAdmin && { backgroundColor: '#fef3c7' }]}>
+                          <Text style={[styles.miniAvatarText, isAdmin && { color: '#b45309' }]}>
                             {item.name ? item.name.charAt(0).toUpperCase() : 'U'}
                           </Text>
                         </View>
 
-                        <View style={{ flex: 1, marginLeft: 12 }}>
+                        <View style={{ flex: 1, marginLeft: 9 }}>
                           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <Text style={styles.userDisplayName} numberOfLines={1}>
+                            <Text style={styles.userNameText} numberOfLines={1}>
                               {item.name || item.displayName || 'Passenger'}
                             </Text>
-                            <View
-                              style={[
-                                styles.roleTag,
-                                isAdminRole ? styles.roleTagAdmin : styles.roleTagUser,
-                              ]}
-                            >
-                              <Text
-                                style={[
-                                  styles.roleTagText,
-                                  isAdminRole ? styles.roleTagAdminText : styles.roleTagUserText,
-                                ]}
-                              >
-                                {(item.role || 'USER').toUpperCase()}
+                            <View style={[styles.roleMicroTag, isAdmin ? styles.roleAdminTag : styles.roleUserTag]}>
+                              <Text style={[styles.roleMicroTagText, isAdmin ? styles.roleAdminText : styles.roleUserText]}>
+                                {isAdmin ? 'ADMIN' : 'USER'}
                               </Text>
                             </View>
                           </View>
-                          <Text style={styles.userEmailText} numberOfLines={1}>
-                            {item.email || 'No email'}
+                          <Text style={styles.userSubText} numberOfLines={1}>
+                            {item.email || 'No email'} {item.mobile ? `• ${item.mobile}` : ''}
                           </Text>
-                          {item.mobile ? (
-                            <Text style={styles.userMobileText}>📱 {item.mobile}</Text>
-                          ) : null}
                         </View>
 
-                        <View style={styles.userWalletBox}>
-                          <Text style={styles.userWalletLabel}>BALANCE</Text>
-                          <Text style={styles.userWalletValue}>
-                            ₹{(item.wallet || 0).toFixed(2)}
-                          </Text>
+                        <View style={{ alignItems: 'flex-end' }}>
+                          <Text style={styles.walletNum}>₹{(item.wallet || 0).toFixed(0)}</Text>
+                          <Text style={styles.walletMicroLabel}>WALLET</Text>
                         </View>
                       </View>
 
-                      {/* Management Action Buttons */}
-                      <View style={styles.userCardActions}>
+                      {/* Bottom Action Row */}
+                      <View style={styles.userCardFooter}>
                         <TouchableOpacity
                           style={[
-                            styles.statusBtn,
-                            isBlocked ? styles.statusBtnActivate : styles.statusBtnBlock,
+                            styles.actionPill,
+                            isBlocked ? styles.actionPillUnblock : styles.actionPillBlock,
                           ]}
                           onPress={() => handleToggleUserStatus(item)}
                           disabled={statusUpdatingId === (item.id || item.uid)}
@@ -745,41 +712,39 @@ export const AdminScreen = () => {
                         >
                           <Text
                             style={[
-                              styles.statusBtnText,
-                              isBlocked ? styles.statusBtnActivateText : styles.statusBtnBlockText,
+                              styles.actionPillText,
+                              isBlocked ? styles.actionPillUnblockText : styles.actionPillBlockText,
                             ]}
                           >
-                            {isBlocked ? '🟢 Unblock / Activate' : '🔴 Deactivate'}
+                            {isBlocked ? '🟢 Unblock' : '🔴 Block'}
                           </Text>
                         </TouchableOpacity>
 
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                           <TouchableOpacity
-                            style={styles.quickTopUpChip}
+                            style={styles.topUpMicroChip}
                             onPress={() => handleTopUpAmount(item, 100)}
                             disabled={toppingUpId === (item.id || item.uid)}
                             activeOpacity={0.75}
                           >
-                            <Text style={styles.quickTopUpChipText}>+₹100</Text>
+                            <Text style={styles.topUpMicroText}>+₹100</Text>
                           </TouchableOpacity>
 
                           <TouchableOpacity
-                            style={styles.quickTopUpChip}
+                            style={styles.topUpMicroChip}
                             onPress={() => handleTopUpAmount(item, 500)}
                             disabled={toppingUpId === (item.id || item.uid)}
                             activeOpacity={0.75}
                           >
-                            <Text style={styles.quickTopUpChipText}>+₹500</Text>
+                            <Text style={styles.topUpMicroText}>+₹500</Text>
                           </TouchableOpacity>
 
                           <TouchableOpacity
-                            style={[styles.quickTopUpChip, { backgroundColor: '#f1f5f9', borderColor: '#cbd5e1' }]}
-                            onPress={() => {
-                              setSelectedUserForTopUp(item);
-                            }}
+                            style={[styles.topUpMicroChip, { backgroundColor: '#f1f5f9', borderColor: '#e2e8f0' }]}
+                            onPress={() => setSelectedUserForTopUp(item)}
                             activeOpacity={0.75}
                           >
-                            <Text style={[styles.quickTopUpChipText, { color: '#475569' }]}>Custom</Text>
+                            <Ionicons name="add" size={13} color="#475569" />
                           </TouchableOpacity>
                         </View>
                       </View>
@@ -791,7 +756,7 @@ export const AdminScreen = () => {
           </View>
         )}
 
-        {/* ─── TAB 3: PROVISION NEW USER ───────────────────────────── */}
+        {/* ─── TAB 3: PROVISION ACCOUNT ────────────────────────────── */}
         {activeTab === 'create' && (
           <ScrollView
             style={styles.scroll}
@@ -799,47 +764,45 @@ export const AdminScreen = () => {
             keyboardShouldPersistTaps="handled"
           >
             {createdUser && (
-              <View style={styles.successCardBox}>
-                <View style={styles.successCardTop}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Ionicons name="checkmark-circle" size={22} color="#16a34a" />
-                    <Text style={styles.successCardTitle}>Account Provisioned Successfully!</Text>
-                  </View>
-                  <TouchableOpacity onPress={() => setCreatedUser(null)}>
-                    <Ionicons name="close" size={20} color="#64748b" />
+              <View style={styles.successBox}>
+                <View style={styles.successHeader}>
+                  <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
+                  <Text style={styles.successTitle}>Account Created!</Text>
+                  <TouchableOpacity
+                    style={{ marginLeft: 'auto' }}
+                    onPress={() => setCreatedUser(null)}
+                  >
+                    <Ionicons name="close" size={16} color="#64748b" />
                   </TouchableOpacity>
                 </View>
 
-                <View style={styles.successCredentialsBox}>
-                  <Text style={styles.credRow}><Text style={styles.credRowLabel}>Name: </Text>{createdUser.name}</Text>
-                  <Text style={styles.credRow}><Text style={styles.credRowLabel}>Email: </Text>{createdUser.email}</Text>
-                  <Text style={styles.credRow}><Text style={styles.credRowLabel}>Password: </Text><Text style={styles.credRowPass}>{createdUser.password}</Text></Text>
-                  <Text style={styles.credRow}><Text style={styles.credRowLabel}>Role: </Text><Text style={{ fontWeight: '700', color: createdUser.role === 'admin' ? '#b45309' : '#0066ff' }}>{createdUser.role.toUpperCase()}</Text></Text>
-                  <Text style={styles.credRow}><Text style={styles.credRowLabel}>Initial Wallet: </Text>₹{createdUser.wallet.toFixed(2)}</Text>
+                <View style={styles.credBox}>
+                  <Text style={styles.credText}><Text style={{ fontWeight: '700' }}>Name: </Text>{createdUser.name}</Text>
+                  <Text style={styles.credText}><Text style={{ fontWeight: '700' }}>Email: </Text>{createdUser.email}</Text>
+                  <Text style={styles.credText}><Text style={{ fontWeight: '700' }}>Password: </Text><Text style={{ color: '#0066ff', fontWeight: '700' }}>{createdUser.password}</Text></Text>
+                  <Text style={styles.credText}><Text style={{ fontWeight: '700' }}>Role: </Text>{createdUser.role.toUpperCase()}</Text>
                 </View>
 
                 <TouchableOpacity
-                  style={styles.shareCredentialsBtn}
+                  style={styles.shareBtn}
                   onPress={() => handleShareCredentials(createdUser)}
                   activeOpacity={0.85}
                 >
-                  <Ionicons name="share-social-outline" size={18} color="#ffffff" style={{ marginRight: 8 }} />
-                  <Text style={styles.shareCredentialsBtnText}>Share Credentials on WhatsApp / SMS</Text>
+                  <Ionicons name="share-social-outline" size={15} color="#ffffff" style={{ marginRight: 6 }} />
+                  <Text style={styles.shareBtnText}>Share Credentials on WhatsApp</Text>
                 </TouchableOpacity>
               </View>
             )}
 
-            <View style={styles.createAccountCard}>
-              <Text style={styles.createCardTitle}>Provision New User / Staff</Text>
-              <Text style={styles.createCardSubtitle}>
-                Create an authorized account and configure digital wallet balance.
-              </Text>
+            <View style={styles.compactFormCard}>
+              <Text style={styles.formHeader}>Provision New Account</Text>
 
-              <Text style={styles.fieldLabel}>Full Name *</Text>
-              <View style={styles.fieldInputBox}>
-                <Ionicons name="person-outline" size={18} color="#94a3b8" style={{ marginRight: 8 }} />
+              {/* Name */}
+              <Text style={styles.label}>Full Name *</Text>
+              <View style={styles.inputWrap}>
+                <Ionicons name="person-outline" size={15} color="#94a3b8" style={{ marginRight: 6 }} />
                 <TextInput
-                  style={styles.fieldInput}
+                  style={styles.formInput}
                   placeholder="e.g. Rahul Sharma"
                   placeholderTextColor="#94a3b8"
                   value={name}
@@ -848,11 +811,12 @@ export const AdminScreen = () => {
                 />
               </View>
 
-              <Text style={styles.fieldLabel}>10-Digit Mobile Number *</Text>
-              <View style={styles.fieldInputBox}>
-                <Ionicons name="call-outline" size={18} color="#94a3b8" style={{ marginRight: 8 }} />
+              {/* Mobile */}
+              <Text style={styles.label}>10-Digit Mobile *</Text>
+              <View style={styles.inputWrap}>
+                <Ionicons name="call-outline" size={15} color="#94a3b8" style={{ marginRight: 6 }} />
                 <TextInput
-                  style={styles.fieldInput}
+                  style={styles.formInput}
                   placeholder="e.g. 9876543210"
                   placeholderTextColor="#94a3b8"
                   value={mobile}
@@ -862,12 +826,13 @@ export const AdminScreen = () => {
                 />
               </View>
 
-              <Text style={styles.fieldLabel}>Email Address *</Text>
-              <View style={styles.fieldInputBox}>
-                <Ionicons name="mail-outline" size={18} color="#94a3b8" style={{ marginRight: 8 }} />
+              {/* Email */}
+              <Text style={styles.label}>Email Address *</Text>
+              <View style={styles.inputWrap}>
+                <Ionicons name="mail-outline" size={15} color="#94a3b8" style={{ marginRight: 6 }} />
                 <TextInput
-                  style={styles.fieldInput}
-                  placeholder="e.g. rahul@gmail.com"
+                  style={styles.formInput}
+                  placeholder="e.g. rahul@railone.com"
                   placeholderTextColor="#94a3b8"
                   value={email}
                   onChangeText={setEmail}
@@ -877,16 +842,17 @@ export const AdminScreen = () => {
                 />
               </View>
 
-              <View style={styles.fieldLabelRow}>
-                <Text style={styles.fieldLabel}>Password *</Text>
-                <TouchableOpacity onPress={generateRandomPassword} activeOpacity={0.7}>
-                  <Text style={styles.autoGenLink}>🎲 Auto-Generate</Text>
+              {/* Password */}
+              <View style={styles.labelRow}>
+                <Text style={styles.label}>Password *</Text>
+                <TouchableOpacity onPress={generateRandomPassword}>
+                  <Text style={styles.autoGenText}>🎲 Auto-Generate</Text>
                 </TouchableOpacity>
               </View>
-              <View style={styles.fieldInputBox}>
-                <Ionicons name="lock-closed-outline" size={18} color="#94a3b8" style={{ marginRight: 8 }} />
+              <View style={styles.inputWrap}>
+                <Ionicons name="lock-closed-outline" size={15} color="#94a3b8" style={{ marginRight: 6 }} />
                 <TextInput
-                  style={styles.fieldInput}
+                  style={styles.formInput}
                   placeholder="Minimum 6 characters"
                   placeholderTextColor="#94a3b8"
                   value={password}
@@ -895,22 +861,19 @@ export const AdminScreen = () => {
                   autoCapitalize="none"
                 />
                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                  <Ionicons
-                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                    size={18}
-                    color="#94a3b8"
-                  />
+                  <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={15} color="#94a3b8" />
                 </TouchableOpacity>
               </View>
 
-              <Text style={styles.fieldLabel}>Initial Welcome Balance (₹)</Text>
-              <View style={styles.walletAmountPills}>
+              {/* Initial Balance */}
+              <Text style={styles.label}>Initial Wallet Credit (₹)</Text>
+              <View style={styles.balancePillRow}>
                 {['100', '250', '500', '1000'].map((amt) => (
                   <TouchableOpacity
                     key={amt}
                     style={[
-                      styles.walletAmountPill,
-                      walletAmount === amt && styles.walletAmountPillActive,
+                      styles.balancePill,
+                      walletAmount === amt && styles.balancePillActive,
                     ]}
                     onPress={() => {
                       triggerHaptic('light');
@@ -920,8 +883,8 @@ export const AdminScreen = () => {
                   >
                     <Text
                       style={[
-                        styles.walletAmountPillText,
-                        walletAmount === amt && styles.walletAmountPillTextActive,
+                        styles.balancePillText,
+                        walletAmount === amt && styles.balancePillTextActive,
                       ]}
                     >
                       ₹{amt}
@@ -930,24 +893,25 @@ export const AdminScreen = () => {
                 ))}
               </View>
 
-              <Text style={styles.fieldLabel}>Account Authorization Role</Text>
-              <View style={styles.rolePickerRow}>
+              {/* Role Switcher */}
+              <Text style={styles.label}>Role</Text>
+              <View style={styles.roleRow}>
                 <TouchableOpacity
-                  style={[styles.rolePickerBtn, role === 'user' && styles.rolePickerBtnActive]}
+                  style={[styles.roleChip, role === 'user' && styles.roleChipActive]}
                   onPress={() => {
                     triggerHaptic('light');
                     setRole('user');
                   }}
                   activeOpacity={0.8}
                 >
-                  <Ionicons name="person" size={16} color={role === 'user' ? '#0066ff' : '#64748b'} />
-                  <Text style={[styles.rolePickerBtnText, role === 'user' && styles.rolePickerBtnTextActive]}>
-                    Passenger (User)
+                  <Ionicons name="person" size={13} color={role === 'user' ? '#0066ff' : '#64748b'} />
+                  <Text style={[styles.roleChipText, role === 'user' && styles.roleChipTextActive]}>
+                    Passenger
                   </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.rolePickerBtn, role === 'admin' && styles.rolePickerBtnActive]}
+                  style={[styles.roleChip, role === 'admin' && styles.roleChipActive]}
                   onPress={() => {
                     triggerHaptic('light');
                     setRole('admin');
@@ -956,17 +920,17 @@ export const AdminScreen = () => {
                 >
                   <MaterialCommunityIcons
                     name="shield-crown"
-                    size={18}
+                    size={15}
                     color={role === 'admin' ? '#0066ff' : '#64748b'}
                   />
-                  <Text style={[styles.rolePickerBtnText, role === 'admin' && styles.rolePickerBtnTextActive]}>
+                  <Text style={[styles.roleChipText, role === 'admin' && styles.roleChipTextActive]}>
                     Administrator
                   </Text>
                 </TouchableOpacity>
               </View>
 
               <TouchableOpacity
-                style={[styles.submitCreateBtn, submitting && { opacity: 0.75 }]}
+                style={[styles.submitBtn, submitting && { opacity: 0.75 }]}
                 onPress={handleCreateUser}
                 disabled={submitting}
                 activeOpacity={0.85}
@@ -974,24 +938,21 @@ export const AdminScreen = () => {
                 {submitting ? (
                   <ActivityIndicator size="small" color="#ffffff" />
                 ) : (
-                  <>
-                    <Ionicons name="person-add" size={18} color="#ffffff" style={{ marginRight: 8 }} />
-                    <Text style={styles.submitCreateBtnText}>Create & Authorize Account</Text>
-                  </>
+                  <Text style={styles.submitBtnText}>Create & Authorize Account</Text>
                 )}
               </TouchableOpacity>
             </View>
           </ScrollView>
         )}
 
-        {/* ─── TAB 4: GLOBAL BOOKINGS INSPECTOR ────────────────────── */}
+        {/* ─── TAB 4: GLOBAL BOOKINGS ──────────────────────────────── */}
         {activeTab === 'bookings' && (
-          <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 14 }}>
-            <View style={styles.searchBarBox}>
-              <Ionicons name="search" size={18} color="#94a3b8" style={{ marginRight: 8 }} />
+          <View style={{ flex: 1, paddingHorizontal: 12, paddingTop: 8 }}>
+            <View style={styles.searchBar}>
+              <Ionicons name="search" size={15} color="#94a3b8" style={{ marginRight: 6 }} />
               <TextInput
-                style={styles.searchBarInput}
-                placeholder="Search by PNR, UTS Code, or Station..."
+                style={styles.searchInput}
+                placeholder="Search UTS code, PNR, Station..."
                 placeholderTextColor="#94a3b8"
                 value={bookingSearchQuery}
                 onChangeText={setBookingSearchQuery}
@@ -999,15 +960,15 @@ export const AdminScreen = () => {
               />
               {bookingSearchQuery.length > 0 && (
                 <TouchableOpacity onPress={() => setBookingSearchQuery('')}>
-                  <Ionicons name="close-circle" size={18} color="#94a3b8" />
+                  <Ionicons name="close-circle" size={16} color="#94a3b8" />
                 </TouchableOpacity>
               )}
             </View>
 
             {/* Status Filter Chips */}
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChipsRow}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsScroll}>
               {[
-                { id: 'all', label: 'All Bookings' },
+                { id: 'all', label: 'All' },
                 { id: 'upcoming', label: 'Upcoming ⏳' },
                 { id: 'completed', label: 'Completed ✅' },
                 { id: 'cancelled', label: 'Cancelled ❌' },
@@ -1015,8 +976,8 @@ export const AdminScreen = () => {
                 <TouchableOpacity
                   key={chip.id}
                   style={[
-                    styles.filterChip,
-                    bookingStatusFilter === chip.id && styles.filterChipActive,
+                    styles.chipBtn,
+                    bookingStatusFilter === chip.id && styles.chipBtnActive,
                   ]}
                   onPress={() => {
                     triggerHaptic('light');
@@ -1026,8 +987,8 @@ export const AdminScreen = () => {
                 >
                   <Text
                     style={[
-                      styles.filterChipText,
-                      bookingStatusFilter === chip.id && styles.filterChipTextActive,
+                      styles.chipBtnText,
+                      bookingStatusFilter === chip.id && styles.chipBtnTextActive,
                     ]}
                   >
                     {chip.label}
@@ -1037,34 +998,33 @@ export const AdminScreen = () => {
             </ScrollView>
 
             {loadingBookings ? (
-              <View style={styles.loadingBox}>
-                <ActivityIndicator size="large" color="#0066ff" />
-                <Text style={styles.loadingText}>Loading all system bookings...</Text>
+              <View style={styles.centerBox}>
+                <ActivityIndicator size="small" color="#0066ff" />
+                <Text style={styles.centerText}>Loading bookings...</Text>
               </View>
             ) : (
               <FlatList
                 data={filteredBookings}
                 keyExtractor={(item) => item.id || item.bookingId || item.pnr}
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 40 }}
+                contentContainerStyle={{ paddingBottom: 30 }}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
                 ListEmptyComponent={
-                  <View style={styles.emptyContainer}>
-                    <Ionicons name="ticket-outline" size={44} color="#cbd5e1" />
-                    <Text style={styles.emptyTitle}>No matching bookings</Text>
-                    <Text style={styles.emptySubtitle}>No tickets match your query.</Text>
+                  <View style={styles.centerBox}>
+                    <Ionicons name="ticket-outline" size={32} color="#cbd5e1" />
+                    <Text style={styles.emptyTitle}>No bookings found</Text>
                   </View>
                 }
                 renderItem={({ item }) => (
-                  <View style={styles.globalBookingCard}>
-                    <View style={styles.globalBookingHeader}>
+                  <View style={styles.compactBookingCard}>
+                    <View style={styles.bookingCardHeader}>
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={styles.globalUtsText}>
+                        <Text style={styles.bookingUtsCode}>
                           UTS: {item.ticketId || item.pnr || 'XMSQEB'}
                         </Text>
                         <View
                           style={[
-                            styles.globalStatusTag,
+                            styles.bookingStatusTag,
                             item.status === 'upcoming' && { backgroundColor: '#fef3c7' },
                             item.status === 'completed' && { backgroundColor: '#dcfce7' },
                             item.status === 'cancelled' && { backgroundColor: '#ffe4e6' },
@@ -1072,7 +1032,7 @@ export const AdminScreen = () => {
                         >
                           <Text
                             style={[
-                              styles.globalStatusTagText,
+                              styles.bookingStatusTagText,
                               item.status === 'upcoming' && { color: '#b45309' },
                               item.status === 'completed' && { color: '#15803d' },
                               item.status === 'cancelled' && { color: '#be123c' },
@@ -1082,40 +1042,36 @@ export const AdminScreen = () => {
                           </Text>
                         </View>
                       </View>
-                      <Text style={styles.globalFareText}>₹{item.fare}</Text>
+                      <Text style={styles.bookingFareNum}>₹{item.fare}</Text>
                     </View>
 
-                    {/* Route */}
-                    <View style={styles.globalRouteBar}>
-                      <Text style={styles.globalStationCode}>
+                    {/* Route Line */}
+                    <View style={styles.compactRouteRow}>
+                      <Text style={styles.routeStation}>
                         {item.sourceCode || (item.source && item.source.substring(0, 4)) || 'SRC'}
                       </Text>
-                      <View style={styles.globalRouteDivider}>
-                        <Text style={styles.globalDistanceText}>{item.distance || '---'}</Text>
-                        <View style={styles.globalRouteLine} />
+                      <View style={styles.routeLineWrapper}>
+                        <Text style={styles.routeDistance}>{item.distance || '---'}</Text>
+                        <View style={styles.routeBar} />
                       </View>
-                      <Text style={styles.globalStationCode}>
+                      <Text style={styles.routeStation}>
                         {item.destCode || (item.dest && item.dest.substring(0, 4)) || 'DST'}
                       </Text>
                     </View>
 
-                    <View style={styles.globalBookingFooter}>
-                      <View>
-                        <Text style={styles.globalBookingMeta}>
-                          📅 {item.date || item.journeyDate || '---'} • {item.passengers || '1 Adult'}
-                        </Text>
-                        <Text style={styles.globalBookingUid} numberOfLines={1}>
-                          UID: {item.userId ? `${item.userId.substring(0, 12)}...` : 'Guest'}
-                        </Text>
-                      </View>
+                    {/* Footer */}
+                    <View style={styles.compactBookingFooter}>
+                      <Text style={styles.bookingMetaText}>
+                        📅 {item.date || item.journeyDate || '---'} • {item.passengers || '1 Adult'}
+                      </Text>
 
                       {item.status === 'upcoming' && (
                         <TouchableOpacity
-                          style={styles.cancelTicketBtn}
+                          style={styles.cancelPill}
                           onPress={() => handleCancelTicket(item)}
                           activeOpacity={0.75}
                         >
-                          <Text style={styles.cancelTicketBtnText}>Cancel</Text>
+                          <Text style={styles.cancelPillText}>Cancel</Text>
                         </TouchableOpacity>
                       )}
                     </View>
@@ -1134,36 +1090,36 @@ export const AdminScreen = () => {
         animationType="fade"
         onRequestClose={() => setSelectedUserForTopUp(null)}
       >
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Recharge User Wallet</Text>
-            <Text style={styles.modalSubtitle}>
-              Adding funds to: {selectedUserForTopUp?.name || selectedUserForTopUp?.email}
+        <View style={styles.modalOverlay}>
+          <View style={styles.compactModalBox}>
+            <Text style={styles.modalHeading}>Recharge Wallet</Text>
+            <Text style={styles.modalSubheading} numberOfLines={1}>
+              {selectedUserForTopUp?.name || selectedUserForTopUp?.email}
             </Text>
 
-            <Text style={styles.fieldLabel}>Enter Amount (₹)</Text>
-            <View style={styles.fieldInputBox}>
-              <Ionicons name="cash-outline" size={18} color="#16a34a" style={{ marginRight: 8 }} />
+            <View style={styles.modalInputWrap}>
+              <Text style={{ fontSize: 16, fontFamily: 'Montserrat_700Bold', color: '#16a34a', marginRight: 6 }}>₹</Text>
               <TextInput
-                style={styles.fieldInput}
-                placeholder="e.g. 500"
+                style={styles.modalInput}
+                placeholder="Amount"
                 placeholderTextColor="#94a3b8"
                 value={customTopUpAmount}
                 onChangeText={setCustomTopUpAmount}
                 keyboardType="numeric"
+                autoFocus
               />
             </View>
 
-            <View style={styles.modalBtnRow}>
+            <View style={styles.modalActionRow}>
               <TouchableOpacity
-                style={styles.modalCancelBtn}
+                style={styles.modalCancel}
                 onPress={() => setSelectedUserForTopUp(null)}
               >
-                <Text style={styles.modalCancelBtnText}>Cancel</Text>
+                <Text style={styles.modalCancelText}>Cancel</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.modalConfirmBtn}
+                style={styles.modalConfirm}
                 onPress={() => {
                   const amt = parseFloat(customTopUpAmount) || 0;
                   if (amt > 0) {
@@ -1171,7 +1127,7 @@ export const AdminScreen = () => {
                   }
                 }}
               >
-                <Text style={styles.modalConfirmBtnText}>Credit Wallet</Text>
+                <Text style={styles.modalConfirmText}>Credit</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1184,765 +1140,720 @@ export const AdminScreen = () => {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#f1f5f9',
   },
-  headerHero: {
-    backgroundColor: '#0f172a',
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 16,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+  compactHeader: {
+    backgroundColor: '#090d16',
+    paddingHorizontal: 14,
+    paddingTop: 6,
+    paddingBottom: 10,
   },
-  headerTopRow: {
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 14,
   },
-  headerBackBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  headerBackCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: '#1e293b',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  headerTitleBox: {
+  headerCenter: {
     alignItems: 'center',
   },
-  adminCrownBadge: {
+  badgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1e293b',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    marginBottom: 3,
   },
-  adminCrownText: {
-    fontSize: 10.5,
+  liveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#22c55e',
+    marginRight: 5,
+  },
+  headerBadgeText: {
+    fontSize: 10,
     fontFamily: 'Montserrat_800ExtraBold',
-    color: '#facc15',
-    marginLeft: 4,
-    letterSpacing: 0.5,
+    color: '#38bdf8',
+    letterSpacing: 0.8,
   },
-  headerEmail: {
-    fontSize: 12,
+  adminEmailText: {
+    fontSize: 11,
     fontFamily: 'Montserrat_500Medium',
     color: '#94a3b8',
   },
-  headerRefreshBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  headerSyncCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: '#1e293b',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  heroSummaryBar: {
+  kpiRibbon: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1e293b',
-    borderRadius: 14,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    backgroundColor: '#131c2e',
+    borderRadius: 10,
+    marginTop: 8,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#1e293b',
   },
-  heroSummaryItem: {
+  ribbonCell: {
     flex: 1,
     alignItems: 'center',
   },
-  heroSummaryLabel: {
-    fontSize: 9.5,
+  ribbonLabel: {
+    fontSize: 8.5,
     fontFamily: 'Montserrat_700Bold',
-    color: '#94a3b8',
-    letterSpacing: 0.4,
-    marginBottom: 2,
+    color: '#64748b',
+    letterSpacing: 0.3,
   },
-  heroSummaryValue: {
-    fontSize: 16,
+  ribbonValue: {
+    fontSize: 14,
     fontFamily: 'Montserrat_800ExtraBold',
-    color: '#ffffff',
+    color: '#f8fafc',
+    marginTop: 1,
   },
-  heroDivider: {
+  ribbonDivider: {
     width: 1,
-    height: 24,
-    backgroundColor: '#334155',
+    height: 18,
+    backgroundColor: '#1e293b',
   },
-  navTabsBar: {
-    flexDirection: 'row',
+  tabsWrapper: {
     backgroundColor: '#ffffff',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderBottomWidth: 1,
     borderColor: '#e2e8f0',
   },
-  navTabBtn: {
+  segmentedContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#f1f5f9',
+    borderRadius: 8,
+    padding: 2.5,
+  },
+  segmentBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
-    borderRadius: 8,
-    backgroundColor: '#f8fafc',
-    marginHorizontal: 3,
+    paddingVertical: 6,
+    borderRadius: 6,
   },
-  navTabBtnActive: {
-    backgroundColor: '#eff6ff',
-    borderWidth: 1.2,
-    borderColor: '#bfdbfe',
+  segmentBtnActive: {
+    backgroundColor: '#0066ff',
+    shadowColor: '#0066ff',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  navTabText: {
-    fontSize: 12,
+  segmentText: {
+    fontSize: 11,
     fontFamily: 'Montserrat_600SemiBold',
     color: '#64748b',
-    marginLeft: 5,
+    marginLeft: 4,
   },
-  navTabTextActive: {
-    color: '#0066ff',
+  segmentTextActive: {
+    color: '#ffffff',
     fontFamily: 'Montserrat_700Bold',
   },
   scroll: {
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
-    paddingBottom: 40,
-  },
-  sectionHeaderTitle: {
-    fontSize: 11.5,
-    fontFamily: 'Montserrat_700Bold',
-    color: '#64748b',
-    letterSpacing: 0.6,
-    marginBottom: 10,
-    marginTop: 4,
-  },
-  actionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  actionCard: {
-    width: '48.5%',
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
     padding: 12,
+    paddingBottom: 30,
+  },
+  quickGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: 10,
+  },
+  quickCard: {
+    width: '23.5%',
+    backgroundColor: '#ffffff',
+    borderRadius: 9,
+    paddingVertical: 8,
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: '#e2e8f0',
   },
-  actionIconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+  quickIconBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
+    marginBottom: 4,
   },
-  actionCardTitle: {
-    fontSize: 13.5,
+  quickCardTitle: {
+    fontSize: 11,
     fontFamily: 'Montserrat_700Bold',
     color: '#0f172a',
   },
-  actionCardSubtitle: {
-    fontSize: 11,
+  quickCardSub: {
+    fontSize: 8.5,
     fontFamily: 'Montserrat_400Regular',
     color: '#64748b',
-    marginTop: 1,
   },
   kpiRow: {
     flexDirection: 'row',
-    marginBottom: 12,
+    marginBottom: 10,
+    gap: 8,
   },
-  kpiBox: {
+  kpiCard: {
     flex: 1,
-    borderRadius: 14,
-    padding: 14,
-    marginHorizontal: 3,
+    backgroundColor: '#ffffff',
+    borderRadius: 10,
+    padding: 10,
     borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
-  kpiBoxHeader: {
+  kpiCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
   },
-  kpiBoxLabel: {
-    fontSize: 9.5,
+  kpiCardLabel: {
+    fontSize: 9,
     fontFamily: 'Montserrat_700Bold',
     color: '#64748b',
     letterSpacing: 0.4,
   },
-  kpiBoxValue: {
-    fontSize: 22,
+  kpiCardNum: {
+    fontSize: 18,
     fontFamily: 'Montserrat_800ExtraBold',
     color: '#0f172a',
+    marginVertical: 2,
+  },
+  kpiTagsRow: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  microTag: {
+    paddingHorizontal: 5,
+    paddingVertical: 1.5,
+    borderRadius: 3.5,
+  },
+  microTagText: {
+    fontSize: 9,
+    fontFamily: 'Montserrat_700Bold',
+  },
+  securityStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 10,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  securityTitle: {
+    fontSize: 12,
+    fontFamily: 'Montserrat_700Bold',
+    color: '#0f172a',
+  },
+  securitySubtitle: {
+    fontSize: 10.5,
+    fontFamily: 'Montserrat_400Regular',
+    color: '#64748b',
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    borderRadius: 8,
+    height: 38,
+    paddingHorizontal: 10,
     marginBottom: 6,
   },
-  kpiPillsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  miniStatusPill: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    marginRight: 4,
-    marginTop: 2,
-  },
-  miniStatusPillText: {
-    fontSize: 9.5,
-    fontFamily: 'Montserrat_700Bold',
-  },
-  architectureCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 14,
-    padding: 14,
-    marginTop: 4,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  archCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  archTitle: {
-    fontSize: 14,
-    fontFamily: 'Montserrat_700Bold',
-    color: '#0f172a',
-  },
-  archSubtitle: {
-    fontSize: 11.5,
-    fontFamily: 'Montserrat_500Medium',
-    color: '#64748b',
-  },
-  archBody: {
-    fontSize: 12,
-    fontFamily: 'Montserrat_400Regular',
-    color: '#475569',
-    lineHeight: 18,
-  },
-  searchBarBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderWidth: 1.2,
-    borderColor: '#cbd5e1',
-    borderRadius: 10,
-    height: 44,
-    paddingHorizontal: 12,
-    marginBottom: 10,
-  },
-  searchBarInput: {
+  searchInput: {
     flex: 1,
-    fontSize: 13,
+    fontSize: 12,
     fontFamily: 'Montserrat_500Medium',
     color: '#0f172a',
   },
-  filterChipsRow: {
+  chipsScroll: {
     flexDirection: 'row',
-    marginBottom: 12,
-    maxHeight: 36,
+    marginBottom: 8,
+    maxHeight: 30,
   },
-  filterChip: {
-    backgroundColor: '#f1f5f9',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    marginRight: 8,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
+  chipBtn: {
+    backgroundColor: '#e2e8f0',
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginRight: 6,
   },
-  filterChipActive: {
-    backgroundColor: '#eff6ff',
-    borderColor: '#0066ff',
+  chipBtnActive: {
+    backgroundColor: '#0066ff',
   },
-  filterChipText: {
-    fontSize: 12,
+  chipBtnText: {
+    fontSize: 10.5,
     fontFamily: 'Montserrat_600SemiBold',
-    color: '#64748b',
+    color: '#475569',
   },
-  filterChipTextActive: {
-    color: '#0066ff',
+  chipBtnTextActive: {
+    color: '#ffffff',
     fontFamily: 'Montserrat_700Bold',
   },
-  userCardItem: {
+  compactUserCard: {
     backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 10,
+    borderRadius: 9,
+    padding: 9,
+    marginBottom: 7,
     borderWidth: 1,
     borderColor: '#e2e8f0',
   },
-  userCardItemBlocked: {
+  compactUserCardBlocked: {
+    opacity: 0.6,
     backgroundColor: '#f8fafc',
-    opacity: 0.65,
   },
-  userCardTopRow: {
+  compactUserHeader: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  userAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  miniAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: '#e0e7ff',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  userAvatarText: {
-    fontSize: 16,
+  miniAvatarText: {
+    fontSize: 13,
     fontFamily: 'Montserrat_700Bold',
     color: '#4338ca',
   },
-  userDisplayName: {
-    fontSize: 13.5,
+  userNameText: {
+    fontSize: 12.5,
     fontFamily: 'Montserrat_700Bold',
     color: '#0f172a',
     maxWidth: 130,
   },
-  roleTag: {
-    paddingHorizontal: 5,
-    paddingVertical: 1.5,
-    borderRadius: 4,
-    marginLeft: 6,
+  roleMicroTag: {
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 3,
+    marginLeft: 5,
   },
-  roleTagUser: {
+  roleUserTag: {
     backgroundColor: '#f1f5f9',
   },
-  roleTagAdmin: {
+  roleAdminTag: {
     backgroundColor: '#fef3c7',
   },
-  roleTagText: {
-    fontSize: 8.5,
+  roleMicroTagText: {
+    fontSize: 7.5,
     fontFamily: 'Montserrat_800ExtraBold',
   },
-  roleTagUserText: {
-    color: '#475569',
+  roleUserText: {
+    color: '#64748b',
   },
-  roleTagAdminText: {
+  roleAdminText: {
     color: '#b45309',
   },
-  userEmailText: {
-    fontSize: 11.5,
+  userSubText: {
+    fontSize: 10.5,
     fontFamily: 'Montserrat_400Regular',
     color: '#64748b',
   },
-  userMobileText: {
-    fontSize: 11,
-    fontFamily: 'Montserrat_500Medium',
-    color: '#475569',
-    marginTop: 1,
-  },
-  userWalletBox: {
-    alignItems: 'flex-end',
-  },
-  userWalletLabel: {
-    fontSize: 8.5,
-    fontFamily: 'Montserrat_700Bold',
-    color: '#94a3b8',
-  },
-  userWalletValue: {
-    fontSize: 14,
+  walletNum: {
+    fontSize: 13,
     fontFamily: 'Montserrat_700Bold',
     color: '#16a34a',
   },
-  userCardActions: {
+  walletMicroLabel: {
+    fontSize: 7.5,
+    fontFamily: 'Montserrat_700Bold',
+    color: '#94a3b8',
+  },
+  userCardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 10,
-    paddingTop: 8,
+    marginTop: 7,
+    paddingTop: 6,
     borderTopWidth: 1,
     borderColor: '#f1f5f9',
   },
-  statusBtn: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+  actionPill: {
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 4.5,
   },
-  statusBtnActivate: {
+  actionPillUnblock: {
     backgroundColor: '#dcfce7',
   },
-  statusBtnBlock: {
+  actionPillBlock: {
     backgroundColor: '#fee2e2',
   },
-  statusBtnText: {
-    fontSize: 11,
+  actionPillText: {
+    fontSize: 9.5,
     fontFamily: 'Montserrat_700Bold',
   },
-  statusBtnActivateText: {
+  actionPillUnblockText: {
     color: '#15803d',
   },
-  statusBtnBlockText: {
+  actionPillBlockText: {
     color: '#b91c1c',
   },
-  quickTopUpChip: {
+  topUpMicroChip: {
     backgroundColor: '#eff6ff',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    marginLeft: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 4.5,
+    marginLeft: 5,
     borderWidth: 1,
     borderColor: '#bfdbfe',
   },
-  quickTopUpChipText: {
+  topUpMicroText: {
+    fontSize: 9.5,
+    fontFamily: 'Montserrat_700Bold',
+    color: '#0066ff',
+  },
+  compactFormCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  formHeader: {
+    fontSize: 13.5,
+    fontFamily: 'Montserrat_700Bold',
+    color: '#0f172a',
+    marginBottom: 10,
+  },
+  label: {
+    fontSize: 11,
+    fontFamily: 'Montserrat_600SemiBold',
+    color: '#334155',
+    marginBottom: 3,
+  },
+  labelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 3,
+  },
+  autoGenText: {
     fontSize: 11,
     fontFamily: 'Montserrat_700Bold',
     color: '#0066ff',
   },
-  createAccountCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 14,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  createCardTitle: {
-    fontSize: 16,
-    fontFamily: 'Montserrat_700Bold',
-    color: '#0f172a',
-  },
-  createCardSubtitle: {
-    fontSize: 12,
-    fontFamily: 'Montserrat_400Regular',
-    color: '#64748b',
-    marginBottom: 16,
-  },
-  fieldLabel: {
-    fontSize: 12,
-    fontFamily: 'Montserrat_600SemiBold',
-    color: '#334155',
-    marginBottom: 4,
-  },
-  fieldLabelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  autoGenLink: {
-    fontSize: 12,
-    fontFamily: 'Montserrat_700Bold',
-    color: '#0066ff',
-  },
-  fieldInputBox: {
+  inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f8fafc',
     borderWidth: 1,
     borderColor: '#cbd5e1',
-    borderRadius: 9,
-    height: 44,
-    paddingHorizontal: 10,
-    marginBottom: 12,
+    borderRadius: 7,
+    height: 38,
+    paddingHorizontal: 9,
+    marginBottom: 8,
   },
-  fieldInput: {
+  formInput: {
     flex: 1,
-    fontSize: 13.5,
+    fontSize: 12,
     fontFamily: 'Montserrat_500Medium',
     color: '#0f172a',
   },
-  walletAmountPills: {
+  balancePillRow: {
     flexDirection: 'row',
-    marginBottom: 14,
+    marginBottom: 10,
+    gap: 5,
   },
-  walletAmountPill: {
+  balancePill: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#f1f5f9',
-    paddingVertical: 8,
-    borderRadius: 8,
-    marginRight: 6,
+    paddingVertical: 6,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: '#e2e8f0',
   },
-  walletAmountPillActive: {
+  balancePillActive: {
     backgroundColor: '#eff6ff',
     borderColor: '#0066ff',
   },
-  walletAmountPillText: {
-    fontSize: 12,
+  balancePillText: {
+    fontSize: 11,
     fontFamily: 'Montserrat_600SemiBold',
     color: '#475569',
   },
-  walletAmountPillTextActive: {
+  balancePillTextActive: {
     color: '#0066ff',
     fontFamily: 'Montserrat_700Bold',
   },
-  rolePickerRow: {
+  roleRow: {
     flexDirection: 'row',
-    marginBottom: 18,
+    marginBottom: 12,
+    gap: 6,
   },
-  rolePickerBtn: {
+  roleChip: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#f8fafc',
-    paddingVertical: 10,
-    borderRadius: 9,
+    paddingVertical: 8,
+    borderRadius: 7,
     borderWidth: 1,
     borderColor: '#cbd5e1',
-    marginRight: 6,
   },
-  rolePickerBtnActive: {
+  roleChipActive: {
     backgroundColor: '#eff6ff',
     borderColor: '#0066ff',
   },
-  rolePickerBtnText: {
-    fontSize: 12,
+  roleChipText: {
+    fontSize: 11,
     fontFamily: 'Montserrat_600SemiBold',
     color: '#64748b',
-    marginLeft: 6,
+    marginLeft: 5,
   },
-  rolePickerBtnTextActive: {
+  roleChipTextActive: {
     color: '#0066ff',
     fontFamily: 'Montserrat_700Bold',
   },
-  submitCreateBtn: {
-    flexDirection: 'row',
+  submitBtn: {
+    backgroundColor: '#0066ff',
+    borderRadius: 8,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#0066ff',
-    borderRadius: 10,
-    height: 48,
   },
-  submitCreateBtnText: {
-    fontSize: 14,
+  submitBtnText: {
+    fontSize: 13,
     fontFamily: 'Montserrat_700Bold',
     color: '#ffffff',
   },
-  successCardBox: {
+  successBox: {
     backgroundColor: '#f0fdf4',
-    borderWidth: 1.2,
+    borderWidth: 1,
     borderColor: '#86efac',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 14,
-  },
-  successCardTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  successCardTitle: {
-    fontSize: 13.5,
-    fontFamily: 'Montserrat_700Bold',
-    color: '#15803d',
-    marginLeft: 6,
-  },
-  successCredentialsBox: {
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
+    borderRadius: 9,
     padding: 10,
     marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#dcfce7',
   },
-  credRow: {
-    fontSize: 12.5,
+  successHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  successTitle: {
+    fontSize: 12,
+    fontFamily: 'Montserrat_700Bold',
+    color: '#15803d',
+    marginLeft: 5,
+  },
+  credBox: {
+    backgroundColor: '#ffffff',
+    borderRadius: 6,
+    padding: 7,
+    marginBottom: 7,
+  },
+  credText: {
+    fontSize: 11,
     fontFamily: 'Montserrat_500Medium',
     color: '#1e293b',
-    marginBottom: 3,
+    marginBottom: 2,
   },
-  credRowLabel: {
-    fontFamily: 'Montserrat_700Bold',
-    color: '#64748b',
-  },
-  credRowPass: {
-    fontFamily: 'Montserrat_700Bold',
-    color: '#0066ff',
-  },
-  shareCredentialsBtn: {
+  shareBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#16a34a',
-    paddingVertical: 10,
-    borderRadius: 8,
+    paddingVertical: 7,
+    borderRadius: 6,
   },
-  shareCredentialsBtnText: {
-    fontSize: 12.5,
+  shareBtnText: {
+    fontSize: 11.5,
     fontFamily: 'Montserrat_700Bold',
     color: '#ffffff',
   },
-  globalBookingCard: {
+  compactBookingCard: {
     backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 10,
+    borderRadius: 9,
+    padding: 9,
+    marginBottom: 7,
     borderWidth: 1,
     borderColor: '#e2e8f0',
   },
-  globalBookingHeader: {
+  bookingCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
   },
-  globalUtsText: {
-    fontSize: 13,
+  bookingUtsCode: {
+    fontSize: 11.5,
     fontFamily: 'Montserrat_700Bold',
     color: '#0f172a',
-    marginRight: 8,
+    marginRight: 6,
   },
-  globalStatusTag: {
+  bookingStatusTag: {
+    paddingHorizontal: 4.5,
+    paddingVertical: 1.5,
+    borderRadius: 3.5,
+  },
+  bookingStatusTagText: {
+    fontSize: 8,
+    fontFamily: 'Montserrat_800ExtraBold',
+  },
+  bookingFareNum: {
+    fontSize: 13,
+    fontFamily: 'Montserrat_700Bold',
+    color: '#0066ff',
+  },
+  compactRouteRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginVertical: 5,
+  },
+  routeStation: {
+    fontSize: 12,
+    fontFamily: 'Montserrat_800ExtraBold',
+    color: '#1e293b',
+  },
+  routeLineWrapper: {
+    flex: 1,
+    alignItems: 'center',
+    marginHorizontal: 8,
+  },
+  routeDistance: {
+    fontSize: 8.5,
+    fontFamily: 'Montserrat_600SemiBold',
+    color: '#94a3b8',
+    marginBottom: 1,
+  },
+  routeBar: {
+    width: '100%',
+    height: 1,
+    backgroundColor: '#cbd5e1',
+  },
+  compactBookingFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+    paddingTop: 4,
+    borderTopWidth: 1,
+    borderColor: '#f8fafc',
+  },
+  bookingMetaText: {
+    fontSize: 9.5,
+    fontFamily: 'Montserrat_500Medium',
+    color: '#64748b',
+  },
+  cancelPill: {
+    backgroundColor: '#fee2e2',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
   },
-  globalStatusTagText: {
-    fontSize: 9,
-    fontFamily: 'Montserrat_800ExtraBold',
-  },
-  globalFareText: {
-    fontSize: 15,
-    fontFamily: 'Montserrat_700Bold',
-    color: '#0066ff',
-  },
-  globalRouteBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginVertical: 4,
-  },
-  globalStationCode: {
-    fontSize: 14,
-    fontFamily: 'Montserrat_800ExtraBold',
-    color: '#1e293b',
-  },
-  globalRouteDivider: {
-    flex: 1,
-    alignItems: 'center',
-    marginHorizontal: 12,
-  },
-  globalDistanceText: {
+  cancelPillText: {
     fontSize: 9.5,
-    fontFamily: 'Montserrat_600SemiBold',
-    color: '#94a3b8',
-    marginBottom: 2,
-  },
-  globalRouteLine: {
-    width: '100%',
-    height: 1.5,
-    backgroundColor: '#cbd5e1',
-  },
-  globalBookingFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 6,
-    paddingTop: 6,
-    borderTopWidth: 1,
-    borderColor: '#f8fafc',
-  },
-  globalBookingMeta: {
-    fontSize: 11,
-    fontFamily: 'Montserrat_500Medium',
-    color: '#64748b',
-  },
-  globalBookingUid: {
-    fontSize: 10,
-    fontFamily: 'Montserrat_500Medium',
-    color: '#94a3b8',
-  },
-  cancelTicketBtn: {
-    backgroundColor: '#fee2e2',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  cancelTicketBtnText: {
-    fontSize: 11,
     fontFamily: 'Montserrat_700Bold',
     color: '#b91c1c',
   },
-  loadingBox: {
+  centerBox: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 50,
+    paddingTop: 40,
   },
-  loadingText: {
-    fontSize: 13,
+  centerText: {
+    fontSize: 11.5,
     fontFamily: 'Montserrat_500Medium',
     color: '#64748b',
-    marginTop: 10,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 60,
+    marginTop: 6,
   },
   emptyTitle: {
-    fontSize: 15,
+    fontSize: 12.5,
     fontFamily: 'Montserrat_700Bold',
     color: '#64748b',
-    marginTop: 10,
+    marginTop: 6,
   },
-  emptySubtitle: {
-    fontSize: 12,
-    fontFamily: 'Montserrat_400Regular',
-    color: '#94a3b8',
-    marginTop: 2,
-  },
-  modalBackdrop: {
+  modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 20,
+    padding: 24,
   },
-  modalCard: {
+  compactModalBox: {
     width: '100%',
     backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 20,
+    borderRadius: 12,
+    padding: 16,
   },
-  modalTitle: {
-    fontSize: 16,
+  modalHeading: {
+    fontSize: 14,
     fontFamily: 'Montserrat_700Bold',
     color: '#0f172a',
   },
-  modalSubtitle: {
-    fontSize: 12,
+  modalSubheading: {
+    fontSize: 11,
     fontFamily: 'Montserrat_400Regular',
     color: '#64748b',
-    marginBottom: 16,
-    marginTop: 2,
+    marginBottom: 12,
   },
-  modalBtnRow: {
+  modalInputWrap: {
     flexDirection: 'row',
-    marginTop: 10,
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    borderRadius: 7,
+    height: 42,
+    paddingHorizontal: 10,
+    marginBottom: 12,
   },
-  modalCancelBtn: {
+  modalInput: {
+    flex: 1,
+    fontSize: 15,
+    fontFamily: 'Montserrat_700Bold',
+    color: '#0f172a',
+  },
+  modalActionRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  modalCancel: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 11,
-    borderRadius: 9,
+    paddingVertical: 9,
+    borderRadius: 7,
     backgroundColor: '#f1f5f9',
-    marginRight: 8,
   },
-  modalCancelBtnText: {
-    fontSize: 13,
+  modalCancelText: {
+    fontSize: 12,
     fontFamily: 'Montserrat_700Bold',
     color: '#64748b',
   },
-  modalConfirmBtn: {
+  modalConfirm: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 11,
-    borderRadius: 9,
+    paddingVertical: 9,
+    borderRadius: 7,
     backgroundColor: '#0066ff',
   },
-  modalConfirmBtnText: {
-    fontSize: 13,
+  modalConfirmText: {
+    fontSize: 12,
     fontFamily: 'Montserrat_700Bold',
     color: '#ffffff',
   },
