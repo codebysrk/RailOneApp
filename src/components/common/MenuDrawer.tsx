@@ -195,15 +195,6 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
       onPress: () => showInfoAlert("Services", "All services are currently active."),
     },
     {
-      id: "lang",
-      label: "Select Language",
-      icon: "language" as const,
-      onPress: () => {
-        handleClose();
-        navigation.navigate("Language");
-      },
-    },
-    {
       id: "faqs",
       label: "FAQs",
       icon: "chatbubble-ellipses" as const,

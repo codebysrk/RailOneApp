@@ -65,7 +65,6 @@ export const MenuScreen = () => {
 
   const menuItems: MenuItem[] = [
     { id: "1", label: "Show/Hide Services", icon: "bookmark" },
-    { id: "lang", label: "Select Language", icon: "language", onPress: () => navigation.navigate("Language") },
     { id: "2", label: "Check for Updates", icon: "cloud-download", onPress: handleCheckForUpdates },
     { id: "3", label: "FAQs", icon: "chatbubble-ellipses" },
     { id: "4", label: "Help & Support", icon: "headset" },
