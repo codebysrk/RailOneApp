@@ -167,12 +167,14 @@ export const TicketScreen = () => {
       const currentYear = now.getFullYear();
       const currentHour = now.getHours().toString().padStart(2, "0");
       const currentMin = now.getMinutes().toString().padStart(2, "0");
+      const currentSec = now.getSeconds().toString().padStart(2, "0");
       const dateFormatted = now.toLocaleDateString("en-GB", {
         day: "numeric",
         month: "short",
         year: "numeric",
       });
       const timeFormatted = `${currentHour}:${currentMin}`;
+      const timeWithSeconds = `${currentHour}:${currentMin}:${currentSec}`;
 
       let bDate = ticketData?.bookingDateTime;
       if (!bDate && ticketData?.date) {
@@ -186,9 +188,20 @@ export const TicketScreen = () => {
         bDate = `${bDate}, ${timeFormatted}`;
       }
 
-      const bNumeric =
-        ticketData?.bookedOn ||
-        `${currentDay}/${currentMonth}/${currentYear} ${currentHour}:${currentMin}`;
+      let bNumeric = ticketData?.bookedOn;
+      if (bNumeric) {
+        // If bookedOn already exists but only has HH:mm without seconds, append seconds
+        const parts = bNumeric.trim().split(" ");
+        if (parts.length === 2) {
+          const timeParts = parts[1].split(":");
+          if (timeParts.length === 2) {
+            bNumeric = `${parts[0]} ${parts[1]}:${currentSec}`;
+          }
+        }
+      } else {
+        bNumeric = `${currentDay}/${currentMonth}/${currentYear} ${timeWithSeconds}`;
+      }
+
       const vNumeric =
         ticketData?.validTill ||
         `${currentDay}/${currentMonth}/${currentYear} 23:59`;

@@ -139,7 +139,9 @@ export const BookingConfigScreen = () => {
     const currentYear = now.getFullYear();
     const currentHour = now.getHours().toString().padStart(2, '0');
     const currentMin = now.getMinutes().toString().padStart(2, '0');
+    const currentSec = now.getSeconds().toString().padStart(2, '0');
     const timeFormatted = `${currentHour}:${currentMin}`;
+    const timeWithSeconds = `${currentHour}:${currentMin}:${currentSec}`;
 
     const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -151,7 +153,7 @@ export const BookingConfigScreen = () => {
     const canonicalJourneyDate = `${dayName}, ${currentDay} ${monthName} ${year2Digit}`;
     const fullDateTime = `${currentDay} ${monthName} ${currentYear}, ${timeFormatted}`;
 
-    const bookedOnStr = `${currentDay}/${currentMonth}/${currentYear} ${timeFormatted}`;
+    const bookedOnStr = `${currentDay}/${currentMonth}/${currentYear} ${timeWithSeconds}`;
     const validTillStr = `${currentDay}/${currentMonth}/${currentYear} 23:59`;
 
     const routeInfo = RailwayDistanceEngine.getRailwayDistance(srcCode, dstCode, computedVia);
