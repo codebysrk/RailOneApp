@@ -13,48 +13,61 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "@/context/AuthContext";
+import { UpdateService } from "@/services";
 
 type Props = {
   visible: boolean;
   onClose: () => void;
 };
 
-type MenuItem = {
-  id: string;
-  label: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  onPress?: () => void;
-};
-
 export const MenuDrawer = ({ visible, onClose }: Props) => {
   const { width } = useWindowDimensions();
   const drawerWidth = Math.min(width * 0.84, 360);
   const { user, logout } = useAuth();
+  const navigation = useNavigation<any>();
+
+  // Start off-screen to the right
   const translateX = useRef(new Animated.Value(drawerWidth)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (visible) {
+      // Reset to off-screen first, then animate in
       translateX.setValue(drawerWidth);
-      Animated.spring(translateX, {
-        toValue: 0,
-        useNativeDriver: true,
-        damping: 22,
-        stiffness: 140,
-      }).start();
+      opacity.setValue(0);
+      Animated.parallel([
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 180,
+          useNativeDriver: true,
+        }),
+        Animated.spring(translateX, {
+          toValue: 0,
+          useNativeDriver: true,
+          damping: 25,
+          stiffness: 180,
+          mass: 0.8,
+        }),
+      ]).start();
     }
-  }, [visible, drawerWidth]);
+  }, [visible]);
 
   const handleClose = () => {
-    Animated.timing(translateX, {
-      toValue: drawerWidth,
-      duration: 180,
-      useNativeDriver: true,
-    }).start(() => {
-      onClose();
-    });
+    Animated.parallel([
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 160,
+        useNativeDriver: true,
+      }),
+      Animated.timing(translateX, {
+        toValue: drawerWidth,
+        duration: 180,
+        useNativeDriver: true,
+      }),
+    ]).start(() => onClose());
   };
 
   const handleShare = async () => {
@@ -79,29 +92,63 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
     ]);
   };
 
-  const navigation = useNavigation<any>();
+  const userName = user?.name || "Passenger";
+  const walletBalance =
+    user?.wallet !== undefined ? user.wallet.toFixed(2) : "0.00";
 
-  const menuItems: MenuItem[] = [
-    { id: "1", label: "Show/Hide Services", icon: "bookmark" },
+  const menuItems = [
+    {
+      id: "show-hide",
+      label: "Show/Hide Services",
+      icon: "bookmark" as const,
+      onPress: undefined,
+    },
     {
       id: "lang",
       label: "Select Language",
-      icon: "language",
+      icon: "language" as const,
       onPress: () => {
         handleClose();
         navigation.navigate("Language");
       },
     },
-    { id: "2", label: "FAQs", icon: "chatbubble-ellipses" },
-    { id: "3", label: "Help & Support", icon: "headset" },
-    { id: "4", label: "About", icon: "information-circle" },
-    { id: "5", label: "Rate Us", icon: "thumbs-up" },
-    { id: "6", label: "Share", icon: "share-social", onPress: handleShare },
-    { id: "7", label: "Log Out", icon: "log-out", onPress: handleLogout },
+    {
+      id: "faqs",
+      label: "FAQs",
+      icon: "chatbubble-ellipses" as const,
+      onPress: undefined,
+    },
+    {
+      id: "support",
+      label: "Help & Support",
+      icon: "headset" as const,
+      onPress: undefined,
+    },
+    {
+      id: "about",
+      label: "About",
+      icon: "information-circle" as const,
+      onPress: undefined,
+    },
+    {
+      id: "rate",
+      label: "Rate Us",
+      icon: "thumbs-up" as const,
+      onPress: undefined,
+    },
+    {
+      id: "share",
+      label: "Share",
+      icon: "share-social" as const,
+      onPress: handleShare,
+    },
+    {
+      id: "logout",
+      label: "Log Out",
+      icon: "log-out" as const,
+      onPress: handleLogout,
+    },
   ];
-
-  const userName = user?.name || "Shahrukh";
-  const walletBalance = user?.wallet !== undefined ? user.wallet.toFixed(2) : "0.00";
 
   return (
     <Modal
@@ -109,71 +156,74 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
       visible={visible}
       onRequestClose={handleClose}
       animationType="none"
+      statusBarTranslucent
     >
+      {/* Dimmed backdrop */}
       <TouchableWithoutFeedback onPress={handleClose}>
-        <View style={styles.backdrop} />
+        <Animated.View style={[styles.backdrop, { opacity }]} />
       </TouchableWithoutFeedback>
 
-      <Animated.View style={[styles.drawer, { width: drawerWidth, transform: [{ translateX }] }]}>
+      {/* Sliding drawer */}
+      <Animated.View
+        style={[
+          styles.drawer,
+          { width: drawerWidth, transform: [{ translateX }] },
+        ]}
+      >
         <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
-          {/* Close Header Bar */}
-          <View style={styles.drawerTopBar}>
-            <TouchableOpacity
-              style={styles.closeCircleBtn}
-              onPress={handleClose}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="close" size={22} color="#0066ff" />
-            </TouchableOpacity>
-          </View>
-
           <ScrollView
             contentContainerStyle={styles.scroll}
             showsVerticalScrollIndicator={false}
+            bounces={false}
           >
-            {/* ─── 1. Top Profile Header Card ─────────────────────────── */}
-            <View style={styles.profileHeaderCard}>
+            {/* ── Profile Card ────────────────────────────── */}
+            <View style={styles.profileCard}>
               <View style={styles.avatarCircle}>
-                <Ionicons name="person" size={48} color="#b8e6fe" />
+                <Ionicons name="person" size={46} color="#ffffff" />
               </View>
               <Text style={styles.userName}>{userName}</Text>
             </View>
 
-            {/* ─── 2. R-Wallet Card ───────────────────────────────────── */}
+            {/* ── R-Wallet Card ───────────────────────────── */}
             <View style={styles.walletCard}>
               <View style={styles.walletLeft}>
-                <View style={styles.walletIconBox}>
-                  <Ionicons name="wallet" size={24} color="#22c55e" />
+                <View style={styles.walletIconWrap}>
+                  <Ionicons name="wallet" size={22} color="#818cf8" />
                 </View>
-                <View style={styles.walletTextContainer}>
+                <View>
                   <Text style={styles.walletLabel}>R-Wallet</Text>
                   <Text style={styles.walletBalance}>₹ {walletBalance}</Text>
                 </View>
               </View>
-              <TouchableOpacity style={styles.addMoneyBtn} activeOpacity={0.85} onPress={handleClose}>
+              <TouchableOpacity style={styles.addMoneyBtn} activeOpacity={0.82}>
                 <Text style={styles.addMoneyText}>Add Money</Text>
               </TouchableOpacity>
             </View>
 
-            {/* ─── 3. Menu Items List ─────────────────────────────────── */}
+            {/* ── Menu Items ──────────────────────────────── */}
             <View style={styles.menuList}>
               {menuItems.map((item) => (
                 <TouchableOpacity
-                  key={`menu-drawer-${item.id}`}
+                  key={item.id}
                   style={styles.menuRow}
-                  activeOpacity={0.65}
+                  activeOpacity={0.6}
                   onPress={item.onPress}
                 >
-                  <View style={styles.menuIcon}>
-                    <Ionicons name={item.icon} size={22} color="#0066ff" />
-                  </View>
+                  <Ionicons
+                    name={item.icon}
+                    size={22}
+                    color="#818cf8"
+                    style={styles.menuIcon}
+                  />
                   <Text style={styles.menuLabel}>{item.label}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            {/* ─── 4. App Version ─────────────────────────────────────── */}
-            <Text style={styles.version}>Version 1.0.0</Text>
+            {/* ── Version ─────────────────────────────────── */}
+            <Text style={styles.version}>
+              V-{UpdateService.getCurrentVersion()}
+            </Text>
           </ScrollView>
         </SafeAreaView>
       </Animated.View>
@@ -188,7 +238,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.45)",
+    backgroundColor: "rgba(0,0,0,0.4)",
   },
   drawer: {
     position: "absolute",
@@ -199,61 +249,45 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 28,
     borderBottomLeftRadius: 28,
     shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 20,
-    elevation: 20,
+    shadowOpacity: 0.18,
+    shadowRadius: 24,
+    shadowOffset: { width: -4, height: 0 },
+    elevation: 24,
     overflow: "hidden",
   },
   safeArea: {
     flex: 1,
   },
-  drawerTopBar: {
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 4,
-    alignItems: 'flex-start',
-  },
-  closeCircleBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 1.2,
-    borderColor: '#bfdbfe',
-    backgroundColor: '#ffffff',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   scroll: {
-    paddingHorizontal: 16,
-    paddingTop: 6,
-    paddingBottom: 28,
+    paddingHorizontal: 18,
+    paddingTop: 24,
+    paddingBottom: 32,
   },
 
-  /* Profile Header */
-  profileHeaderCard: {
+  /* Profile Card */
+  profileCard: {
     backgroundColor: "#eef2ff",
     borderRadius: 20,
     alignItems: "center",
-    paddingVertical: 22,
-    paddingHorizontal: 16,
+    paddingVertical: 28,
     marginBottom: 14,
   },
   avatarCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 84,
+    height: 84,
+    borderRadius: 42,
     backgroundColor: "#38bdf8",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 12,
   },
   userName: {
-    fontSize: 18,
+    fontSize: 20,
     fontFamily: "Montserrat_700Bold",
     color: "#0f172a",
   },
 
-  /* R-Wallet Card */
+  /* Wallet Card */
   walletCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -262,62 +296,59 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    marginBottom: 16,
+    marginBottom: 20,
   },
   walletLeft: {
     flexDirection: "row",
     alignItems: "center",
-    flex: 1,
-    marginRight: 8,
+    gap: 10,
   },
-  walletIconBox: {
-    marginRight: 10,
+  walletIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: "#e0e7ff",
     justifyContent: "center",
     alignItems: "center",
-  },
-  walletTextContainer: {
-    justifyContent: "center",
-    flexShrink: 1,
   },
   walletLabel: {
     fontSize: 12,
     fontFamily: "Montserrat_500Medium",
-    color: "#334155",
-    marginBottom: 1,
+    color: "#64748b",
+    marginBottom: 2,
   },
   walletBalance: {
-    fontSize: 17,
+    fontSize: 18,
     fontFamily: "Montserrat_700Bold",
     color: "#0f172a",
   },
   addMoneyBtn: {
     backgroundColor: "#0066ff",
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    borderRadius: 24,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
   },
   addMoneyText: {
     color: "#ffffff",
-    fontSize: 13,
+    fontSize: 13.5,
     fontFamily: "Montserrat_600SemiBold",
   },
 
   /* Menu List */
   menuList: {
-    paddingHorizontal: 4,
-    marginBottom: 16,
+    marginBottom: 10,
   },
   menuRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12,
+    paddingVertical: 13,
   },
   menuIcon: {
-    width: 32,
-    marginRight: 12,
+    width: 36,
+    marginRight: 10,
   },
   menuLabel: {
-    fontSize: 15,
+    fontSize: 15.5,
     fontFamily: "Montserrat_600SemiBold",
     color: "#1e293b",
   },
@@ -328,6 +359,6 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     fontFamily: "Montserrat_500Medium",
     color: "#94a3b8",
-    marginTop: 10,
+    marginTop: 8,
   },
 });
