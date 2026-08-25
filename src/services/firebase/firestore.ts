@@ -108,7 +108,7 @@ export const FirebaseFirestoreService = {
       mobile: targetUser.mobile || '',
       role: targetUser.role || 'user',
       walletBalanceAtDeletion: targetUser.wallet || 0,
-      deletedByAdminId: adminUser?.uid || adminUser?.id || 'admin',
+      deletedByAdminId: adminUser?.uid || 'admin',
       deletedByAdminEmail: adminUser?.email || 'admin@railone.com',
       deletedAt: new Date().toISOString(),
       deletedAtTimestamp: serverTimestamp(),
@@ -116,7 +116,14 @@ export const FirebaseFirestoreService = {
       reason: 'Admin Manual Deletion',
     });
 
-    // 2. Delete the user document from Firestore users collection
+    // 2. Clean up any wallet_ledger subcollection documents to avoid phantom IDs in console
+    try {
+      const ledgerSnap = await getDocs(collection(db, 'users', uid, 'wallet_ledger'));
+      const deletePromises = ledgerSnap.docs.map((d) => deleteDoc(d.ref));
+      await Promise.all(deletePromises);
+    } catch {}
+
+    // 3. Delete the user document from Firestore users collection
     const userRef = doc(db, 'users', uid);
     await deleteDoc(userRef);
 
