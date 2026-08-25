@@ -8,7 +8,6 @@ import {
   TouchableWithoutFeedback,
   Animated,
   Share,
-  ScrollView,
   Alert,
   useWindowDimensions,
 } from "react-native";
@@ -178,67 +177,66 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
         ]}
       >
         <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
-          <ScrollView
-            contentContainerStyle={styles.scroll}
-            showsVerticalScrollIndicator={false}
-            bounces={false}
-          >
-            {/* ── Profile Card ────────────────────────────── */}
-            <View style={styles.profileCard}>
-              <View style={styles.avatarCircle}>
-                <Ionicons name="person" size={46} color="#ffffff" />
-              </View>
-              <Text style={styles.userName}>{userName}</Text>
-            </View>
-
-            {/* ── R-Wallet Card ───────────────────────────── */}
-            <View style={styles.walletCard}>
-              <View style={styles.walletLeft}>
-                <View style={styles.walletIconWrap}>
-                  <Ionicons name="wallet" size={22} color="#818cf8" />
+          <View style={styles.content}>
+            {/* Top section: Profile & Wallet */}
+            <View>
+              {/* ── Profile Card ────────────────────────────── */}
+              <View style={styles.profileCard}>
+                <View style={styles.avatarCircle}>
+                  <Ionicons name="person" size={42} color="#ffffff" />
                 </View>
-                <View>
-                  <Text style={styles.walletLabel}>R-Wallet</Text>
-                  <Text style={styles.walletBalance}>₹ {walletBalance}</Text>
-                </View>
+                <Text style={styles.userName}>{userName}</Text>
               </View>
-              <TouchableOpacity
-                style={styles.addMoneyBtn}
-                activeOpacity={0.82}
-                onPress={() => {
-                  handleClose();
-                  navigation.navigate("ProfileTab");
-                }}
-              >
-                <Text style={styles.addMoneyText}>Add Money</Text>
-              </TouchableOpacity>
-            </View>
 
-            {/* ── Menu Items ──────────────────────────────── */}
-            <View style={styles.menuList}>
-              {menuItems.map((item) => (
+              {/* ── R-Wallet Card ───────────────────────────── */}
+              <View style={styles.walletCard}>
+                <View style={styles.walletLeft}>
+                  <View style={styles.walletIconWrap}>
+                    <Ionicons name="wallet" size={20} color="#818cf8" />
+                  </View>
+                  <View>
+                    <Text style={styles.walletLabel}>R-Wallet</Text>
+                    <Text style={styles.walletBalance}>₹ {walletBalance}</Text>
+                  </View>
+                </View>
                 <TouchableOpacity
-                  key={item.id}
-                  style={styles.menuRow}
-                  activeOpacity={0.6}
-                  onPress={item.onPress}
+                  style={styles.addMoneyBtn}
+                  activeOpacity={0.82}
+                  onPress={() => {
+                    handleClose();
+                    navigation.navigate("ProfileTab");
+                  }}
                 >
-                  <Ionicons
-                    name={item.icon}
-                    size={22}
-                    color="#818cf8"
-                    style={styles.menuIcon}
-                  />
-                  <Text style={styles.menuLabel}>{item.label}</Text>
+                  <Text style={styles.addMoneyText}>Add Money</Text>
                 </TouchableOpacity>
-              ))}
+              </View>
+
+              {/* ── Menu Items ──────────────────────────────── */}
+              <View style={styles.menuList}>
+                {menuItems.map((item) => (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={styles.menuRow}
+                    activeOpacity={0.6}
+                    onPress={item.onPress}
+                  >
+                    <Ionicons
+                      name={item.icon}
+                      size={21}
+                      color="#818cf8"
+                      style={styles.menuIcon}
+                    />
+                    <Text style={styles.menuLabel}>{item.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
 
             {/* ── Version ─────────────────────────────────── */}
             <Text style={styles.version}>
               V-{UpdateService.getCurrentVersion()}
             </Text>
-          </ScrollView>
+          </View>
         </SafeAreaView>
       </Animated.View>
     </Modal>
@@ -272,31 +270,33 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
-  scroll: {
-    paddingHorizontal: 18,
-    paddingTop: 24,
-    paddingBottom: 32,
+  content: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 14,
+    justifyContent: "space-between",
   },
 
   /* Profile Card */
   profileCard: {
     backgroundColor: "#eef2ff",
-    borderRadius: 20,
+    borderRadius: 18,
     alignItems: "center",
-    paddingVertical: 28,
-    marginBottom: 14,
+    paddingVertical: 18,
+    marginBottom: 10,
   },
   avatarCircle: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
+    width: 68,
+    height: 68,
+    borderRadius: 34,
     backgroundColor: "#38bdf8",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 8,
   },
   userName: {
-    fontSize: 20,
+    fontSize: 18,
     fontFamily: "Montserrat_700Bold",
     color: "#0f172a",
   },
@@ -307,62 +307,61 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: "#eef2ff",
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 20,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 12,
   },
   walletLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 8,
   },
   walletIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 32,
+    height: 32,
+    borderRadius: 8,
     backgroundColor: "#e0e7ff",
     justifyContent: "center",
     alignItems: "center",
   },
   walletLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: "Montserrat_500Medium",
     color: "#64748b",
-    marginBottom: 2,
   },
   walletBalance: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: "Montserrat_700Bold",
     color: "#0f172a",
   },
   addMoneyBtn: {
     backgroundColor: "#0066ff",
-    borderRadius: 24,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
   },
   addMoneyText: {
     color: "#ffffff",
-    fontSize: 13.5,
+    fontSize: 12.5,
     fontFamily: "Montserrat_600SemiBold",
   },
 
   /* Menu List */
   menuList: {
-    marginBottom: 10,
+    paddingHorizontal: 4,
   },
   menuRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 13,
+    paddingVertical: 10,
   },
   menuIcon: {
-    width: 36,
+    width: 32,
     marginRight: 10,
   },
   menuLabel: {
-    fontSize: 15.5,
+    fontSize: 14.5,
     fontFamily: "Montserrat_600SemiBold",
     color: "#1e293b",
   },
@@ -370,9 +369,9 @@ const styles = StyleSheet.create({
   /* Version */
   version: {
     textAlign: "center",
-    fontSize: 12.5,
+    fontSize: 12,
     fontFamily: "Montserrat_500Medium",
     color: "#94a3b8",
-    marginTop: 8,
+    paddingVertical: 4,
   },
 });
