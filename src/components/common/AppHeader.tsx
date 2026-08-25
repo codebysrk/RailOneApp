@@ -188,16 +188,9 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 2,
-    elevation: 1,
   },
   noBorder: {
     borderWidth: 0,
-    elevation: 0,
-    shadowOpacity: 0,
   },
   spacer40: {
     width: 40,
