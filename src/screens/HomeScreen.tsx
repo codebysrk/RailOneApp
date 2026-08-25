@@ -106,19 +106,19 @@ export const HomeScreen = () => {
   const renderOfferingIcon = (type: string, color: string) => {
     switch (type) {
       case "search":
-        return <SearchTrainsIcon color={color} size={30} />;
+        return <SearchTrainsIcon color={color} size={33} />;
       case "pnr":
-        return <PNRStatusIcon color={color} size={33} />;
+        return <PNRStatusIcon color={color} size={35} />;
       case "coach":
         return <CoachPositionIcon color={color} size={34} />;
       case "track":
-        return <TrackYourTrainIcon color={color} size={33} />;
+        return <TrackYourTrainIcon color={color} size={34} />;
       case "food":
         return <OrderFoodIcon color={color} size={34} />;
       case "refund":
-        return <FileRefundIcon color={color} size={33} />;
+        return <FileRefundIcon color={color} size={34} />;
       case "madad":
-        return <RailMadadIcon color={color} size={32} />;
+        return <RailMadadIcon color={color} size={33} />;
       case "waves":
         return <GoToWavesIcon color={color} size={34} />;
       default:
@@ -702,25 +702,25 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   gridItem: {
-    width: 68,
+    width: 66, // 👈 More Offerings Card WIDTH (Aap yahan badal sakte hain)
     alignItems: "center",
   },
   iconWrapper: {
-    width: 68,
-    height: 64,
-    borderRadius: 18,
+    width: 66, // 👈 More Offerings Card WIDTH (Aap yahan badal sakte hain)
+    height: 62, // 👈 More Offerings Card HEIGHT (Aap yahan badal sakte hain)
+    borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 6,
   },
   gridTitle: {
-    fontFamily: "Montserrat_600SemiBold",
-    fontSize: 11.5,
-    color: "#16274e",
+    fontFamily: "Montserrat_500Medium",
+    fontSize: 11,
+    color: "#233258",
     textAlign: "center",
-    lineHeight: 15,
+    lineHeight: 14,
     letterSpacing: 0.1,
-    width: 82,
+    width: 78,
   },
 
   // ─── Upcoming Journey ────────────────────────────────────────
