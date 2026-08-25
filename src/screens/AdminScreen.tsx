@@ -157,12 +157,21 @@ export const AdminScreen = () => {
     return map;
   }, [allBookings]);
 
-  const generateRandomPassword = () => {
+  const generateRandomPassword = (customName?: string) => {
     triggerHaptic('light');
-    const prefixes = ['Rail', 'Fast', 'Track', 'Super', 'Admin'];
-    const randomPrefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+    const targetName = (typeof customName === 'string' ? customName : name).trim();
+    let namePrefix = 'Rail';
+
+    if (targetName) {
+      // Extract first word, strip non-alphanumeric chars, Capitalize first letter (e.g. "Rahul", "Priya")
+      const firstName = targetName.split(' ')[0].replace(/[^a-zA-Z0-9]/g, '');
+      if (firstName.length >= 2) {
+        namePrefix = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+      }
+    }
+
     const randomNum = Math.floor(1000 + Math.random() * 9000);
-    setPassword(`${randomPrefix}@${randomNum}`);
+    setPassword(`${namePrefix}@${randomNum}`);
   };
 
   const handleCreateUser = async () => {
@@ -1106,7 +1115,17 @@ export const AdminScreen = () => {
                   placeholder="e.g. Rahul Sharma"
                   placeholderTextColor="#94a3b8"
                   value={name}
-                  onChangeText={setName}
+                  onChangeText={(val) => {
+                    setName(val);
+                    if (!password && val.trim().length >= 2) {
+                      const firstName = val.trim().split(' ')[0].replace(/[^a-zA-Z0-9]/g, '');
+                      if (firstName) {
+                        const clean = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+                        const rand = Math.floor(1000 + Math.random() * 9000);
+                        setPassword(`${clean}@${rand}`);
+                      }
+                    }
+                  }}
                   autoCapitalize="words"
                 />
               </View>
@@ -1145,8 +1164,10 @@ export const AdminScreen = () => {
               {/* Password */}
               <View style={styles.labelRow}>
                 <Text style={styles.label}>Password *</Text>
-                <TouchableOpacity onPress={generateRandomPassword}>
-                  <Text style={styles.autoGenText}>🎲 Auto-Generate</Text>
+                <TouchableOpacity onPress={() => generateRandomPassword()}>
+                  <Text style={styles.autoGenText}>
+                    🎲 Auto-Generate {name.trim() ? `(${name.trim().split(' ')[0]}@...)` : ''}
+                  </Text>
                 </TouchableOpacity>
               </View>
               <View style={styles.inputWrap}>
