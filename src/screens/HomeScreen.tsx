@@ -211,7 +211,13 @@ export const HomeScreen = () => {
       <FocusAwareStatusBar backgroundColor="#ffffff" barStyle="dark-content" />
       {/* ─── Top Header (Fixed at Top) ────────────────────────────── */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.headerIconCircle} activeOpacity={0.7}>
+        <TouchableOpacity
+          style={styles.headerIconCircle}
+          activeOpacity={0.7}
+          onPress={() => navigation.navigate("Language")}
+          accessibilityLabel="Select Language"
+          accessibilityRole="button"
+        >
           <Text style={styles.langTextTop}>A</Text>
           <Text style={styles.langTextBottom}>अ</Text>
         </TouchableOpacity>

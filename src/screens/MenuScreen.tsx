@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "@/context/AuthContext";
 import { UpdateService, ReleaseInfo } from "@/services";
 import { UpdateModal, FocusAwareStatusBar } from "@/components/common";
@@ -24,6 +25,7 @@ type MenuItem = {
 };
 
 export const MenuScreen = () => {
+  const navigation = useNavigation<any>();
   const { user, logout } = useAuth();
   const [checkingUpdate, setCheckingUpdate] = useState(false);
   const [updateInfo, setUpdateInfo] = useState<ReleaseInfo | null>(null);
@@ -62,6 +64,7 @@ export const MenuScreen = () => {
 
   const menuItems: MenuItem[] = [
     { id: "1", label: "Show/Hide Services", icon: "bookmark" },
+    { id: "lang", label: "Select Language", icon: "language", onPress: () => navigation.navigate("Language") },
     { id: "2", label: "Check for Updates", icon: "cloud-download", onPress: handleCheckForUpdates },
     { id: "3", label: "FAQs", icon: "chatbubble-ellipses" },
     { id: "4", label: "Help & Support", icon: "headset" },

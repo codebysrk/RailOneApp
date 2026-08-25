@@ -3,7 +3,7 @@ import { View, ActivityIndicator, Platform, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from '@/context/AuthContext';
-import { LoginScreen, UnreservedScreen, BookingConfigScreen, TicketScreen, NotificationScreen } from '@/screens';
+import { LoginScreen, UnreservedScreen, BookingConfigScreen, TicketScreen, NotificationScreen, LanguageScreen } from '@/screens';
 import { MenuDrawer } from '@/components/common/MenuDrawer';
 import { BottomTabNavigator } from '@/navigation/BottomTabNavigator';
 import { RootStackParamList } from '@/types/navigation';
@@ -49,6 +49,7 @@ export const AppNavigator: React.FC = () => {
               }}
             />
             <Stack.Screen name="Notification" component={NotificationScreen} />
+            <Stack.Screen name="Language" component={LanguageScreen} />
           </>
         )}
       </Stack.Navigator>

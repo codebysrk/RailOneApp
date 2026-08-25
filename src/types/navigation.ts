@@ -14,6 +14,7 @@ export type RootStackParamList = {
     fromBooking?: boolean;
   };
   Notification: undefined;
+  Language: undefined;
 };
 
 export type BottomTabParamList = {

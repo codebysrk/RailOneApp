@@ -119,4 +119,17 @@ export const StorageService = {
       return [];
     }
   },
+  getLanguage: async (): Promise<string> => {
+    try {
+      const lang = await safeGetItem('railone_language');
+      return lang || 'en';
+    } catch {
+      return 'en';
+    }
+  },
+  saveLanguage: async (lang: string): Promise<void> => {
+    try {
+      await safeSetItem('railone_language', lang);
+    } catch {}
+  },
 };

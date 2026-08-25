@@ -1,6 +1,7 @@
 export * from './BookingConfigScreen';
 export * from './BookingsScreen';
 export * from './HomeScreen';
+export * from './LanguageScreen';
 export * from './LoginScreen';
 export * from './MenuScreen';
 export * from './NotificationScreen';

@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "@/context/AuthContext";
 
 type Props = {
@@ -73,8 +74,19 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
     ]);
   };
 
+  const navigation = useNavigation<any>();
+
   const menuItems: MenuItem[] = [
     { id: "1", label: "Show/Hide Services", icon: "bookmark" },
+    {
+      id: "lang",
+      label: "Select Language",
+      icon: "language",
+      onPress: () => {
+        onClose();
+        navigation.navigate("Language");
+      },
+    },
     { id: "2", label: "FAQs", icon: "chatbubble-ellipses" },
     { id: "3", label: "Help & Support", icon: "headset" },
     { id: "4", label: "About", icon: "information-circle" },
