@@ -51,16 +51,16 @@ export const BottomTabNavigator: React.FC = () => {
               style={props.style}
             />
           ),
-          tabBarIcon: ({ color, focused }) => {
+          tabBarIcon: ({ color }) => {
             const ICON_SIZE = 26;
             let iconName: keyof typeof MaterialCommunityIcons.glyphMap;
 
             if (route.name === 'HomeTab') {
-              iconName = focused ? 'home' : 'home-outline';
+              iconName = 'home-outline';
             } else if (route.name === 'BookingsTab') {
-              iconName = focused ? 'ticket' : 'ticket-outline';
+              iconName = 'ticket-outline';
             } else if (route.name === 'ProfileTab') {
-              iconName = focused ? 'account' : 'account-outline';
+              iconName = 'account-outline';
             } else {
               iconName = 'menu';
             }
