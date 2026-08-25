@@ -10,7 +10,7 @@ import { RootStackParamList } from '@/types/navigation';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export const AppNavigator: React.FC = () => {
-  const { user, loading } = useAuth();
+  const { user, isAdmin, loading } = useAuth();
 
   if (loading) {
     return <View style={styles.splashHolder} />;
@@ -62,7 +62,9 @@ export const AppNavigator: React.FC = () => {
                 gestureEnabled: false,
               }}
             />
-            <Stack.Screen name="Admin" component={AdminScreen} />
+            {isAdmin && (
+              <Stack.Screen name="Admin" component={AdminScreen} />
+            )}
           </>
         )}
       </Stack.Navigator>

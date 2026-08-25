@@ -224,8 +224,13 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const badge = getBadgeDetails();
   const cardWidth = Math.min(width * 0.86, 360);
 
+  const contextValue = React.useMemo(
+    () => ({ showAlert, hideAlert }),
+    [showAlert, hideAlert]
+  );
+
   return (
-    <AlertContext.Provider value={{ showAlert, hideAlert }}>
+    <AlertContext.Provider value={contextValue}>
       {children}
       <Modal
         transparent

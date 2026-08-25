@@ -8,6 +8,7 @@ import { getReactNativePersistence } from 'firebase/auth';
 import {
   initializeFirestore,
   memoryLocalCache,
+  memoryLruGarbageCollector,
   getFirestore,
 } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -41,11 +42,13 @@ try {
   }
 }
 
-// Initialize Firestore with React Native optimized Memory Cache (eliminates IndexedDB warning)
+// Initialize Firestore with React Native optimized Memory Cache and LRU GC (auto memory cleanup)
 let firestoreInstance: any;
 try {
   firestoreInstance = initializeFirestore(app, {
-    localCache: memoryLocalCache(),
+    localCache: memoryLocalCache({
+      garbageCollector: memoryLruGarbageCollector(),
+    }),
   });
 } catch {
   try {

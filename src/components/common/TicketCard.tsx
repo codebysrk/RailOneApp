@@ -36,7 +36,7 @@ interface TicketCardProps {
   onBookAgain?: () => void;
 }
 
-export const TicketCard: React.FC<TicketCardProps> = ({
+export const TicketCard: React.FC<TicketCardProps> = React.memo(({
   ticket,
   status,
   onOpen,
@@ -208,7 +208,7 @@ export const TicketCard: React.FC<TicketCardProps> = ({
       </View>
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   card: {

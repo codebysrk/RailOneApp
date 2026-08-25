@@ -5,13 +5,11 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
 import {
   useFonts,
-  Montserrat_300Light,
   Montserrat_400Regular,
   Montserrat_500Medium,
   Montserrat_600SemiBold,
   Montserrat_700Bold,
   Montserrat_800ExtraBold,
-  Montserrat_900Black,
 } from '@expo-google-fonts/montserrat';
 import { StatusBar } from 'expo-status-bar';
 
@@ -25,11 +23,6 @@ const getMontserratFont = (fontWeight, fontFamily) => {
   }
   const weightStr = String(fontWeight || '').toLowerCase();
   switch (weightStr) {
-    case '100':
-    case '200':
-    case '300':
-    case 'light':
-      return 'Montserrat_300Light';
     case '500':
     case 'medium':
       return 'Montserrat_500Medium';
@@ -40,13 +33,16 @@ const getMontserratFont = (fontWeight, fontFamily) => {
     case 'bold':
       return 'Montserrat_700Bold';
     case '800':
-    case 'extrabold':
-      return 'Montserrat_800ExtraBold';
     case '900':
+    case 'extrabold':
     case 'black':
-      return 'Montserrat_900Black';
+      return 'Montserrat_800ExtraBold';
     case '400':
     case 'normal':
+    case '100':
+    case '200':
+    case '300':
+    case 'light':
     default:
       return 'Montserrat_400Regular';
   }
@@ -99,53 +95,56 @@ import { AppNavigator } from './src/navigation/AppNavigator';
 
 function AppContent({ fontsLoaded }) {
   const { loading: authLoading } = useAuth();
-  const [minTimerDone, setMinTimerDone] = useState(false);
+  const [animationFinished, setAnimationFinished] = useState(false);
 
-  // Zoom-out animation
-  const scaleAnim = useRef(new Animated.Value(3.8)).current;
-  const opacityAnim = useRef(new Animated.Value(0)).current;
+  // Pure zoom-out animation (starts zoomed in at 3.5x, smoothly zooms out to 1.0x)
+  const scaleAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(scaleAnim, {
-        toValue: 2.2,
-        duration: 1500,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacityAnim, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    // Dismiss native splash screen immediately so our animated splash is visible
+    SplashScreen.hideAsync().catch(() => {});
 
-    // Minimum animation time so the zoom-out animation plays gracefully
-    const timer = setTimeout(() => {
-      setMinTimerDone(true);
-    }, 1200);
+    // Pre-warm critical home images in memory during splash animation for zero flickering
+    try {
+      const criticalAssets = [
+        require('./assets/images/railone-logo.webp'),
+        require('./assets/images/journey-reserved.webp'),
+        require('./assets/images/journey-unreserved.webp'),
+        require('./assets/images/journey-platform.webp'),
+        require('./assets/images/railone-social-banner.jpg'),
+      ];
+      criticalAssets.forEach((asset) => {
+        const resolved = Image.resolveAssetSource(asset);
+        if (resolved?.uri) {
+          Image.prefetch(resolved.uri).catch(() => {});
+        }
+      });
+    } catch {}
 
-    // Guaranteed failsafe timer: Dismiss splash after 2.5s maximum
-    const failsafeTimer = setTimeout(() => {
-      setMinTimerDone(true);
-      SplashScreen.hideAsync().catch(() => {});
+    // Run pure zoom-out animation
+    Animated.timing(scaleAnim, {
+      toValue: 0.6,
+      duration: 1400,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start(() => {
+      // Hold for 200ms, then directly switch to the app
+      setTimeout(() => {
+        setAnimationFinished(true);
+      }, 200);
+    });
+
+    // Failsafe timer (max 2.5 seconds)
+    const failsafe = setTimeout(() => {
+      setAnimationFinished(true);
     }, 2500);
 
-    return () => {
-      clearTimeout(timer);
-      clearTimeout(failsafeTimer);
-    };
-  }, [scaleAnim, opacityAnim]);
+    return () => clearTimeout(failsafe);
+  }, [scaleAnim]);
 
-  const isAppReady = (fontsLoaded && !authLoading && minTimerDone) || minTimerDone;
+  const showSplash = !animationFinished;
 
-  useEffect(() => {
-    if (isAppReady) {
-      SplashScreen.hideAsync().catch(() => {});
-    }
-  }, [isAppReady]);
-
-  if (!isAppReady) {
+  if (showSplash) {
     return (
       <View style={styles.splashContainer}>
         <StatusBar style="dark" backgroundColor="#ffffff" translucent={false} />
@@ -157,12 +156,11 @@ function AppContent({ fontsLoaded }) {
             styles.animatedLogoBox,
             {
               transform: [{ scale: scaleAnim }],
-              opacity: opacityAnim,
             },
           ]}
         >
           <Image
-            source={require('./assets/images/railone-splash-logo.png')}
+            source={require('./assets/images/railone-splash-animation.webp')}
             style={styles.splashLogoImage}
             resizeMode="contain"
           />
@@ -181,13 +179,11 @@ function AppContent({ fontsLoaded }) {
 
 export default function App() {
   const [fontsLoaded, fontError] = useFonts({
-    Montserrat_300Light,
     Montserrat_400Regular,
     Montserrat_500Medium,
     Montserrat_600SemiBold,
     Montserrat_700Bold,
     Montserrat_800ExtraBold,
-    Montserrat_900Black,
   });
 
   // FIX H9: if fonts fail to load due to asset error, proceed with system font fallback rather than freezing splash
@@ -225,7 +221,7 @@ const styles = StyleSheet.create({
   animatedLogoBox: {
     width: '90%',
     maxWidth: 380,
-    height: 300,
+    height: 380,
     justifyContent: 'center',
     alignItems: 'center',
   },

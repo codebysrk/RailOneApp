@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -15,37 +15,19 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuth } from "@/context/AuthContext";
 import { AppAlert } from "@/context/AlertContext";
-import { FirebaseService, StorageService } from "@/services";
+import { FirebaseService } from "@/services";
 import { FocusAwareStatusBar } from "@/components/common";
 
 export const LoginScreen = () => {
   const { login } = useAuth();
 
-  const [lastUserName, setLastUserName] = useState<string>("");
-
-  // Form Inputs
+  // Form Inputs - start empty on fresh launch, logout, and navigation
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [resettingPassword, setResettingPassword] = useState(false);
   const [showPass, setShowPass] = useState(false);
-
-  useEffect(() => {
-    // Attempt to load last logged in user name if available
-    const loadLastUser = async () => {
-      try {
-        const saved = await StorageService.getLastUserEmail();
-        if (saved?.name) {
-          setLastUserName(saved.name);
-        }
-        if (saved?.email) {
-          setEmail(saved.email);
-        }
-      } catch {}
-    };
-    loadLastUser();
-  }, []);
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -80,7 +62,6 @@ export const LoginScreen = () => {
   const handleDifferentUser = () => {
     setEmail("");
     setPassword("");
-    setLastUserName("");
   };
 
   const handleForgotPassword = async () => {
@@ -156,7 +137,7 @@ export const LoginScreen = () => {
             </Text>
 
             <Text style={styles.welcomeText}>
-              {lastUserName ? `Welcome ${lastUserName}!` : "Welcome to RailOne!"}
+              Welcome to RailOne!
             </Text>
 
             <Text style={styles.subSubtitleText}>

@@ -74,6 +74,7 @@ export const UnreservedScreen = () => {
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [stations, setStations] = useState<StationModel[]>([]);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (route.params?.source) {
@@ -87,6 +88,11 @@ export const UnreservedScreen = () => {
   useEffect(() => {
     loadRecentSearches();
     loadStations("");
+    return () => {
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+      }
+    };
   }, []);
 
   const loadRecentSearches = async () => {
@@ -115,6 +121,16 @@ export const UnreservedScreen = () => {
   const loadStations = async (q: string) => {
     const list = await FirebaseService.searchStations(q);
     setStations(list);
+  };
+
+  const handleSearchTextChange = (text: string) => {
+    setSearchQuery(text);
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+    searchDebounceRef.current = setTimeout(() => {
+      loadStations(text);
+    }, 150);
   };
 
   const handleSelectStation = (stn: StationModel) => {
@@ -462,10 +478,7 @@ export const UnreservedScreen = () => {
                   placeholder="Select Station"
                   placeholderTextColor="#94a3b8"
                   value={searchQuery}
-                  onChangeText={(text) => {
-                    setSearchQuery(text);
-                    loadStations(text);
-                  }}
+                  onChangeText={handleSearchTextChange}
                   autoFocus
                 />
                 <MaterialIcons name="mic" size={24} color="#64748b" />
@@ -482,6 +495,10 @@ export const UnreservedScreen = () => {
                 data={stations}
                 keyExtractor={(item) => item.code}
                 keyboardShouldPersistTaps="handled"
+                removeClippedSubviews={Platform.OS === 'android'}
+                initialNumToRender={10}
+                maxToRenderPerBatch={12}
+                windowSize={5}
                 ListEmptyComponent={
                   <View style={styles.emptyListWrap}>
                     <Ionicons name="search-outline" size={38} color="#94a3b8" />

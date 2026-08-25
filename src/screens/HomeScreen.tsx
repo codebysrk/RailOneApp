@@ -69,6 +69,7 @@ export const HomeScreen = () => {
   const [upcomingList, setUpcomingList] = useState<any[]>([]);
   const [updateInfo, setUpdateInfo] = useState<ReleaseInfo | null>(null);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [hasUnreadNotif, setHasUnreadNotif] = useState(false);
 
   useEffect(() => {
     // Check for GitHub Release OTA update on launch
@@ -79,6 +80,20 @@ export const HomeScreen = () => {
       }
     });
   }, []);
+
+  useEffect(() => {
+    if (user?.role === 'admin') {
+      const unsub = FirebaseService.listenToPendingRechargeRequests((reqs: any[]) => {
+        setHasUnreadNotif(reqs.length > 0);
+      });
+      return () => unsub();
+    } else if (user?.uid) {
+      const unsub = FirebaseService.listenToUserNotifications(user.uid, (list: any[]) => {
+        setHasUnreadNotif(list.length > 0);
+      });
+      return () => unsub();
+    }
+  }, [user?.uid, user?.role]);
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -158,9 +173,13 @@ export const HomeScreen = () => {
         <TouchableOpacity
           style={styles.headerIconCircle}
           activeOpacity={0.7}
-          onPress={() => navigation.navigate("Notification")}
+          onPress={() => {
+            setHasUnreadNotif(false);
+            navigation.navigate("Notification");
+          }}
         >
           <Ionicons name="notifications-outline" size={23} color="#475569" />
+          {hasUnreadNotif && <View style={styles.notifRedDot} />}
         </TouchableOpacity>
       </View>
 
@@ -272,6 +291,9 @@ export const HomeScreen = () => {
               showsHorizontalScrollIndicator={false}
               snapToInterval={upcomingCardWidth + 12}
               decelerationRate="fast"
+              initialNumToRender={3}
+              maxToRenderPerBatch={4}
+              windowSize={3}
               style={styles.upcomingCarousel}
               contentContainerStyle={styles.upcomingCarouselContent}
               renderItem={({
@@ -471,7 +493,7 @@ export const HomeScreen = () => {
         </Text>
         <View style={styles.socialSection}>
           <ImageBackground
-            source={require("../../assets/images/railone-social-banner.webp")}
+            source={require("../../assets/images/railone-social-banner.jpg")}
             style={styles.socialBanner}
             imageStyle={styles.socialBannerImg}
           >
@@ -572,6 +594,7 @@ const styles = StyleSheet.create({
     zIndex: 20,
   },
   headerIconCircle: {
+    position: "relative",
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -580,6 +603,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#ffffff",
+  },
+  notifRedDot: {
+    position: "absolute",
+    top: 7,
+    right: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#ef4444",
+    borderWidth: 1.5,
+    borderColor: "#ffffff",
   },
   langTextTop: {
     fontFamily: "Montserrat_800ExtraBold",

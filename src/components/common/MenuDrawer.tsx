@@ -31,7 +31,7 @@ const PRESET_AMOUNTS = [500, 1000, 1500, 2000];
 export const MenuDrawer = ({ visible, onClose }: Props) => {
   const { width } = useWindowDimensions();
   const drawerWidth = Math.min(width * 0.84, 360);
-  const { user, logout, addWalletBalance } = useAuth();
+  const { user, logout, addWalletBalance, requestWalletRecharge } = useAuth();
   const navigation = useNavigation<any>();
 
   // Drawer Animation (slide from right)
@@ -59,26 +59,21 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
         Animated.spring(translateX, {
           toValue: 0,
           useNativeDriver: true,
-          damping: 25,
-          stiffness: 180,
+          damping: 24,
+          stiffness: 220,
           mass: 0.8,
         }),
       ]);
       anim.start();
       return () => anim.stop();
-    } else {
-      setAddMoneyVisible(false);
     }
   }, [visible, drawerWidth, opacity, translateX]);
 
   const handleClose = () => {
-    if (addMoneyVisible) {
-      handleCloseAddMoney();
-    }
     Animated.parallel([
       Animated.timing(opacity, {
         toValue: 0,
-        duration: 160,
+        duration: 150,
         useNativeDriver: true,
       }),
       Animated.timing(translateX, {
@@ -144,13 +139,22 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
 
     setIsAddingMoney(true);
     try {
-      if (user?.uid) {
+      if (user?.role === "admin") {
         await addWalletBalance(num, "Added via UPI / Card");
+        handleCloseAddMoney();
+        AppAlert.show("Success", `₹${num.toFixed(2)} added directly to R-Wallet!`, undefined, "success");
+      } else {
+        await requestWalletRecharge(num, "Menu Drawer Request");
+        handleCloseAddMoney();
+        AppAlert.show(
+          "Request Submitted ⏳",
+          `Your recharge request for ₹${num.toFixed(2)} has been sent to the Admin for approval.\n\nBalance will be credited upon approval.`,
+          undefined,
+          "success"
+        );
       }
-      handleCloseAddMoney();
-      AppAlert.show("Success", `₹${num.toFixed(2)} added to R-Wallet successfully!`, undefined, "success");
     } catch (err: any) {
-      AppAlert.show("Failed", err?.message || "Could not add funds. Please try again.", undefined, "error");
+      AppAlert.show("Failed", err?.message || "Could not process recharge request. Please try again.", undefined, "error");
     } finally {
       setIsAddingMoney(false);
     }
@@ -192,7 +196,7 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
       ? [
           {
             id: "admin-control",
-            label: "Admin Control Center 👑",
+            label: "Admin Control Center",
             iconType: "material" as const,
             icon: "admin-panel-settings" as const,
             onPress: () => {
@@ -368,7 +372,9 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
               ]}
             >
               {/* Bottom Sheet Title */}
-              <Text style={styles.sheetTitle}>Add Money</Text>
+              <Text style={styles.sheetTitle}>
+                {user?.role === "admin" ? "Add Money" : "Add Money"}
+              </Text>
 
               {/* Amount Input */}
               <TextInput
@@ -378,7 +384,7 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
                 keyboardType="numeric"
                 value={addAmount}
                 onChangeText={setAddAmount}
-                autoFocus
+                autoFocus={false}
               />
 
               {/* Preset Amount Pills */}
@@ -416,7 +422,9 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
                   color="#859ab5"
                 />
                 <Text style={styles.noticeText}>
-                  R-Wallet balance cannot be transferred or withdrawn
+                  {user?.role === "admin"
+                    ? "R-Wallet balance will be added immediately"
+                    : "Requested amount will be credited after Administrator approval"}
                 </Text>
               </View>
 
@@ -433,7 +441,9 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
                 {isAddingMoney ? (
                   <ActivityIndicator color="#ffffff" size="small" />
                 ) : (
-                  <Text style={styles.sheetAddBtnText}>Add</Text>
+                  <Text style={styles.sheetAddBtnText}>
+                    {user?.role === "admin" ? "Add" : "Add"}
+                  </Text>
                 )}
               </TouchableOpacity>
             </Animated.View>

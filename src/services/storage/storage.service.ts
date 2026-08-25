@@ -141,17 +141,4 @@ export const StorageService = {
       await safeSetItem('railone_language', lang);
     } catch {}
   },
-  getLastUserEmail: async (): Promise<{ email: string; name?: string } | null> => {
-    try {
-      const data = await safeGetItem('railone_last_user');
-      return data ? JSON.parse(data) : null;
-    } catch {
-      return null;
-    }
-  },
-  setLastUserEmail: async (user: { email: string; name?: string }): Promise<void> => {
-    try {
-      await safeSetItem('railone_last_user', JSON.stringify(user));
-    } catch {}
-  },
 };

@@ -58,6 +58,20 @@ export const MenuScreen = () => {
     }
   };
 
+  const handleAddMoneyPress = () => {
+    if (user?.role === "admin") {
+      triggerHaptic("medium");
+      navigation.navigate("Admin");
+    } else {
+      AppAlert.show(
+        "Admin Permission Required",
+        "R-Wallet balance can only be added or recharged by the Administrator. Please contact your Admin to recharge your wallet balance.",
+        undefined,
+        "info"
+      );
+    }
+  };
+
   const handleLogout = () => {
     AppAlert.show("Log Out", "Are you sure you want to log out?", [
       { text: "Cancel", style: "cancel" },
@@ -116,7 +130,11 @@ export const MenuScreen = () => {
               <Text style={styles.walletBalance}>₹ {walletBalance}</Text>
             </View>
           </View>
-          <TouchableOpacity style={styles.addMoneyBtn} activeOpacity={0.85}>
+          <TouchableOpacity
+            style={styles.addMoneyBtn}
+            activeOpacity={0.85}
+            onPress={handleAddMoneyPress}
+          >
             <Text style={styles.addMoneyText}>Add Money</Text>
           </TouchableOpacity>
         </View>

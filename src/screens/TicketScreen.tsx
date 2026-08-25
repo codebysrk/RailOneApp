@@ -14,6 +14,8 @@ import {
   Easing,
   BackHandler,
   AppState,
+  Modal,
+  ActivityIndicator,
 } from "react-native";
 import {
   useNavigation,
@@ -21,12 +23,13 @@ import {
   useIsFocused,
 } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, Feather } from "@expo/vector-icons";
 import { AppAlert } from "@/context/AlertContext";
 import { AppHeader } from "@/components/common";
 import { colors } from "@/theme/colors";
 import { spacing, elevation } from "@/theme/spacing";
 import { useAuth } from "@/context/AuthContext";
+import { FirebaseService } from "@/services";
 import { RailwayDistanceEngine } from "@/services/RailwayDistanceEngine";
 
 // ─── Dual Mechanical Rolling Reel (Jata Hua & Aata Hua Digits) ───────────────────
@@ -141,6 +144,51 @@ export const TicketScreen = () => {
     }
     return "238 km";
   }, [ticketData, source, dest, via]);
+
+  // ─── Double Click Distance Editing State ─────────────────────────
+  const [overrideDistance, setOverrideDistance] = useState<string | null>(null);
+  const [showEditDistanceModal, setShowEditDistanceModal] = useState(false);
+  const [newDistanceInput, setNewDistanceInput] = useState('');
+  const [savingDistance, setSavingDistance] = useState(false);
+  const lastDistanceTapRef = useRef<number>(0);
+
+  const displayDistance = overrideDistance || distance;
+
+  const handleDistancePress = () => {
+    const now = Date.now();
+    const DOUBLE_TAP_DELAY = 450; // ms
+    if (now - lastDistanceTapRef.current < DOUBLE_TAP_DELAY) {
+      // Double click / tap detected! Extract only digits
+      const digitsOnly = displayDistance.replace(/[^0-9.]/g, '').trim();
+      setNewDistanceInput(digitsOnly);
+      setShowEditDistanceModal(true);
+    }
+    lastDistanceTapRef.current = now;
+  };
+
+  const handleSaveDistance = async () => {
+    const numericOnly = newDistanceInput.replace(/[^0-9.]/g, '').trim();
+    if (!numericOnly) {
+      AppAlert.show('Invalid Distance', 'Please enter a valid distance (e.g. 345).', undefined, 'warning');
+      return;
+    }
+    const formatted = `${numericOnly} km`;
+    setSavingDistance(true);
+    try {
+      const docId = ticketData?.id || ticketData?.bookingId || ticketId;
+      if (docId && docId !== '---') {
+        await FirebaseService.updateBookingDistance(docId, formatted);
+      }
+      setOverrideDistance(formatted);
+      setShowEditDistanceModal(false);
+      AppAlert.show('Distance Updated', `Distance updated to ${formatted}.`, undefined, 'success');
+    } catch (err: any) {
+      AppAlert.show('Update Failed', err?.message || 'Could not update distance.', undefined, 'error');
+    } finally {
+      setSavingDistance(false);
+    }
+  };
+
   const userMobile = user?.mobile || ticketData?.userMobile || "---";
   const userName = user?.name || ticketData?.userName || "Passenger";
 
@@ -502,7 +550,13 @@ export const TicketScreen = () => {
                 {/* Row 2: Route & Distance */}
                 <View style={styles.routeRow}>
                   <Text style={styles.stnNameLeft}>{source}</Text>
-                  <Text style={styles.distanceText}>—{distance}—</Text>
+                  <TouchableOpacity
+                    onPress={handleDistancePress}
+                    activeOpacity={0.8}
+                    hitSlop={{ top: 8, bottom: 8, left: 10, right: 10 }}
+                  >
+                    <Text style={styles.distanceText}>—{displayDistance}—</Text>
+                  </TouchableOpacity>
                   <Text style={styles.stnNameRight}>{dest}</Text>
                 </View>
 
@@ -685,6 +739,84 @@ export const TicketScreen = () => {
           )}
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* ─── 📏 USER DOUBLE TAP EDIT DISTANCE MODAL ───────────────────────── */}
+      <Modal
+        visible={showEditDistanceModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowEditDistanceModal(false)}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
+          <View style={styles.modalContentBox}>
+            {/* Header */}
+            <View style={styles.modalHeaderRow}>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Ionicons name="speedometer-outline" size={20} color="#0066ff" style={{ marginRight: 8 }} />
+                <Text style={styles.modalHeaderTitle}>Edit Ticket Distance</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.modalCloseBtn}
+                onPress={() => setShowEditDistanceModal(false)}
+              >
+                <Ionicons name="close" size={20} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Route preview */}
+            <View style={styles.modalRouteCard}>
+              <Text style={styles.modalRouteStn} numberOfLines={1}>{source}</Text>
+              <Ionicons name="arrow-forward" size={14} color="#94a3b8" style={{ marginHorizontal: 8 }} />
+              <Text style={[styles.modalRouteStn, { textAlign: "right" }]} numberOfLines={1}>{dest}</Text>
+            </View>
+
+            {/* Distance Input */}
+            <Text style={styles.inputFieldLabel}>Distance</Text>
+            <View style={styles.inputFieldWrap}>
+              <Ionicons name="speedometer-outline" size={16} color="#94a3b8" style={{ marginRight: 8 }} />
+              <TextInput
+                style={styles.inputField}
+                placeholder="e.g. 345"
+                placeholderTextColor="#94a3b8"
+                keyboardType="numeric"
+                value={newDistanceInput}
+                onChangeText={(val) => setNewDistanceInput(val.replace(/[^0-9.]/g, ''))}
+                autoCapitalize="none"
+              />
+              <View style={{ backgroundColor: '#eff6ff', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: '#bfdbfe' }}>
+                <Text style={{ fontSize: 11.5, fontFamily: 'Montserrat_700Bold', color: '#0066ff' }}>KM</Text>
+              </View>
+            </View>
+
+            {/* Actions */}
+            <View style={styles.modalActionRow}>
+              <TouchableOpacity
+                style={styles.modalCancelBtn}
+                onPress={() => setShowEditDistanceModal(false)}
+                disabled={savingDistance}
+              >
+                <Text style={styles.modalCancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalSaveBtn, savingDistance && { opacity: 0.75 }]}
+                onPress={handleSaveDistance}
+                disabled={savingDistance}
+                activeOpacity={0.85}
+              >
+                {savingDistance ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <Text style={styles.modalSaveBtnText}>Save Distance</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -1114,4 +1246,111 @@ const styles = StyleSheet.create({
     color: "#64748b",
   },
   submitBtnTextActive: { color: "#ffffff" },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(15, 23, 42, 0.65)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  modalContentBox: {
+    width: "100%",
+    backgroundColor: "#ffffff",
+    borderRadius: 16,
+    padding: 18,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  modalHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  modalHeaderTitle: {
+    fontSize: 16,
+    fontFamily: "Montserrat_700Bold",
+    color: "#0f172a",
+  },
+  modalCloseBtn: {
+    padding: 4,
+  },
+  modalRouteCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#f8fafc",
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+  },
+  modalRouteStn: {
+    fontSize: 13,
+    fontFamily: "Montserrat_700Bold",
+    color: "#1e293b",
+    flex: 1,
+  },
+  inputFieldLabel: {
+    fontSize: 12,
+    fontFamily: "Montserrat_600SemiBold",
+    color: "#475569",
+    marginBottom: 6,
+  },
+  inputFieldWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f8fafc",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: "#cbd5e1",
+    height: 44,
+  },
+  inputField: {
+    flex: 1,
+    fontSize: 13.5,
+    fontFamily: "Montserrat_600SemiBold",
+    color: "#0f172a",
+  },
+  modalActionRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 18,
+  },
+  modalCancelBtn: {
+    flex: 1,
+    height: 42,
+    borderRadius: 10,
+    backgroundColor: "#f1f5f9",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalCancelBtnText: {
+    fontSize: 13.5,
+    fontFamily: "Montserrat_600SemiBold",
+    color: "#475569",
+  },
+  modalSaveBtn: {
+    flex: 2,
+    height: 42,
+    borderRadius: 10,
+    backgroundColor: "#0066ff",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#0066ff",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  modalSaveBtnText: {
+    fontSize: 13.5,
+    fontFamily: "Montserrat_700Bold",
+    color: "#ffffff",
+  },
 });

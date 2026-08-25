@@ -55,7 +55,7 @@ const BiometricToggle = ({ enabled = true }: { enabled?: boolean }) => (
 export const ProfileScreen = () => {
   const { width } = useWindowDimensions();
   const gridBoxWidth = (width - 44) / 3;
-  const { user, updateUserProfile, addWalletBalance } = useAuth();
+  const { user, updateUserProfile, addWalletBalance, requestWalletRecharge, refreshProfile } = useAuth();
   const navigation = useNavigation<any>();
 
   // Modals state
@@ -95,6 +95,10 @@ export const ProfileScreen = () => {
   const loadPassengers = async () => {
     const list = await StorageService.getSavedPassengers();
     setPassengers(list);
+  };
+
+  const handleWalletAddPress = () => {
+    setModalVisible(true);
   };
 
   const handleOpenAddPassenger = () => {
@@ -178,12 +182,24 @@ export const ProfileScreen = () => {
     }
     setRecharging(true);
     try {
-      await addWalletBalance(val, 'Recharge via UPI / Netbanking');
-      setModalVisible(false);
-      setAmount('100');
-      AppAlert.show('Success', `₹${val.toFixed(2)} added to your R-Wallet!`, undefined, 'success');
-    } catch {
-      AppAlert.show('Error', 'Could not recharge wallet. Please try again.', undefined, 'error');
+      if (user?.role === 'admin') {
+        await addWalletBalance(val, 'Admin Direct Top-Up');
+        setModalVisible(false);
+        setAmount('100');
+        AppAlert.show('Success', `₹${val.toFixed(2)} added directly to R-Wallet!`, undefined, 'success');
+      } else {
+        await requestWalletRecharge(val, 'User App Recharge Request');
+        setModalVisible(false);
+        setAmount('100');
+        AppAlert.show(
+          'Request Submitted ⏳',
+          `Your recharge request for ₹${val.toFixed(2)} has been sent to the Administrator for approval.\n\nYour balance will update automatically once approved.`,
+          undefined,
+          'success'
+        );
+      }
+    } catch (err: any) {
+      AppAlert.show('Error', err?.message || 'Could not submit recharge request. Please try again.', undefined, 'error');
     } finally {
       setRecharging(false);
     }
@@ -255,7 +271,11 @@ export const ProfileScreen = () => {
             <View style={styles.walletRight}>
               <TouchableOpacity
                 style={styles.walletRefreshBtn}
-                onPress={() => {}}
+                onPress={async () => {
+                  try {
+                    await refreshProfile();
+                  } catch {}
+                }}
                 activeOpacity={0.7}
               >
                 <Ionicons name="refresh" size={22} color="#0066ff" />
@@ -263,7 +283,7 @@ export const ProfileScreen = () => {
 
               <TouchableOpacity
                 style={styles.walletAddBtn}
-                onPress={() => setModalVisible(true)}
+                onPress={handleWalletAddPress}
                 activeOpacity={0.85}
               >
                 <Text style={styles.walletAddBtnText}>Add</Text>
@@ -554,13 +574,19 @@ export const ProfileScreen = () => {
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.modalContentBox}>
               <View style={styles.modalHeaderRow}>
-                <Text style={styles.modalHeaderTitle}>Recharge R-Wallet</Text>
+                <Text style={styles.modalHeaderTitle}>
+                  {user?.role === 'admin' ? 'Recharge R-Wallet (Admin)' : 'Request R-Wallet Recharge'}
+                </Text>
                 <TouchableOpacity onPress={() => setModalVisible(false)}>
                   <Ionicons name="close" size={22} color="#64748b" />
                 </TouchableOpacity>
               </View>
 
-              <Text style={styles.modalSub}>Enter amount to add to your Indian Railways wallet:</Text>
+              <Text style={styles.modalSub}>
+                {user?.role === 'admin'
+                  ? 'Enter amount to credit directly:'
+                  : 'Enter amount to add. Balance will be updated after Administrator approval:'}
+              </Text>
               <View style={styles.amountInputRow}>
                 <Text style={styles.rupeePrefix}>₹</Text>
                 <TextInput
@@ -595,7 +621,11 @@ export const ProfileScreen = () => {
                 {recharging ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.confirmBtnText}>Proceed to Pay ₹{amount || '0'}</Text>
+                  <Text style={styles.confirmBtnText}>
+                    {user?.role === 'admin'
+                      ? `Credit ₹${amount || '0'} Directly`
+                      : `Submit Request for ₹${amount || '0'}`}
+                  </Text>
                 )}
               </TouchableOpacity>
             </View>
