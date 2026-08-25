@@ -116,22 +116,51 @@ export const FirebaseFirestoreService = {
       reason: 'Admin Manual Deletion',
     });
 
-    // 2. Clean up any wallet_ledger subcollection documents to avoid phantom IDs in console
+    // 2. Clean up ALL user subcollections to avoid phantom documents
+    const subcollections = ['wallet_ledger', 'notifications', 'saved_routes', 'search_history'];
+    for (const sub of subcollections) {
+      try {
+        const subSnap = await getDocs(collection(db, 'users', uid, sub));
+        if (subSnap.size > 0) {
+          await Promise.all(subSnap.docs.map((d) => deleteDoc(d.ref)));
+        }
+      } catch {}
+    }
+
+    // 3. Clean up ALL top-level collections associated with this user
+    // a) bookings
     try {
-      const ledgerSnap = await getDocs(collection(db, 'users', uid, 'wallet_ledger'));
-      const deletePromises = ledgerSnap.docs.map((d) => deleteDoc(d.ref));
-      await Promise.all(deletePromises);
+      const bSnap = await getDocs(query(collection(db, 'bookings'), where('userId', '==', uid)));
+      if (bSnap.size > 0) {
+        await Promise.all(bSnap.docs.map((d) => deleteDoc(d.ref)));
+      }
     } catch {}
 
-    // 3. Clean up any bookings belonging to this deleted user
+    // b) tickets (legacy / alternate collection if any)
     try {
-      const bookingsQuery = query(collection(db, 'bookings'), where('userId', '==', uid));
-      const bookingsSnap = await getDocs(bookingsQuery);
-      const bookingDeletePromises = bookingsSnap.docs.map((d) => deleteDoc(d.ref));
-      await Promise.all(bookingDeletePromises);
+      const tSnap = await getDocs(query(collection(db, 'tickets'), where('userId', '==', uid)));
+      if (tSnap.size > 0) {
+        await Promise.all(tSnap.docs.map((d) => deleteDoc(d.ref)));
+      }
     } catch {}
 
-    // 4. Delete the user document from Firestore users collection
+    // c) notifications
+    try {
+      const nSnap = await getDocs(query(collection(db, 'notifications'), where('userId', '==', uid)));
+      if (nSnap.size > 0) {
+        await Promise.all(nSnap.docs.map((d) => deleteDoc(d.ref)));
+      }
+    } catch {}
+
+    // d) feedback & support requests
+    try {
+      const fSnap = await getDocs(query(collection(db, 'feedback'), where('userId', '==', uid)));
+      if (fSnap.size > 0) {
+        await Promise.all(fSnap.docs.map((d) => deleteDoc(d.ref)));
+      }
+    } catch {}
+
+    // 4. Delete the root user document from Firestore users collection
     const userRef = doc(db, 'users', uid);
     await deleteDoc(userRef);
 

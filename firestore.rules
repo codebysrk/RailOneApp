@@ -70,6 +70,19 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // --- Auxiliary User Collections (Tickets, Notifications, Feedback)
+    match /tickets/{ticketId} {
+      allow read, write, delete: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+    }
+
+    match /notifications/{notificationId} {
+      allow read, write, delete: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+    }
+
+    match /feedback/{feedbackId} {
+      allow read, write, delete: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+    }
+
     // --- Deleted Users Audit Logs ----------------------------------
     match /deleted_users/{logId} {
       allow read, write: if isAdmin();
