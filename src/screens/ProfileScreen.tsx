@@ -189,7 +189,7 @@ export const ProfileScreen = () => {
     }
   };
 
-  const userName = user?.name || 'Shahrukh';
+  const userName = user?.name || 'User';
   const walletAmount = user?.wallet !== undefined ? user.wallet.toFixed(2) : '0.00';
 
   return (
@@ -684,7 +684,7 @@ export const ProfileScreen = () => {
             </View>
             <View style={styles.detailsRow}>
               <Text style={styles.detailsKey}>Mobile:</Text>
-              <Text style={styles.detailsVal}>+91 {user?.mobile || '9876543210'}</Text>
+              <Text style={styles.detailsVal}>{user?.mobile ? `+91 ${user.mobile}` : 'Not Provided'}</Text>
             </View>
             <View style={styles.detailsRow}>
               <Text style={styles.detailsKey}>R-Wallet:</Text>

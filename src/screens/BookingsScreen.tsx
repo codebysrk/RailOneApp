@@ -15,60 +15,6 @@ import { FirebaseService, StorageService } from "@/services";
 import { useAuth } from "@/context/AuthContext";
 import { AppHeader, TicketCard, TicketData } from "@/components/common";
 
-const DEFAULT_UPCOMING: TicketData[] = [
-  {
-    id: "up-1",
-    pnr: "2160978001",
-    train: "12279 (TAJ EXPRESS)",
-    date: "Sat, 29 Aug 2026",
-    source: "MORENA",
-    dest: "HAZRAT NIZAMUDDIN JN",
-    duration: "4h:8m",
-    distance: "238 km",
-    status: "upcoming",
-    moduleType: "RESERVED",
-  },
-  {
-    id: "up-2",
-    pnr: "2261626145",
-    train: "12279 (TAJ EXPRESS)",
-    date: "Sat, 29 Aug 2026",
-    source: "MORENA",
-    dest: "HAZRAT NIZAMUDDIN JN",
-    duration: "4h:7m",
-    distance: "238 km",
-    status: "upcoming",
-    moduleType: "RESERVED",
-  },
-];
-
-const DEFAULT_COMPLETED: TicketData[] = [
-  {
-    id: "comp-1",
-    pnr: "6835493350",
-    train: "20423 (PATALKOT SF EXP)",
-    date: "Thu, 30 Jul 2026",
-    source: "CHHINDWARA JN.",
-    dest: "GWALIOR JN.",
-    duration: "12h:41m",
-    distance: "647 km",
-    status: "completed",
-    moduleType: "RESERVED",
-  },
-  {
-    id: "comp-2",
-    pnr: "2841446468",
-    train: "12280 (TAJ EXPRESS)",
-    date: "Sun, 09 Aug 2026",
-    source: "HAZRAT NIZAMUDDIN JN",
-    dest: "MORENA",
-    duration: "4h:10m",
-    distance: "238 km",
-    status: "completed",
-    moduleType: "RESERVED",
-  },
-];
-
 // Exact Sort Descending Header Icon from screenshot
 const HeaderSortIcon = ({ color = "#ffffff", size = 22 }: { color?: string; size?: number }) => (
   <FontAwesome5 name="sort-amount-down-alt" size={size} color={color} />
@@ -125,9 +71,8 @@ export const BookingsScreen = () => {
   const [filter, setFilter] = useState<
     "Upcoming" | "Completed" | "Cancelled" | "All"
   >("Upcoming");
-  const [upcomingList, setUpcomingList] = useState<TicketData[]>(DEFAULT_UPCOMING);
-  const [completedList, setCompletedList] = useState<TicketData[]>(DEFAULT_COMPLETED);
-  // FIX H2: separate cancelled list — Firestore was adding cancelled to completedList
+  const [upcomingList, setUpcomingList] = useState<TicketData[]>([]);
+  const [completedList, setCompletedList] = useState<TicketData[]>([]);
   const [cancelledList, setCancelledList] = useState<TicketData[]>([]);
 
   useEffect(() => {
@@ -146,11 +91,9 @@ export const BookingsScreen = () => {
             } else if (data.status === "completed") {
               completed.push(data);
             } else if (data.status === "cancelled") {
-              // FIX H2: route cancelled tickets to cancelledList
               cancelled.push(data);
             }
           });
-          // FIX H1: always set state regardless of length — clears mock defaults
           setUpcomingList(upcoming);
           setCompletedList(completed);
           setCancelledList(cancelled);
@@ -159,23 +102,23 @@ export const BookingsScreen = () => {
       return () => unsubscribe();
     } else {
       // Local storage fallback
-      // FIX M5: add cancelled flag to prevent state update on unmounted component
-      let cancelled = false;
+      let isCancelled = false;
       StorageService.getBookedTickets().then((tickets: TicketData[]) => {
-        if (cancelled) return;
-        if (tickets && tickets.length > 0) {
+        if (isCancelled) return;
+        if (tickets && Array.isArray(tickets)) {
           const upcoming = tickets.filter((t) => t.status === "upcoming");
           const completed = tickets.filter((t) => t.status === "completed");
           const cancelledTickets = tickets.filter((t) => t.status === "cancelled");
-          // FIX H1: always set state regardless of length
           setUpcomingList(upcoming);
           setCompletedList(completed);
           setCancelledList(cancelledTickets);
         } else {
-          // Keep defaults only on truly empty storage
+          setUpcomingList([]);
+          setCompletedList([]);
+          setCancelledList([]);
         }
       });
-      return () => { cancelled = true; };
+      return () => { isCancelled = true; };
     }
   }, [user?.uid]);
 

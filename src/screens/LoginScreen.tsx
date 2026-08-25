@@ -23,7 +23,7 @@ export const LoginScreen = () => {
 
   // Mode: "login" | "register" | "forgot" | "reset"
   const [mode, setMode] = useState<"login" | "register">("login");
-  const [lastUserName, setLastUserName] = useState<string>("Shahrukh");
+  const [lastUserName, setLastUserName] = useState<string>("");
 
   // Form Inputs
   const [email, setEmail] = useState("");
@@ -251,7 +251,7 @@ export const LoginScreen = () => {
 
             <Text style={styles.welcomeText}>
               {mode === "login"
-                ? `Welcome ${lastUserName}!`
+                ? lastUserName ? `Welcome ${lastUserName}!` : "Welcome to RailOne!"
                 : "Join Indian Railways UTS"}
             </Text>
 
