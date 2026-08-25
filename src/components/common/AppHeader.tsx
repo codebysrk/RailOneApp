@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   titleLeftAligned: {
-    marginLeft: 14,
+    marginLeft: 12,
   },
   titleCentered: {
     alignItems: 'center',
@@ -213,15 +213,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   title: {
-    fontSize: 18.5,
+    fontSize: 16.5,
     fontFamily: 'Montserrat_700Bold',
-    letterSpacing: 0.2,
+    letterSpacing: -0.1,
+    lineHeight: 20,
   },
   subtitle: {
-    fontSize: 12.5,
-    fontFamily: 'Montserrat_400Regular',
-    marginTop: 2,
-    letterSpacing: 0.1,
+    fontSize: 11.5,
+    fontFamily: 'Montserrat_500Medium',
+    marginTop: 1,
+    letterSpacing: 0,
+    lineHeight: 14,
   },
   rightWrap: {
     width: 40,
