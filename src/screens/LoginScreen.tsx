@@ -19,17 +19,13 @@ import { StorageService } from "@/services";
 import { FocusAwareStatusBar } from "@/components/common";
 
 export const LoginScreen = () => {
-  const { login, register } = useAuth();
+  const { login } = useAuth();
 
-  // Mode: "login" | "register" | "forgot" | "reset"
-  const [mode, setMode] = useState<"login" | "register">("login");
   const [lastUserName, setLastUserName] = useState<string>("");
 
   // Form Inputs
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [mobile, setMobile] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
@@ -92,129 +88,52 @@ export const LoginScreen = () => {
     }
   };
 
-  const handleRegister = async () => {
-    if (!name.trim() || !mobile.trim() || !email.trim() || !password.trim()) {
-      AppAlert.show(
-        "Required Fields",
-        "Please fill in all registration fields.",
-        undefined,
-        "warning"
-      );
-      return;
-    }
-    if (!/^\d{10}$/.test(mobile.trim())) {
-      AppAlert.show(
-        "Invalid Mobile",
-        "Please enter a valid 10-digit mobile number.",
-        undefined,
-        "warning"
-      );
-      return;
-    }
-    if (password.length < 6) {
-      AppAlert.show(
-        "Weak Password",
-        "Password must be at least 6 characters.",
-        undefined,
-        "warning"
-      );
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await register(name.trim(), mobile.trim(), email.trim(), password);
-      await StorageService.setLastUserEmail({ email: email.trim(), name: name.trim() });
-    } catch (e: any) {
-      let msg = e?.message || "Registration failed.";
-      const code = e?.code || "";
-      if (code === "auth/email-already-in-use") {
-        msg = "This email is already registered. Please login instead.";
-      }
-      AppAlert.show("Registration Failed", msg, undefined, "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleBiometricLogin = () => {
-    AppAlert.show(
-      "Biometric Login",
-      "Touch your fingerprint sensor or look at the camera to login with biometrics.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Authenticate",
-          style: "default",
-          onPress: () => {
-            if (email && password) {
-              handleLogin();
-            } else {
-              AppAlert.show(
-                "Biometrics Configured",
-                "Please perform email/password login first to bind biometrics to your session.",
-                undefined,
-                "info"
-              );
-            }
-          },
-        },
-      ],
-      "info"
-    );
+  const handleDifferentUser = () => {
+    setEmail("");
+    setPassword("");
+    setLastUserName("");
   };
 
   const handleForgotPassword = () => {
+    if (!email.trim()) {
+      AppAlert.show(
+        "Reset Password",
+        "Please enter your email address in the field above to receive a reset link.",
+        undefined,
+        "info"
+      );
+      return;
+    }
     AppAlert.show(
-      "Forgot Password?",
-      "A password recovery link can be sent to your registered email address.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Send Link",
-          onPress: () => {
-            AppAlert.show(
-              "Reset Link Sent",
-              "If the account exists, password recovery instructions have been sent to your email.",
-              undefined,
-              "success"
-            );
-          },
-        },
-      ],
+      "Password Reset",
+      `A password reset link will be sent to ${email.trim()}.`,
+      undefined,
       "info"
     );
   };
 
   const handleResetPassword = () => {
+    if (!email.trim()) {
+      AppAlert.show(
+        "Reset Password",
+        "Please enter your registered email address first.",
+        undefined,
+        "warning"
+      );
+      return;
+    }
     AppAlert.show(
-      "Reset Password?",
-      "Would you like to reset your credentials using OTP or registered email?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Proceed",
-          onPress: () => {
-            AppAlert.show(
-              "OTP Sent",
-              "A 6-digit verification code has been sent to your registered contact.",
-              undefined,
-              "info"
-            );
-          },
-        },
-      ],
-      "info"
+      "Verification Sent",
+      `Password reset instructions have been forwarded to ${email.trim()}.`,
+      undefined,
+      "success"
     );
   };
 
-  const handleDifferentUser = () => {
-    setEmail("");
-    setPassword("");
-    setLastUserName("User");
+  const handleBiometricLogin = async () => {
     AppAlert.show(
-      "Switch Account",
-      "Credentials cleared. Please enter email and password for the other account.",
+      "Biometric Authentication",
+      "Scan fingerprint or Face ID to instantly sign in.",
       undefined,
       "info"
     );
@@ -235,7 +154,7 @@ export const LoginScreen = () => {
           {/* ─── 1. Top Brand Logo ────────────────────────────────────── */}
           <View style={styles.topLogoContainer}>
             <Image
-              source={require("../../assets/images/brand-logo.webp")}
+              source={require("../../assets/images/railone-logo.webp")}
               style={styles.brandLogo}
               resizeMode="contain"
             />
@@ -244,67 +163,20 @@ export const LoginScreen = () => {
           {/* ─── 2. Main Headings ─────────────────────────────────────── */}
           <View style={styles.headerSection}>
             <Text style={styles.titleText}>
-              {mode === "login"
-                ? "Login using Email & Password"
-                : "Create your RailOne Account"}
+              Login using Email & Password
             </Text>
 
             <Text style={styles.welcomeText}>
-              {mode === "login"
-                ? lastUserName ? `Welcome ${lastUserName}!` : "Welcome to RailOne!"
-                : "Join Indian Railways UTS"}
+              {lastUserName ? `Welcome ${lastUserName}!` : "Welcome to RailOne!"}
             </Text>
 
             <Text style={styles.subSubtitleText}>
-              {mode === "login"
-                ? "Enter your email and password below"
-                : "Fill in your personal details to get started"}
+              Enter your email and password below
             </Text>
           </View>
 
           {/* ─── 3. Form Input Fields ─────────────────────────────────── */}
           <View style={styles.formContainer}>
-            {mode === "register" && (
-              <>
-                {/* Full Name Input */}
-                <View style={styles.inputCard}>
-                  <Ionicons
-                    name="person-outline"
-                    size={20}
-                    color="#94a3b8"
-                    style={styles.inputLeadingIcon}
-                  />
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="Full Name"
-                    placeholderTextColor="#94a3b8"
-                    value={name}
-                    onChangeText={setName}
-                    autoCapitalize="words"
-                  />
-                </View>
-
-                {/* Mobile Number Input */}
-                <View style={styles.inputCard}>
-                  <Ionicons
-                    name="call-outline"
-                    size={20}
-                    color="#94a3b8"
-                    style={styles.inputLeadingIcon}
-                  />
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="Mobile Number"
-                    placeholderTextColor="#94a3b8"
-                    value={mobile}
-                    onChangeText={setMobile}
-                    keyboardType="phone-pad"
-                    maxLength={10}
-                  />
-                </View>
-              </>
-            )}
-
             {/* Email Field */}
             <View style={styles.inputCard}>
               <Ionicons
@@ -356,125 +228,86 @@ export const LoginScreen = () => {
             </View>
 
             {/* ─── 4. Forgot / Reset Password Row ────────────────────── */}
-            {mode === "login" ? (
-              <View style={styles.linksRow}>
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  onPress={handleForgotPassword}
-                >
-                  <Text style={styles.linkTextLeft}>Forgot Password?</Text>
-                </TouchableOpacity>
+            <View style={styles.linksRow}>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={handleForgotPassword}
+              >
+                <Text style={styles.linkTextLeft}>Forgot Password?</Text>
+              </TouchableOpacity>
 
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  onPress={handleResetPassword}
-                >
-                  <Text style={styles.linkTextRight}>Reset Password?</Text>
-                </TouchableOpacity>
-              </View>
-            ) : null}
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={handleResetPassword}
+              >
+                <Text style={styles.linkTextRight}>Reset Password?</Text>
+              </TouchableOpacity>
+            </View>
 
             {/* ─── 5. Or Login using Biometric Divider ────────────────── */}
-            {mode === "login" && (
-              <View style={styles.dividerRow}>
-                <View style={styles.dashedLine} />
-                <Text style={styles.dividerText}>Or login using biometric</Text>
-                <View style={styles.dashedLine} />
-              </View>
-            )}
+            <View style={styles.dividerRow}>
+              <View style={styles.dashedLine} />
+              <Text style={styles.dividerText}>Or login using biometric</Text>
+              <View style={styles.dashedLine} />
+            </View>
 
             {/* ─── 6. Action Row (Biometrics on Left, Login Button on Right) ── */}
             <View style={styles.actionRow}>
-              {mode === "login" ? (
-                <View style={styles.biometricsGroup}>
-                  {/* Face ID / Scan Icon */}
-                  <TouchableOpacity
-                    style={styles.biometricIconBtn}
-                    activeOpacity={0.75}
-                    onPress={handleBiometricLogin}
-                  >
-                    <MaterialCommunityIcons
-                      name="face-recognition"
-                      size={28}
-                      color="#64748b"
-                    />
-                  </TouchableOpacity>
+              <View style={styles.biometricsGroup}>
+                {/* Face ID / Scan Icon */}
+                <TouchableOpacity
+                  style={styles.biometricIconBtn}
+                  activeOpacity={0.75}
+                  onPress={handleBiometricLogin}
+                >
+                  <MaterialCommunityIcons
+                    name="face-recognition"
+                    size={28}
+                    color="#64748b"
+                  />
+                </TouchableOpacity>
 
-                  {/* Fingerprint Icon */}
-                  <TouchableOpacity
-                    style={styles.biometricIconBtn}
-                    activeOpacity={0.75}
-                    onPress={handleBiometricLogin}
-                  >
-                    <Ionicons
-                      name="finger-print-outline"
-                      size={32}
-                      color="#64748b"
-                    />
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <View style={{ flex: 1 }} />
-              )}
+                {/* Fingerprint Icon */}
+                <TouchableOpacity
+                  style={styles.biometricIconBtn}
+                  activeOpacity={0.75}
+                  onPress={handleBiometricLogin}
+                >
+                  <Ionicons
+                    name="finger-print-outline"
+                    size={32}
+                    color="#64748b"
+                  />
+                </TouchableOpacity>
+              </View>
 
-              {/* Login / Register Button */}
+              {/* Login Button */}
               <TouchableOpacity
                 style={[
                   styles.loginBtn,
                   loading && { opacity: 0.75 },
-                  mode === "register" && { flex: 1 },
                 ]}
                 activeOpacity={0.85}
                 disabled={loading}
-                onPress={mode === "login" ? handleLogin : handleRegister}
+                onPress={handleLogin}
               >
                 {loading ? (
                   <ActivityIndicator color="#0066ff" size="small" />
                 ) : (
-                  <Text style={styles.loginBtnText}>
-                    {mode === "login" ? "Login" : "Register"}
-                  </Text>
+                  <Text style={styles.loginBtnText}>Login</Text>
                 )}
               </TouchableOpacity>
             </View>
 
-            {/* ─── 7. Bottom Switch / Different User Link ─────────────── */}
+            {/* ─── 7. Bottom Section ──────────────────────────────────── */}
             <View style={styles.bottomSection}>
-              {mode === "login" ? (
-                <>
-                  <TouchableOpacity
-                    activeOpacity={0.75}
-                    onPress={handleDifferentUser}
-                    style={styles.differentUserBtn}
-                  >
-                    <Text style={styles.differentUserText}>
-                      Different User?
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    activeOpacity={0.75}
-                    onPress={() => setMode("register")}
-                    style={styles.switchModeBtn}
-                  >
-                    <Text style={styles.switchModeText}>
-                      Don't have an account?{" "}
-                      <Text style={styles.switchModeBold}>Create Account</Text>
-                    </Text>
-                  </TouchableOpacity>
-                </>
-              ) : (
-                <TouchableOpacity
-                  activeOpacity={0.75}
-                  onPress={() => setMode("login")}
-                  style={styles.switchModeBtn}
-                >
-                  <Text style={styles.switchModeText}>
-                    Already have an account?{" "}
-                    <Text style={styles.switchModeBold}>Login</Text>
-                  </Text>
-                </TouchableOpacity>
-              )}
+              <TouchableOpacity
+                activeOpacity={0.75}
+                onPress={handleDifferentUser}
+                style={styles.differentUserBtn}
+              >
+                <Text style={styles.differentUserText}>Different User?</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </ScrollView>
