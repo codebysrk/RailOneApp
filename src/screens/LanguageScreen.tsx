@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
+  Animated,
+  Easing,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -25,11 +27,47 @@ export const LanguageScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const [selectedLang, setSelectedLang] = useState<string>('en');
 
+  // Entrance slide from right + subtle fade
+  const translateX = useRef(new Animated.Value(45)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
+
   useEffect(() => {
     StorageService.getLanguage().then((lang) => {
       if (lang) setSelectedLang(lang);
     });
+
+    Animated.parallel([
+      Animated.timing(translateX, {
+        toValue: 0,
+        duration: 250,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+    ]).start();
   }, []);
+
+  const handleClose = () => {
+    Animated.parallel([
+      Animated.timing(translateX, {
+        toValue: 35,
+        duration: 180,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 180,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      navigation.goBack();
+    });
+  };
 
   const handleSelectLanguage = (langId: string) => {
     setSelectedLang(langId);
@@ -40,49 +78,51 @@ export const LanguageScreen: React.FC = () => {
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <FocusAwareStatusBar backgroundColor="#eef2fa" barStyle="dark-content" />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.closeBtn}
-          onPress={() => navigation.goBack()}
-          activeOpacity={0.7}
-          accessibilityLabel="Close language selection"
-          accessibilityRole="button"
-        >
-          <Ionicons name="close" size={24} color="#3045b5" />
-        </TouchableOpacity>
+      <Animated.View style={[styles.animatedWrapper, { opacity, transform: [{ translateX }] }]}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.closeBtn}
+            onPress={handleClose}
+            activeOpacity={0.7}
+            accessibilityLabel="Close language selection"
+            accessibilityRole="button"
+          >
+            <Ionicons name="close" size={24} color="#3045b5" />
+          </TouchableOpacity>
 
-        <Text style={styles.headerTitle}>Select Language</Text>
+          <Text style={styles.headerTitle}>Select Language</Text>
 
-        {/* Empty Spacer to center the title */}
-        <View style={styles.headerSpacer} />
-      </View>
+          {/* Empty Spacer to center the title */}
+          <View style={styles.headerSpacer} />
+        </View>
 
-      {/* Language Options List */}
-      <View style={styles.optionsList}>
-        {LANGUAGE_OPTIONS.map((item) => {
-          const isSelected = selectedLang === item.id;
-          return (
-            <TouchableOpacity
-              key={item.id}
-              style={styles.optionRow}
-              onPress={() => handleSelectLanguage(item.id)}
-              activeOpacity={0.7}
-              accessibilityRole="radio"
-              accessibilityState={{ checked: isSelected }}
-              accessibilityLabel={item.label}
-            >
-              {/* Radio Button */}
-              <View style={styles.radioOuterCircle}>
-                {isSelected && <View style={styles.radioInnerDot} />}
-              </View>
+        {/* Language Options List */}
+        <View style={styles.optionsList}>
+          {LANGUAGE_OPTIONS.map((item) => {
+            const isSelected = selectedLang === item.id;
+            return (
+              <TouchableOpacity
+                key={item.id}
+                style={styles.optionRow}
+                onPress={() => handleSelectLanguage(item.id)}
+                activeOpacity={0.7}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: isSelected }}
+                accessibilityLabel={item.label}
+              >
+                {/* Radio Button */}
+                <View style={styles.radioOuterCircle}>
+                  {isSelected && <View style={styles.radioInnerDot} />}
+                </View>
 
-              {/* Language Name */}
-              <Text style={styles.optionLabel}>{item.label}</Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+                {/* Language Name */}
+                <Text style={styles.optionLabel}>{item.label}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </Animated.View>
     </SafeAreaView>
   );
 };
@@ -91,6 +131,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#eef2fa',
+  },
+  animatedWrapper: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
@@ -158,3 +201,4 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
 });
+

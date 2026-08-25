@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Animated,
+  Easing,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -35,29 +37,68 @@ const mockNotifications: NotificationItem[] = [
 export const NotificationScreen: React.FC = () => {
   const navigation = useNavigation<any>();
 
+  // Entrance slide from right + subtle fade
+  const translateX = useRef(new Animated.Value(45)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(translateX, {
+        toValue: 0,
+        duration: 250,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  const handleBack = () => {
+    Animated.parallel([
+      Animated.timing(translateX, {
+        toValue: 35,
+        duration: 180,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 180,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      navigation.goBack();
+    });
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      {/* ─── Blue Header ────────────────────────────────────────────── */}
-      <AppHeader
-        title="Notification"
-        variant="blue"
-        onBack={() => navigation.goBack()}
-      />
+      <Animated.View style={[styles.animatedWrapper, { opacity, transform: [{ translateX }] }]}>
+        {/* ─── Blue Header ────────────────────────────────────────────── */}
+        <AppHeader
+          title="Notification"
+          variant="blue"
+          onBack={handleBack}
+        />
 
-      <ScrollView
-        style={styles.content}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {mockNotifications.map((item) => (
-          <View key={`notif-${item.id}`} style={styles.notificationItem}>
-            {/* Header Row */}
-            <View style={styles.itemHeaderRow}>
-              <Text style={styles.itemTitle}>{item.title}</Text>
-              <TouchableOpacity activeOpacity={0.7} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                <Ionicons name="ellipsis-horizontal" size={18} color="#94a3b8" />
-              </TouchableOpacity>
-            </View>
+        <ScrollView
+          style={styles.content}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {mockNotifications.map((item) => (
+            <View key={`notif-${item.id}`} style={styles.notificationItem}>
+              {/* Header Row */}
+              <View style={styles.itemHeaderRow}>
+                <Text style={styles.itemTitle}>{item.title}</Text>
+                <TouchableOpacity activeOpacity={0.7} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                  <Ionicons name="ellipsis-horizontal" size={18} color="#94a3b8" />
+                </TouchableOpacity>
+              </View>
 
             {/* Message Body */}
             <Text style={styles.itemMessage}>{item.message}</Text>
@@ -67,7 +108,8 @@ export const NotificationScreen: React.FC = () => {
           </View>
         ))}
       </ScrollView>
-    </SafeAreaView>
+    </Animated.View>
+  </SafeAreaView>
   );
 };
 
@@ -75,6 +117,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0066ff',
+  },
+  animatedWrapper: {
+    flex: 1,
   },
   content: {
     flex: 1,
