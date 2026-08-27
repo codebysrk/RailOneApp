@@ -98,9 +98,9 @@ function AppContent({ fontsLoaded }) {
   const [minAnimationDone, setMinAnimationDone] = useState(false);
   const [appReady, setAppReady] = useState(false);
 
-  // Zoom-out animation: starts zoomed in at 2.8x, smoothly zooms out to 1.0x
+  // Pure single zoom-out animation: starts zoomed in at 2.8x, smoothly glides out to 1.0x
   const scaleAnim = useRef(new Animated.Value(2.8)).current;
-  const loopAnimRef = useRef(null);
+  const hasStartedRef = useRef(false);
 
   useEffect(() => {
     // Dismiss native splash immediately so our JS animated splash is displayed
@@ -123,63 +123,35 @@ function AppContent({ fontsLoaded }) {
       });
     } catch {}
 
-    // Run primary zoom-out animation (2.8x -> 1.0x)
-    const zoomAnimation = Animated.timing(scaleAnim, {
-      toValue: 1.0,
-      duration: 1300,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    });
-
-    zoomAnimation.start(() => {
-      setMinAnimationDone(true);
-    });
+    // Run zoom-out animation only once per app launch
+    if (!hasStartedRef.current) {
+      hasStartedRef.current = true;
+      Animated.timing(scaleAnim, {
+        toValue: 1.0,
+        duration: 1200,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }).start(() => {
+        setMinAnimationDone(true);
+      });
+    }
 
     // Failsafe timer (max 3.5 seconds) to prevent infinite loading on network stall
     const failsafe = setTimeout(() => {
       setAppReady(true);
     }, 3500);
 
-    return () => {
-      clearTimeout(failsafe);
-      if (loopAnimRef.current) {
-        loopAnimRef.current.stop();
-      }
-    };
+    return () => clearTimeout(failsafe);
   }, [scaleAnim]);
 
-  // When both resources (fonts & auth) are loaded AND the initial animation finished, transition to main app
+  // Transition to main app once both resources (fonts & auth) and the initial animation are complete
   useEffect(() => {
     const isResourcesReady = fontsLoaded && !authLoading;
 
     if (isResourcesReady && minAnimationDone) {
-      if (loopAnimRef.current) {
-        loopAnimRef.current.stop();
-      }
       setAppReady(true);
-    } else if (minAnimationDone && !isResourcesReady) {
-      // If resources are still loading after primary zoom-out, keep breathing smoothly
-      if (!loopAnimRef.current) {
-        loopAnimRef.current = Animated.loop(
-          Animated.sequence([
-            Animated.timing(scaleAnim, {
-              toValue: 1.04,
-              duration: 700,
-              easing: Easing.inOut(Easing.quad),
-              useNativeDriver: true,
-            }),
-            Animated.timing(scaleAnim, {
-              toValue: 0.98,
-              duration: 700,
-              easing: Easing.inOut(Easing.quad),
-              useNativeDriver: true,
-            }),
-          ])
-        );
-        loopAnimRef.current.start();
-      }
     }
-  }, [fontsLoaded, authLoading, minAnimationDone, scaleAnim]);
+  }, [fontsLoaded, authLoading, minAnimationDone]);
 
   const showSplash = !appReady;
 
