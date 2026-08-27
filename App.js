@@ -95,13 +95,15 @@ import { AppNavigator } from './src/navigation/AppNavigator';
 
 function AppContent({ fontsLoaded }) {
   const { loading: authLoading } = useAuth();
-  const [animationFinished, setAnimationFinished] = useState(false);
+  const [minAnimationDone, setMinAnimationDone] = useState(false);
+  const [appReady, setAppReady] = useState(false);
 
-  // Pure zoom-out animation (starts zoomed in at 3.5x, smoothly zooms out to 1.0x)
-  const scaleAnim = useRef(new Animated.Value(1)).current;
+  // Zoom-out animation: starts zoomed in at 2.8x, smoothly zooms out to 1.0x
+  const scaleAnim = useRef(new Animated.Value(2.8)).current;
+  const loopAnimRef = useRef(null);
 
   useEffect(() => {
-    // Dismiss native splash screen immediately so our animated splash is visible
+    // Dismiss native splash immediately so our JS animated splash is displayed
     SplashScreen.hideAsync().catch(() => {});
 
     // Pre-warm critical home images in memory during splash animation for zero flickering
@@ -121,28 +123,65 @@ function AppContent({ fontsLoaded }) {
       });
     } catch {}
 
-    // Run pure zoom-out animation
-    Animated.timing(scaleAnim, {
-      toValue: 0.6,
-      duration: 1400,
+    // Run primary zoom-out animation (2.8x -> 1.0x)
+    const zoomAnimation = Animated.timing(scaleAnim, {
+      toValue: 1.0,
+      duration: 1300,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
-    }).start(() => {
-      // Hold for 200ms, then directly switch to the app
-      setTimeout(() => {
-        setAnimationFinished(true);
-      }, 200);
     });
 
-    // Failsafe timer (max 2.5 seconds)
-    const failsafe = setTimeout(() => {
-      setAnimationFinished(true);
-    }, 2500);
+    zoomAnimation.start(() => {
+      setMinAnimationDone(true);
+    });
 
-    return () => clearTimeout(failsafe);
+    // Failsafe timer (max 3.5 seconds) to prevent infinite loading on network stall
+    const failsafe = setTimeout(() => {
+      setAppReady(true);
+    }, 3500);
+
+    return () => {
+      clearTimeout(failsafe);
+      if (loopAnimRef.current) {
+        loopAnimRef.current.stop();
+      }
+    };
   }, [scaleAnim]);
 
-  const showSplash = !animationFinished;
+  // When both resources (fonts & auth) are loaded AND the initial animation finished, transition to main app
+  useEffect(() => {
+    const isResourcesReady = fontsLoaded && !authLoading;
+
+    if (isResourcesReady && minAnimationDone) {
+      if (loopAnimRef.current) {
+        loopAnimRef.current.stop();
+      }
+      setAppReady(true);
+    } else if (minAnimationDone && !isResourcesReady) {
+      // If resources are still loading after primary zoom-out, keep breathing smoothly
+      if (!loopAnimRef.current) {
+        loopAnimRef.current = Animated.loop(
+          Animated.sequence([
+            Animated.timing(scaleAnim, {
+              toValue: 1.04,
+              duration: 700,
+              easing: Easing.inOut(Easing.quad),
+              useNativeDriver: true,
+            }),
+            Animated.timing(scaleAnim, {
+              toValue: 0.98,
+              duration: 700,
+              easing: Easing.inOut(Easing.quad),
+              useNativeDriver: true,
+            }),
+          ])
+        );
+        loopAnimRef.current.start();
+      }
+    }
+  }, [fontsLoaded, authLoading, minAnimationDone, scaleAnim]);
+
+  const showSplash = !appReady;
 
   if (showSplash) {
     return (
