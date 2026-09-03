@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
     ...elevation.sm,
   },
   segmentText: {
-    fontSize: 13.5,
+    fontSize: 12.5,
     fontFamily: 'Montserrat_600SemiBold',
     color: colors.textMain,
   },

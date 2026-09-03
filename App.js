@@ -96,11 +96,15 @@ import { AppNavigator } from './src/navigation/AppNavigator';
 function AppContent({ fontsLoaded }) {
   const { loading: authLoading } = useAuth();
   const [minAnimationDone, setMinAnimationDone] = useState(false);
-  const [appReady, setAppReady] = useState(false);
+  const [splashVisible, setSplashVisible] = useState(true);
 
-  // Pure single zoom-out animation: starts zoomed in at 2.8x, smoothly glides out to 1.0x
-  const scaleAnim = useRef(new Animated.Value(2.8)).current;
+  // Zoom-out animation: starts zoomed in at 2.8x, smoothly glides out to 1.0x
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const splashOpacity = useRef(new Animated.Value(1)).current;
+  const appOpacity = useRef(new Animated.Value(0)).current;
+  const appScale = useRef(new Animated.Value(0.97)).current;
   const hasStartedRef = useRef(false);
+  const hasTransitionedRef = useRef(false);
 
   useEffect(() => {
     // Dismiss native splash immediately so our JS animated splash is displayed
@@ -127,7 +131,7 @@ function AppContent({ fontsLoaded }) {
     if (!hasStartedRef.current) {
       hasStartedRef.current = true;
       Animated.timing(scaleAnim, {
-        toValue: 1.0,
+        toValue: 0.6,
         duration: 1200,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
@@ -138,53 +142,89 @@ function AppContent({ fontsLoaded }) {
 
     // Failsafe timer (max 3.5 seconds) to prevent infinite loading on network stall
     const failsafe = setTimeout(() => {
-      setAppReady(true);
+      setMinAnimationDone(true);
     }, 3500);
 
     return () => clearTimeout(failsafe);
   }, [scaleAnim]);
 
-  // Transition to main app once both resources (fonts & auth) and the initial animation are complete
+  // Smooth crossfade transition once resources and initial animation are ready
   useEffect(() => {
     const isResourcesReady = fontsLoaded && !authLoading;
 
-    if (isResourcesReady && minAnimationDone) {
-      setAppReady(true);
+    if (isResourcesReady && minAnimationDone && !hasTransitionedRef.current) {
+      hasTransitionedRef.current = true;
+      
+      Animated.parallel([
+        Animated.timing(splashOpacity, {
+          toValue: 0,
+          duration: 380,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(appOpacity, {
+          toValue: 1,
+          duration: 380,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(appScale, {
+          toValue: 1,
+          duration: 380,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        setSplashVisible(false);
+      });
     }
-  }, [fontsLoaded, authLoading, minAnimationDone]);
-
-  const showSplash = !appReady;
-
-  if (showSplash) {
-    return (
-      <View style={styles.splashContainer}>
-        <StatusBar style="dark" backgroundColor="#ffffff" translucent={false} />
-        {Platform.OS === 'android' && (
-          <RNStatusBar barStyle="dark-content" backgroundColor="#ffffff" translucent={false} />
-        )}
-        <Animated.View
-          style={[
-            styles.animatedLogoBox,
-            {
-              transform: [{ scale: scaleAnim }],
-            },
-          ]}
-        >
-          <Image
-            source={require('./assets/images/railone-splash-animation.webp')}
-            style={styles.splashLogoImage}
-            resizeMode="contain"
-          />
-        </Animated.View>
-      </View>
-    );
-  }
+  }, [fontsLoaded, authLoading, minAnimationDone, splashOpacity, appOpacity, appScale]);
 
   return (
-    <>
-      <OfflineBanner />
-      <AppNavigator />
-    </>
+    <View style={styles.rootContainer}>
+      <Animated.View
+        style={[
+          styles.mainAppWrapper,
+          {
+            opacity: appOpacity,
+            transform: [{ scale: appScale }],
+          },
+        ]}
+      >
+        <OfflineBanner />
+        <AppNavigator />
+      </Animated.View>
+
+      {splashVisible && (
+        <Animated.View
+          pointerEvents={hasTransitionedRef.current ? 'none' : 'auto'}
+          style={[
+            StyleSheet.absoluteFill,
+            styles.splashContainer,
+            { opacity: splashOpacity },
+          ]}
+        >
+          <StatusBar style="dark" backgroundColor="#ffffff" translucent={false} />
+          {Platform.OS === 'android' && (
+            <RNStatusBar barStyle="dark-content" backgroundColor="#ffffff" translucent={false} />
+          )}
+          <Animated.View
+            style={[
+              styles.animatedLogoBox,
+              {
+                transform: [{ scale: scaleAnim }],
+              },
+            ]}
+          >
+            <Image
+              source={require('./assets/images/railone-splash-animation.webp')}
+              style={styles.splashLogoImage}
+              resizeMode="contain"
+            />
+          </Animated.View>
+        </Animated.View>
+      )}
+    </View>
   );
 }
 
@@ -223,11 +263,19 @@ const styles = StyleSheet.create({
   rootGestureView: {
     flex: 1,
   },
+  rootContainer: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+  },
+  mainAppWrapper: {
+    flex: 1,
+  },
   splashContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#ffffff',
+    zIndex: 999,
   },
   animatedLogoBox: {
     width: '90%',

@@ -99,9 +99,9 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
 const styles = StyleSheet.create({
   headerWrapper: {
     backgroundColor: '#080e1a',
-    paddingHorizontal: 14,
-    paddingTop: 8,
-    paddingBottom: 12,
+    paddingHorizontal: 10,
+    paddingTop: 14,
+    paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#1e293b',
   },

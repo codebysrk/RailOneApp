@@ -10,6 +10,7 @@ export interface UserProfile {
   role: UserRole;
   status: UserStatus;
   wallet: number;
+  photoURL?: string;
   createdAt?: any;
   updatedAt?: any;
   lastLoginAt?: any;

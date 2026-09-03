@@ -19,6 +19,8 @@ export interface Ticket {
   destCode?: string;
   duration?: string;
   fare?: string;
+  adults?: number;
+  children?: number;
   passengers?: string;
   classType?: string;
   trainType?: string;

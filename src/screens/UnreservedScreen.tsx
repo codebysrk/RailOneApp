@@ -97,25 +97,7 @@ export const UnreservedScreen = () => {
 
   const loadRecentSearches = async () => {
     const list = await StorageService.getRecentSearches();
-    if (list && list.length > 0) {
-      setRecentSearches(list);
-    } else {
-      setRecentSearches([
-        { fromCode: "MRA", fromName: "MORENA", toCode: "DBA", toName: "DABRA" },
-        {
-          fromCode: "NDLS",
-          fromName: "NEW DELHI",
-          toCode: "MRA",
-          toName: "MORENA",
-        },
-        {
-          fromCode: "NZM",
-          fromName: "H NIZAMUDDIN",
-          toCode: "GWL",
-          toName: "GWALIOR",
-        },
-      ]);
-    }
+    setRecentSearches(list || []);
   };
 
   const loadStations = async (q: string) => {
@@ -175,8 +157,13 @@ export const UnreservedScreen = () => {
       );
       return;
     }
-    const srcCode = source.split(" - ")[0]?.trim();
-    const dstCode = dest.split(" - ")[0]?.trim();
+    const srcParts = source.split(" - ");
+    const dstParts = dest.split(" - ");
+    const srcCode = srcParts[0]?.trim();
+    const srcName = srcParts[1]?.trim() || srcCode;
+    const dstCode = dstParts[0]?.trim();
+    const dstName = dstParts[1]?.trim() || dstCode;
+
     if (
       srcCode === dstCode ||
       source.trim().toUpperCase() === dest.trim().toUpperCase()
@@ -189,6 +176,16 @@ export const UnreservedScreen = () => {
       );
       return;
     }
+
+    if (srcCode && dstCode) {
+      StorageService.saveRecentSearch(
+        { code: srcCode, name: srcName },
+        { code: dstCode, name: dstName }
+      ).then(() => {
+        loadRecentSearches();
+      });
+    }
+
     navigation.navigate("BookingConfig", { source, dest });
   };
 
@@ -230,7 +227,16 @@ export const UnreservedScreen = () => {
       <AppHeader
         title="Unreserved E-Ticket"
         variant="light"
-        onClose={() => navigation.goBack()}
+        titleCenter
+        titleBold
+        height={54}
+        containerStyle={{ paddingBottom: 4 }}
+        rightAction={{
+          icon: "close",
+          color: "#0066ff",
+          borderColor: "#53a7e470",
+          onPress: () => navigation.goBack(),
+        }}
       />
 
       <ScrollView
@@ -268,10 +274,9 @@ export const UnreservedScreen = () => {
                     Outside Station
                   </Text>
                   <MaterialIcons
-                    name="info"
-                    size={16}
+                    name="info-outline"
+                    size={15}
                     color={location === "outside" ? colors.white : "#94a3b8"}
-                    style={styles.infoIcon}
                   />
                 </TouchableOpacity>
 
@@ -295,10 +300,9 @@ export const UnreservedScreen = () => {
                     At Station
                   </Text>
                   <MaterialIcons
-                    name="info"
-                    size={16}
+                    name="info-outline"
+                    size={15}
                     color={location === "at" ? colors.white : "#94a3b8"}
-                    style={styles.infoIcon}
                   />
                 </TouchableOpacity>
               </View>
@@ -321,7 +325,7 @@ export const UnreservedScreen = () => {
                         !source && styles.inputPlaceholder,
                       ]}
                     >
-                      {source || "Select Source Station"}
+                      {source || "Source"}
                     </Text>
                   </View>
                 </TouchableOpacity>
@@ -357,7 +361,7 @@ export const UnreservedScreen = () => {
                         !dest && styles.inputPlaceholder,
                       ]}
                     >
-                      {dest || "Select Destination Station"}
+                      {dest || "Destination"}
                     </Text>
                   </View>
                 </TouchableOpacity>
@@ -368,7 +372,7 @@ export const UnreservedScreen = () => {
                 onPress={handleProceedToBook}
                 activeOpacity={0.8}
               >
-                <Text style={styles.primaryBtnText}>Book Ticket</Text>
+                <Text style={styles.primaryBtnText}>Proceed To Book</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -406,35 +410,39 @@ export const UnreservedScreen = () => {
           )}
         </View>
 
-        <Text style={styles.recentTitle}>Recent Searches</Text>
-        <ScrollView
-          horizontal
-          nestedScrollEnabled
-          showsHorizontalScrollIndicator={false}
-          style={styles.recentScroll}
-        >
-          {recentSearches.map((item, index) => (
-            <TouchableOpacity
-              key={`${item.fromCode}-${item.toCode}-${index}`}
-              style={styles.recentCard}
-              activeOpacity={0.75}
-              onPress={() => {
-                setSource(`${item.fromCode} - ${item.fromName}`);
-                setDest(`${item.toCode} - ${item.toName}`);
-              }}
+        {recentSearches && recentSearches.length > 0 ? (
+          <>
+            <Text style={styles.recentTitle}>Recent Searches</Text>
+            <ScrollView
+              horizontal
+              nestedScrollEnabled
+              showsHorizontalScrollIndicator={false}
+              style={styles.recentScroll}
             >
-              <Text style={styles.recentText}>
-                {`${item.fromName}, ${item.fromCode}`}
-              </Text>
-              <View style={styles.compareIcon}>
-                <MaterialIcons name="route" size={16} color="#007bff" />
-              </View>
-              <Text style={styles.recentText}>
-                {`${item.toName}, ${item.toCode}`}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+              {recentSearches.map((item, index) => (
+                <TouchableOpacity
+                  key={`${item.fromCode}-${item.toCode}-${index}`}
+                  style={styles.recentCard}
+                  activeOpacity={0.75}
+                  onPress={() => {
+                    setSource(`${item.fromCode} - ${item.fromName}`);
+                    setDest(`${item.toCode} - ${item.toName}`);
+                  }}
+                >
+                  <Text style={styles.recentText}>
+                    {`${item.fromName}, ${item.fromCode}`}
+                  </Text>
+                  <View style={styles.compareIcon}>
+                    <MaterialIcons name="route" size={16} color="#007bff" />
+                  </View>
+                  <Text style={styles.recentText}>
+                    {`${item.toName}, ${item.toCode}`}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </>
+        ) : null}
       </ScrollView>
 
       {/* Station Selector Modal */}
@@ -541,7 +549,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: 24,
     paddingHorizontal: 16,
-    paddingVertical: 18,
+    paddingVertical: 20,
+    minHeight: 395,
     marginTop: 4,
     marginBottom: 20,
     ...elevation.sm,
@@ -550,16 +559,18 @@ const styles = StyleSheet.create({
   subTabsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 20,
+    marginBottom: 18,
   },
   subTabBtn: {
     flex: 1,
     flexDirection: "row",
-    justifyContent: "center",
+    justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 11,
+    paddingVertical: 10,
+    paddingLeft: 12,
+    paddingRight: 8,
     borderRadius: 22,
-    marginHorizontal: 4,
+    marginHorizontal: 3,
   },
   subTabActive: { backgroundColor: "#0066ff" },
   subTabInactive: {
@@ -568,9 +579,8 @@ const styles = StyleSheet.create({
     borderColor: "#e5e7eb",
   },
   subTabText: {
-    fontFamily: "Montserrat_600SemiBold",
-    fontSize: 12.5,
-    flexShrink: 1,
+    fontFamily: "Montserrat_500Medium",
+    fontSize: 11,
   },
   subTabTextActive: { color: colors.white },
   subTabTextInactive: { color: "#9ca3af" },
@@ -579,15 +589,15 @@ const styles = StyleSheet.create({
   inputRow: { marginVertical: 3 },
   inputLabel: {
     fontFamily: "Montserrat_500Medium",
-    fontSize: 13,
+    fontSize: 11.5,
     color: "#0ea5e9",
     marginBottom: 4,
   },
-  inputField: { flexDirection: "row", alignItems: "center", height: 32 },
+  inputField: { flexDirection: "row", alignItems: "center", height: 34 },
   inputText: {
-    fontFamily: "Montserrat_600SemiBold",
+    fontFamily: "Montserrat_500Medium",
     marginLeft: 10,
-    fontSize: 14.5,
+    fontSize: 13,
     color: "#111827",
     letterSpacing: 0.1,
     flex: 1,
@@ -595,12 +605,12 @@ const styles = StyleSheet.create({
   },
   inputPlaceholder: {
     color: "#9ca3af",
-    fontFamily: "Montserrat_400Regular",
+    fontFamily: "Montserrat_600SemiBold",
     textTransform: "none",
   },
 
   dividerWrapper: {
-    height: 24,
+    height: 26,
     justifyContent: "center",
     position: "relative",
   },
@@ -625,9 +635,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   primaryBtnText: {
-    fontFamily: "Montserrat_600SemiBold",
+    fontFamily: "Montserrat_500Medium",
     color: colors.white,
-    fontSize: 14.5,
+    fontSize: 13.5,
     letterSpacing: 0.3,
   },
   secondaryBtn: {
@@ -639,16 +649,17 @@ const styles = StyleSheet.create({
     borderColor: "#0066ff",
   },
   secondaryBtnText: {
-    fontFamily: "Montserrat_600SemiBold",
+    fontFamily: "Montserrat_500Medium",
     color: "#0066ff",
-    fontSize: 14.5,
+    fontSize: 13.5,
     letterSpacing: 0.3,
   },
 
   recentTitle: {
     fontFamily: "Montserrat_700Bold",
-    fontSize: 13.5,
+    fontSize: 12,
     color: "#1e293b",
+    marginTop: 35,
     marginBottom: 12,
     marginLeft: 4,
   },
@@ -658,19 +669,20 @@ const styles = StyleSheet.create({
   },
   recentCard: {
     backgroundColor: "#e0f2fe",
-    width: 155,
-    paddingVertical: 15,
-    paddingHorizontal: 12,
+    width: 140,
+    paddingVertical: 12,
+    paddingHorizontal: 6,
     borderRadius: 10,
     alignItems: "center",
-    marginRight: 12,
+    marginRight: 10,
   },
   recentText: {
-    fontFamily: "Montserrat_500Medium",
-    fontSize: 10.5,
+    fontFamily: "Montserrat_400Regular",
+    fontSize: 9.5,
     color: "#334155",
     letterSpacing: 0.2,
     textTransform: "uppercase",
+    textAlign: "center",
   },
 
   // Modal Styles
@@ -680,12 +692,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: 40,
+    paddingBottom: 36,
   },
   modalCloseBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     borderWidth: 1.5,
     borderColor: "#bfdbfe",
     justifyContent: "center",
@@ -693,16 +705,16 @@ const styles = StyleSheet.create({
   },
   modalTitleWrapper: { flex: 1, alignItems: "center" },
   modalTitle: {
-    fontFamily: "Montserrat_700Bold",
-    fontSize: 18,
+    fontFamily: "Montserrat_500Medium",
+    fontSize: 16,
     color: "#1e3a8a",
   },
-  modalSpacer: { width: 44 },
+  modalSpacer: { width: 40 },
 
   modalContent: { flex: 1, paddingHorizontal: 20, paddingTop: 10 },
   modalTargetLabel: {
-    fontFamily: "Montserrat_700Bold",
-    fontSize: 16,
+    fontFamily: "Montserrat_500Medium",
+    fontSize: 14.5,
     color: "#1e3a8a",
     marginBottom: 12,
   },
@@ -720,8 +732,8 @@ const styles = StyleSheet.create({
   searchIcon: { marginRight: 10 },
   modalSearchInput: {
     flex: 1,
-    fontFamily: "Montserrat_500Medium",
-    fontSize: 15,
+    fontFamily: "Montserrat_400Regular",
+    fontSize: 13.5,
     color: "#334155",
   },
 
@@ -731,8 +743,8 @@ const styles = StyleSheet.create({
     marginTop: 18,
   },
   recentSearchesLabel: {
-    fontFamily: "Montserrat_600SemiBold",
-    fontSize: 13.5,
+    fontFamily: "Montserrat_700Bold",
+    fontSize: 12,
     color: "#1e3a8a",
     marginLeft: 8,
   },
@@ -740,25 +752,27 @@ const styles = StyleSheet.create({
   stationItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 14,
+    paddingVertical: 12,
   },
   stationTextCol: { flex: 1, paddingRight: 16 },
   stationItemName: {
     fontFamily: "Montserrat_500Medium",
-    fontSize: 14,
+    fontSize: 13,
     color: "#334155",
     textTransform: "uppercase",
   },
   stationItemSub: {
     fontFamily: "Montserrat_400Regular",
-    fontSize: 12,
+    fontSize: 11,
     color: "#94a3b8",
     textTransform: "uppercase",
     marginTop: 2,
   },
   stationListContent: { paddingBottom: 24 },
 
-  infoIcon: { marginLeft: 6 },
+  infoIcon: {
+    marginLeft: 2,
+  },
   compareIcon: {
     marginVertical: 4,
     transform: [{ scaleX: -1 }, { rotate: "-45deg" }], // 👈 Flipped + Tilted
@@ -773,27 +787,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   seasonIconWrap: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: "#eff6ff",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 12,
   },
   seasonTitle: {
-    fontFamily: "Montserrat_700Bold",
-    fontSize: 15,
+    fontFamily: "Montserrat_500Medium",
+    fontSize: 14,
     color: "#1e3a8a",
     textAlign: "center",
     marginBottom: 6,
   },
   seasonSubtitle: {
     fontFamily: "Montserrat_400Regular",
-    fontSize: 12.5,
+    fontSize: 11.5,
     color: "#64748b",
     textAlign: "center",
-    lineHeight: 18,
+    lineHeight: 17,
     marginBottom: 16,
     maxWidth: 280,
   },
@@ -806,8 +820,8 @@ const styles = StyleSheet.create({
     borderColor: "#bae6fd",
   },
   seasonBadgeText: {
-    fontFamily: "Montserrat_600SemiBold",
-    fontSize: 12,
+    fontFamily: "Montserrat_500Medium",
+    fontSize: 11,
     color: "#0284c7",
   },
   emptyListWrap: {
@@ -817,8 +831,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   emptyListText: {
-    fontFamily: "Montserrat_500Medium",
-    fontSize: 13.5,
+    fontFamily: "Montserrat_400Regular",
+    fontSize: 12,
     color: "#94a3b8",
     textAlign: "center",
     marginTop: 10,

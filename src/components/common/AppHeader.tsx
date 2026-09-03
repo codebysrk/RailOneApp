@@ -4,6 +4,9 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  StyleProp,
+  TextStyle,
+  ViewStyle,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { FocusAwareStatusBar } from '@/components/common/FocusAwareStatusBar';
@@ -17,14 +20,19 @@ export interface AppHeaderProps {
   iconColor?: string;
   circleBorderColor?: string;
   barStyle?: 'light-content' | 'dark-content';
+  height?: number;
+  containerStyle?: StyleProp<ViewStyle>;
   onBack?: () => void;
   onClose?: () => void;
   titleCenter?: boolean;
+  titleBold?: boolean;
+  titleStyle?: StyleProp<TextStyle>;
   rightAction?: {
     icon: keyof typeof Ionicons.glyphMap;
     onPress: () => void;
     size?: number;
     color?: string;
+    borderColor?: string;
     borderless?: boolean;
   };
   rightComponent?: React.ReactNode;
@@ -39,9 +47,13 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   iconColor,
   circleBorderColor,
   barStyle: propBarStyle,
+  height,
+  containerStyle,
   onBack,
   onClose,
   titleCenter = false,
+  titleBold = false,
+  titleStyle,
   rightAction,
   rightComponent,
 }) => {
@@ -82,7 +94,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   return (
     <>
       <FocusAwareStatusBar backgroundColor={finalBg} barStyle={barStyle} />
-      <View style={[styles.header, { backgroundColor: finalBg }]}>
+      <View style={[styles.header, { backgroundColor: finalBg }, height !== undefined && { height }, containerStyle]}>
         {/* Left Action (Back or Close Button) */}
         {onBack ? (
           <TouchableOpacity
@@ -126,7 +138,9 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             style={[
               styles.title,
               { color: finalTextColor },
+              titleBold && { fontFamily: 'Montserrat_700Bold' },
               titleCenter && styles.textAlignCenter,
+              titleStyle,
             ]}
             numberOfLines={1}
           >
@@ -155,7 +169,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
               styles.circleBtn,
               rightAction.borderless
                 ? styles.noBorder
-                : { borderColor: finalBorderColor, backgroundColor: defaultCircleBg },
+                : { borderColor: rightAction.borderColor || finalBorderColor, backgroundColor: defaultCircleBg },
             ]}
             onPress={rightAction.onPress}
             activeOpacity={0.7}
@@ -177,11 +191,12 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 
 const styles = StyleSheet.create({
   header: {
-    height: 58,
+    height: 66,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingHorizontal: 10,
+    paddingBottom: 8,
   },
   circleBtn: {
     width: 40,
@@ -213,13 +228,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   title: {
-    fontSize: 16.5,
-    fontFamily: 'Montserrat_700Bold',
+    fontSize: 15,
+    fontFamily: 'Montserrat_600SemiBold',
     letterSpacing: -0.1,
-    lineHeight: 20,
+    lineHeight: 19,
   },
   subtitle: {
-    fontSize: 11.5,
+    fontSize: 11,
     fontFamily: 'Montserrat_500Medium',
     marginTop: 1,
     letterSpacing: 0,

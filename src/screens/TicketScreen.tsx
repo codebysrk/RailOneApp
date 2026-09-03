@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   View,
-  Text,
+  Text as RNText,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
@@ -31,6 +31,42 @@ import { spacing, elevation } from "@/theme/spacing";
 import { useAuth } from "@/context/AuthContext";
 import { FirebaseService } from "@/services";
 import { RailwayDistanceEngine } from "@/services/RailwayDistanceEngine";
+
+// ─── Font Weight to Montserrat Mapping ─────────────────────────────────────────
+const FONT_WEIGHT_MAP: Record<string, string> = {
+  "100": "Montserrat_400Regular",
+  "200": "Montserrat_400Regular",
+  "300": "Montserrat_400Regular",
+  "400": "Montserrat_400Regular",
+  normal: "Montserrat_400Regular",
+  "500": "Montserrat_500Medium",
+  medium: "Montserrat_500Medium",
+  "600": "Montserrat_600SemiBold",
+  semibold: "Montserrat_600SemiBold",
+  "700": "Montserrat_700Bold",
+  bold: "Montserrat_700Bold",
+  "800": "Montserrat_800ExtraBold",
+  "900": "Montserrat_800ExtraBold",
+};
+
+// Custom Text component that allows changing font weight directly via `fontWeight`
+const Text = (props: React.ComponentProps<typeof RNText>) => {
+  const flatStyle = StyleSheet.flatten(props.style);
+  if (!flatStyle || !flatStyle.fontWeight) {
+    return <RNText {...props} />;
+  }
+
+  const weightKey = String(flatStyle.fontWeight).toLowerCase();
+  const mappedFamily = FONT_WEIGHT_MAP[weightKey] || "Montserrat_500Medium";
+
+  const resolvedStyle = {
+    ...flatStyle,
+    fontFamily: mappedFamily,
+    fontWeight: undefined,
+  };
+
+  return <RNText {...props} style={resolvedStyle} />;
+};
 
 // ─── Dual Mechanical Rolling Reel (Jata Hua & Aata Hua Digits) ───────────────────
 const CELL_HEIGHT = 46;
@@ -148,7 +184,7 @@ export const TicketScreen = () => {
   // ─── Double Click Distance Editing State ─────────────────────────
   const [overrideDistance, setOverrideDistance] = useState<string | null>(null);
   const [showEditDistanceModal, setShowEditDistanceModal] = useState(false);
-  const [newDistanceInput, setNewDistanceInput] = useState('');
+  const [newDistanceInput, setNewDistanceInput] = useState("");
   const [savingDistance, setSavingDistance] = useState(false);
   const lastDistanceTapRef = useRef<number>(0);
 
@@ -159,7 +195,7 @@ export const TicketScreen = () => {
     const DOUBLE_TAP_DELAY = 450; // ms
     if (now - lastDistanceTapRef.current < DOUBLE_TAP_DELAY) {
       // Double click / tap detected! Extract only digits
-      const digitsOnly = displayDistance.replace(/[^0-9.]/g, '').trim();
+      const digitsOnly = displayDistance.replace(/[^0-9.]/g, "").trim();
       setNewDistanceInput(digitsOnly);
       setShowEditDistanceModal(true);
     }
@@ -167,23 +203,38 @@ export const TicketScreen = () => {
   };
 
   const handleSaveDistance = async () => {
-    const numericOnly = newDistanceInput.replace(/[^0-9.]/g, '').trim();
+    const numericOnly = newDistanceInput.replace(/[^0-9.]/g, "").trim();
     if (!numericOnly) {
-      AppAlert.show('Invalid Distance', 'Please enter a valid distance (e.g. 345).', undefined, 'warning');
+      AppAlert.show(
+        "Invalid Distance",
+        "Please enter a valid distance (e.g. 345).",
+        undefined,
+        "warning",
+      );
       return;
     }
     const formatted = `${numericOnly} km`;
     setSavingDistance(true);
     try {
       const docId = ticketData?.id || ticketData?.bookingId || ticketId;
-      if (docId && docId !== '---') {
+      if (docId && docId !== "---") {
         await FirebaseService.updateBookingDistance(docId, formatted);
       }
       setOverrideDistance(formatted);
       setShowEditDistanceModal(false);
-      AppAlert.show('Distance Updated', `Distance updated to ${formatted}.`, undefined, 'success');
+      AppAlert.show(
+        "Distance Updated",
+        `Distance updated to ${formatted}.`,
+        undefined,
+        "success",
+      );
     } catch (err: any) {
-      AppAlert.show('Update Failed', err?.message || 'Could not update distance.', undefined, 'error');
+      AppAlert.show(
+        "Update Failed",
+        err?.message || "Could not update distance.",
+        undefined,
+        "error",
+      );
     } finally {
       setSavingDistance(false);
     }
@@ -206,6 +257,35 @@ export const TicketScreen = () => {
         "C1ZR",
     [ticketData?.irCode],
   );
+
+  // Dynamic passenger quantities from database
+  const adultsCount = useMemo(() => {
+    if (typeof ticketData?.adults === "number") return ticketData.adults;
+    if (ticketData?.adults && !isNaN(Number(ticketData.adults))) {
+      return Number(ticketData.adults);
+    }
+    if (ticketData?.passengers) {
+      const match = String(ticketData.passengers).match(/(\d+)\s*Adult/i);
+      if (match) return parseInt(match[1], 10);
+    }
+    return 1;
+  }, [ticketData?.adults, ticketData?.passengers]);
+
+  const childCount = useMemo(() => {
+    if (typeof ticketData?.children === "number") return ticketData.children;
+    if (ticketData?.children && !isNaN(Number(ticketData.children))) {
+      return Number(ticketData.children);
+    }
+    if (typeof ticketData?.child === "number") return ticketData.child;
+    if (ticketData?.child && !isNaN(Number(ticketData.child))) {
+      return Number(ticketData.child);
+    }
+    if (ticketData?.passengers) {
+      const match = String(ticketData.passengers).match(/(\d+)\s*Child/i);
+      if (match) return parseInt(match[1], 10);
+    }
+    return 0;
+  }, [ticketData?.children, ticketData?.child, ticketData?.passengers]);
 
   const { bookedNumeric, validTillNumeric, validTillDate, bookingDate } =
     useMemo(() => {
@@ -382,7 +462,7 @@ export const TicketScreen = () => {
         "Feedback",
         "Please provide a star rating or comments before submitting.",
         undefined,
-        "warning"
+        "warning",
       );
       return;
     }
@@ -391,7 +471,7 @@ export const TicketScreen = () => {
       "Thank You!",
       "Your rating and feedback have been recorded successfully.",
       undefined,
-      "success"
+      "success",
     );
   };
 
@@ -410,7 +490,7 @@ export const TicketScreen = () => {
       `FARE:INR-${fare}`,
       `RNUM:${rNumber}`,
       `IRCD:${irCode}`,
-      `PAX:${ticketData?.passengers || "1-ADULT-0-CHILD"}`,
+      `PAX:${adultsCount}-ADULT-${childCount}-CHILD`,
       `CLS:${ticketData?.classType || "SECOND-2S"}`,
       `TYP:${ticketData?.trainType || "MAIL-EXP"}`,
       `USER:${userName}//MOB:${userMobile}`,
@@ -420,11 +500,13 @@ export const TicketScreen = () => {
       `HASH_SHA256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`,
       `CERT_EXP:2028-12-31T23:59:59Z`,
       `AUTH:CENTRE-FOR-RAILWAY-INFORMATION-SYSTEMS`,
+      `PADD1:B8A11928374650ACB8A11928374650ACB8A11928374650AC`,
+      `PADD2:9a1s3d5f7g9h1j3k5l7z9x1c3v5b7n9m1q3w5e7r9t1y3u5i`,
     ].join("//");
 
     return `https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&data=${encodeURIComponent(
       qrSecurityDigest,
-    )}&ecc=M&margin=1`;
+    )}&ecc=H&margin=1`;
   }, [
     ticketId,
     source,
@@ -439,7 +521,8 @@ export const TicketScreen = () => {
     userName,
     userMobile,
     ticketData?.train,
-    ticketData?.passengers,
+    adultsCount,
+    childCount,
     ticketData?.classType,
     ticketData?.trainType,
   ]);
@@ -569,7 +652,7 @@ export const TicketScreen = () => {
                   <View style={styles.gridColRight}>
                     <Text style={styles.gridLabelRight}>Passenger</Text>
                     <Text style={styles.gridValueRight}>
-                      {ticketData?.passengers || "1 Adult, 0 Child"}
+                      {adultsCount} Adult, {childCount} Child
                     </Text>
                   </View>
                 </View>
@@ -755,8 +838,15 @@ export const TicketScreen = () => {
             {/* Header */}
             <View style={styles.modalHeaderRow}>
               <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Ionicons name="speedometer-outline" size={20} color="#0066ff" style={{ marginRight: 8 }} />
-                <Text style={styles.modalHeaderTitle}>Edit Ticket Distance</Text>
+                <Ionicons
+                  name="speedometer-outline"
+                  size={20}
+                  color="#0066ff"
+                  style={{ marginRight: 8 }}
+                />
+                <Text style={styles.modalHeaderTitle}>
+                  Edit Ticket Distance
+                </Text>
               </View>
               <TouchableOpacity
                 style={styles.modalCloseBtn}
@@ -768,26 +858,62 @@ export const TicketScreen = () => {
 
             {/* Route preview */}
             <View style={styles.modalRouteCard}>
-              <Text style={styles.modalRouteStn} numberOfLines={1}>{source}</Text>
-              <Ionicons name="arrow-forward" size={14} color="#94a3b8" style={{ marginHorizontal: 8 }} />
-              <Text style={[styles.modalRouteStn, { textAlign: "right" }]} numberOfLines={1}>{dest}</Text>
+              <Text style={styles.modalRouteStn} numberOfLines={1}>
+                {source}
+              </Text>
+              <Ionicons
+                name="arrow-forward"
+                size={14}
+                color="#94a3b8"
+                style={{ marginHorizontal: 8 }}
+              />
+              <Text
+                style={[styles.modalRouteStn, { textAlign: "right" }]}
+                numberOfLines={1}
+              >
+                {dest}
+              </Text>
             </View>
 
             {/* Distance Input */}
             <Text style={styles.inputFieldLabel}>Distance</Text>
             <View style={styles.inputFieldWrap}>
-              <Ionicons name="speedometer-outline" size={16} color="#94a3b8" style={{ marginRight: 8 }} />
+              <Ionicons
+                name="speedometer-outline"
+                size={16}
+                color="#94a3b8"
+                style={{ marginRight: 8 }}
+              />
               <TextInput
                 style={styles.inputField}
                 placeholder="e.g. 345"
                 placeholderTextColor="#94a3b8"
                 keyboardType="numeric"
                 value={newDistanceInput}
-                onChangeText={(val) => setNewDistanceInput(val.replace(/[^0-9.]/g, ''))}
+                onChangeText={(val) =>
+                  setNewDistanceInput(val.replace(/[^0-9.]/g, ""))
+                }
                 autoCapitalize="none"
               />
-              <View style={{ backgroundColor: '#eff6ff', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: '#bfdbfe' }}>
-                <Text style={{ fontSize: 11.5, fontFamily: 'Montserrat_700Bold', color: '#0066ff' }}>KM</Text>
+              <View
+                style={{
+                  backgroundColor: "#eff6ff",
+                  paddingHorizontal: 8,
+                  paddingVertical: 4,
+                  borderRadius: 6,
+                  borderWidth: 1,
+                  borderColor: "#bfdbfe",
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 11.5,
+                    fontFamily: "Montserrat_700Bold",
+                    color: "#0066ff",
+                  }}
+                >
+                  KM
+                </Text>
               </View>
             </View>
 
@@ -802,7 +928,10 @@ export const TicketScreen = () => {
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.modalSaveBtn, savingDistance && { opacity: 0.75 }]}
+                style={[
+                  styles.modalSaveBtn,
+                  savingDistance && { opacity: 0.75 },
+                ]}
                 onPress={handleSaveDistance}
                 disabled={savingDistance}
                 activeOpacity={0.85}
@@ -865,7 +994,7 @@ const styles = StyleSheet.create({
   },
   progressBarFill: { height: "100%", backgroundColor: "rgb(0, 190, 204)" },
   darkBanner: {
-    backgroundColor: "#111722",
+    backgroundColor: "#000000",
     flexDirection: "row",
     paddingVertical: 14,
     alignItems: "center",
@@ -878,11 +1007,12 @@ const styles = StyleSheet.create({
   },
   verticalTextEnglish: {
     fontFamily: "Montserrat_700Bold",
+    fontWeight: "700",
     color: "#a0aab8",
-    fontSize: 12,
-    letterSpacing: 1.5,
+    fontSize: 13,
+    letterSpacing: 2,
     transform: [{ rotate: "-90deg" }],
-    width: 140,
+    width: 160,
     textAlign: "center",
   },
   verticalColRight: {
@@ -892,6 +1022,7 @@ const styles = StyleSheet.create({
   },
   verticalTextHindi: {
     fontFamily: "Montserrat_700Bold",
+    fontWeight: "700",
     color: "#a0aab8",
     fontSize: 18,
     letterSpacing: 1.5,
@@ -962,13 +1093,15 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   bookingDateLabel: {
-    fontFamily: "Montserrat_500Medium",
+    fontFamily: "Montserrat_700Bold",
+    fontWeight: "700",
     color: "#a0aab8",
-    fontSize: 12,
+    fontSize: 13,
     marginTop: 2,
   },
   bookingDateValue: {
     fontFamily: "Montserrat_600SemiBold",
+    fontWeight: "600",
     color: "#ff9800",
     fontSize: 24,
     letterSpacing: 0.2,
@@ -977,6 +1110,7 @@ const styles = StyleSheet.create({
   },
   rNumberText: {
     fontFamily: "Montserrat_600SemiBold",
+    fontWeight: "600",
     color: "#f9f9f9",
     fontSize: 11,
     letterSpacing: 0.5,
@@ -984,6 +1118,7 @@ const styles = StyleSheet.create({
   },
   nonTransferableText: {
     fontFamily: "Montserrat_500Medium",
+    fontWeight: "500",
     color: "#f9f9f9",
     fontSize: 11,
     marginTop: 2,
@@ -1001,105 +1136,123 @@ const styles = StyleSheet.create({
   },
   ticketTypeTitle: {
     fontFamily: "Montserrat_600SemiBold",
-    fontSize: 14,
-    color: "#555555",
+    fontWeight: "600",
+    fontSize: 13.5,
+    color: "#475569",
     letterSpacing: 0.2,
   },
   ticketIdText: {
-    fontFamily: "Montserrat_700Bold",
+    fontFamily: "Montserrat_600SemiBold",
+    fontWeight: "600",
     fontSize: 14,
-    color: "#333333",
+    color: "#0f172a",
     letterSpacing: 0.5,
   },
   routeRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 4,
-    marginBottom: 4,
+    alignItems: "flex-start",
+    marginTop: 6,
+    marginBottom: 6,
   },
   stnNameLeft: {
-    fontFamily: "Montserrat_700Bold",
-    fontSize: 13,
-    color: "#222222",
+    fontFamily: "Montserrat_600SemiBold",
+    fontWeight: "600",
+    fontSize: 12,
+    color: "#0f172a",
     flex: 1,
     letterSpacing: 0.2,
-    lineHeight: 18,
+    lineHeight: 17,
   },
   distanceText: {
     fontFamily: "Montserrat_600SemiBold",
-    fontSize: 11.5,
-    color: "#555555",
+    fontWeight: "600",
+    fontSize: 11,
+    color: "#475569",
     marginHorizontal: 4,
     flexShrink: 0,
     textAlign: "center",
-    letterSpacing: 0.1,
+    letterSpacing: 0.2,
+    lineHeight: 17,
   },
   stnNameRight: {
-    fontFamily: "Montserrat_700Bold",
-    fontSize: 13,
-    color: "#222222",
+    fontFamily: "Montserrat_600SemiBold",
+    fontWeight: "600",
+    fontSize: 12,
+    color: "#0f172a",
     flex: 1,
     textAlign: "right",
     letterSpacing: 0.2,
-    lineHeight: 18,
+    lineHeight: 17,
   },
   detailsGrid: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginVertical: 3,
+    marginVertical: 4.5,
   },
   gridColLeft: { flex: 1 },
   gridColRight: { flex: 1, alignItems: "flex-end" },
   gridLabel: {
-    fontFamily: "Montserrat_500Medium",
-    fontSize: 11,
-    color: "#666666",
+    fontFamily: "Montserrat_700Bold",
+    fontWeight: "700",
+    fontSize: 12,
+    color: "#596579",
+    letterSpacing: 0.2,
   },
   gridLabelRight: {
-    fontFamily: "Montserrat_500Medium",
-    fontSize: 11,
-    color: "#666666",
+    fontFamily: "Montserrat_700Bold",
+    fontWeight: "700",
+    fontSize: 12,
+    color: "#596579",
     textAlign: "right",
+    letterSpacing: 0.2,
   },
   gridValue: {
-    fontFamily: "Montserrat_700Bold",
-    fontSize: 12.5,
-    color: "#333333",
-    marginTop: 1,
+    fontFamily: "Montserrat_600SemiBold",
+    fontWeight: "600",
+    fontSize: 13,
+    color: "#0f172a",
+    marginTop: 2,
+    letterSpacing: 0.1,
   },
   gridValueRight: {
-    fontFamily: "Montserrat_700Bold",
-    fontSize: 12.5,
-    color: "#333333",
+    fontFamily: "Montserrat_600SemiBold",
+    fontWeight: "600",
+    fontSize: 13,
+    color: "#0f172a",
     textAlign: "right",
-    marginTop: 1,
+    marginTop: 2,
+    letterSpacing: 0.1,
   },
-  fareInfoBlock: { marginVertical: 3, marginTop: 6 },
+  fareInfoBlock: { marginTop: 7, marginBottom: 4 },
   fareSummaryText: {
     fontFamily: "Montserrat_600SemiBold",
+    fontWeight: "600",
     fontSize: 12.5,
-    color: "#555555",
+    color: "#334155",
     letterSpacing: 0.2,
   },
   irCodeText: {
     fontFamily: "Montserrat_500Medium",
+    fontWeight: "500",
     fontSize: 11.5,
-    color: "#555555",
+    color: "#64748b",
     marginTop: 2,
+    letterSpacing: 0.3,
   },
   tearWrapper: {
     height: 16,
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 4,
+    marginVertical: 6,
   },
   tearDashedLine: {
     flex: 1,
     height: 1,
     borderWidth: 0.5,
-    borderColor: "#cccccc",
+    borderColor: "#cbd5e1",
     borderStyle: "dashed",
+    marginHorizontal: 8,
   },
   tearCutout: {
     width: 30,
@@ -1109,14 +1262,14 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -7,
   },
-  tearCutoutLeft: { left: -27 },
-  tearCutoutRight: { right: -27 },
+  tearCutoutLeft: { left: -25 },
+  tearCutoutRight: { right: -25 },
   validityNote: {
     fontFamily: "Montserrat_500Medium",
     fontSize: 10.5,
-    color: "#555555",
-    lineHeight: 14,
-    marginTop: 4,
+    color: "#64748b",
+    lineHeight: 15,
+    marginTop: 5,
   },
   warningCard: {
     backgroundColor: "#f9e6e6",

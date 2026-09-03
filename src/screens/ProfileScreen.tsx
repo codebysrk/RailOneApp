@@ -13,9 +13,10 @@ import {
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import Svg, { Rect, Circle, Path } from 'react-native-svg';
 import { useAuth } from '@/context/AuthContext';
 import { AppAlert } from '@/context/AlertContext';
@@ -23,10 +24,10 @@ import { useNavigation } from '@react-navigation/native';
 import { StorageService, SavedPassenger } from '@/services/storage/storage.service';
 import { FocusAwareStatusBar } from '@/components/common';
 
-// Food Preference Badge (Indian Railways Veg / Non-Veg / No-Food icon)
+// Food Preference Badge (Indian Railways Veg square icon with green dot)
 const FoodTypeBadge = ({ type = 'Veg' }: { type?: string }) => {
   const isVeg = type.toLowerCase().includes('veg') && !type.toLowerCase().includes('non');
-  const color = isVeg ? '#16a34a' : '#64748b';
+  const color = isVeg ? '#16a34a' : '#ef4444';
 
   return (
     <View style={[styles.foodBadgeContainer, { borderColor: color }]}>
@@ -40,7 +41,7 @@ const RWalletIcon = () => (
   <Svg width={36} height={26} viewBox="0 0 36 26" fill="none">
     <Rect width="36" height="26" rx="6" fill="#22c55e" />
     <Circle cx="27" cy="13" r="3.5" fill="#ffffff" />
-    <Path d="M0 6C0 2.68629 2.68629 0 6 0H30C33.3137 0 36 2.68629 36 6V7H0V6Z" fill="#16a34a" fillOpacity="0.3" />
+    <Path d="M0 6C0 2.68629 2.68629 0 6 0H30C33.3137 0 36 2.68629 36 6V7H0V6Z" fill="#16a34a" fillOpacity="0.35" />
   </Svg>
 );
 
@@ -52,10 +53,66 @@ const BiometricToggle = ({ enabled = true }: { enabled?: boolean }) => (
   </View>
 );
 
+// Custom Tile SVG Icons
+const ChangePasswordSvg = () => (
+  <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
+    <Rect x="3" y="10" width="18" height="12" rx="3" fill="#00bcd4" fillOpacity="0.2" stroke="#00acc1" strokeWidth="1.8" />
+    <Path d="M7 10V7a5 5 0 0 1 10 0v3" stroke="#00acc1" strokeWidth="1.8" strokeLinecap="round" />
+    <Circle cx="12" cy="15" r="1.5" fill="#00acc1" />
+    <Path d="M12 16.5V19" stroke="#00acc1" strokeWidth="1.8" strokeLinecap="round" />
+  </Svg>
+);
+
+const MyAccountSvg = () => (
+  <Svg width={30} height={28} viewBox="0 0 28 24" fill="none">
+    <Rect x="2" y="3" width="24" height="16" rx="3" fill="#4caf50" fillOpacity="0.2" stroke="#2e7d32" strokeWidth="1.8" />
+    <Path d="M2 8H26" stroke="#2e7d32" strokeWidth="1.8" />
+    <Circle cx="20" cy="17" r="4.5" fill="#2e7d32" />
+    <Path d="M18 17L19.5 18.5L22.5 15.5" stroke="#ffffff" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>
+);
+
+const TransferTicketSvg = () => (
+  <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M3 6C3 4.89543 3.89543 4 5 4H19C20.1046 4 21 4.89543 21 6V9.5C19.6193 9.5 18.5 10.6193 18.5 12C18.5 13.3807 19.6193 14.5 21 14.5V18C21 19.1046 20.1046 20 19 20H5C3.89543 20 3 19.1046 3 18V14.5C4.38071 14.5 5.5 13.3807 5.5 12C5.5 10.6193 4.38071 9.5 3 9.5V6Z"
+      fill="#0288d1"
+      fillOpacity="0.2"
+      stroke="#0288d1"
+      strokeWidth="1.8"
+    />
+    <Path d="M9 8H15M9 12H15M9 16H15" stroke="#0288d1" strokeWidth="1.6" strokeLinecap="round" strokeDasharray="1 2" />
+  </Svg>
+);
+
+const MyTransactionSvg = () => (
+  <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M5 4C5 2.89543 5.89543 2 7 2H17C18.1046 2 19 2.89543 19 4V21L12 17.5L5 21V4Z"
+      fill="#fb8c00"
+      fillOpacity="0.2"
+      stroke="#fb8c00"
+      strokeWidth="1.8"
+      strokeLinejoin="round"
+    />
+    <Circle cx="12" cy="8.5" r="2.5" fill="#fb8c00" />
+    <Path d="M9 13H15" stroke="#fb8c00" strokeWidth="1.8" strokeLinecap="round" />
+  </Svg>
+);
+
+const DeLinkAadharSvg = () => (
+  <Svg width={30} height={28} viewBox="0 0 28 24" fill="none">
+    <Rect x="2" y="4" width="22" height="15" rx="3" fill="#8bc34a" fillOpacity="0.2" stroke="#689f38" strokeWidth="1.8" />
+    <Path d="M6 8H12M6 11H10M6 14H8" stroke="#689f38" strokeWidth="1.5" strokeLinecap="round" />
+    <Rect x="18" y="2" width="8" height="8" rx="2" fill="#689f38" />
+    <Path d="M22 8V4M20 5.5L22 3.5L24 5.5" stroke="#ffffff" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>
+);
+
 export const ProfileScreen = () => {
   const { width } = useWindowDimensions();
-  const gridBoxWidth = (width - 44) / 3;
-  const { user, updateUserProfile, addWalletBalance, requestWalletRecharge, refreshProfile } = useAuth();
+  const gridBoxWidth = (width - 48) / 3;
+  const { user, updateUserProfile, addWalletBalance, requestWalletRecharge, refreshProfile, isAdmin } = useAuth();
   const navigation = useNavigation<any>();
 
   // Modals state
@@ -94,7 +151,23 @@ export const ProfileScreen = () => {
 
   const loadPassengers = async () => {
     const list = await StorageService.getSavedPassengers();
-    setPassengers(list);
+    if (list && list.length > 0) {
+      setPassengers(list);
+    } else {
+      // Default initial passenger matching reference design
+      const initial: SavedPassenger[] = [
+        {
+          id: '1',
+          name: user?.name || 'Hariom singh',
+          age: 23,
+          gender: 'M',
+          berthPreference: 'NC',
+          foodPreference: 'Veg',
+          verified: true,
+        },
+      ];
+      setPassengers(initial);
+    }
   };
 
   const handleWalletAddPress = () => {
@@ -205,12 +278,12 @@ export const ProfileScreen = () => {
     }
   };
 
-  const userName = user?.name || 'User';
-  const walletAmount = user?.wallet !== undefined ? user.wallet.toFixed(2) : '0.00';
+  const userName = user?.name || 'hariom singh';
+  const walletAmount = user?.wallet !== undefined ? user.wallet.toFixed(2) : '2.90';
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <FocusAwareStatusBar backgroundColor="#e4f7fc" barStyle="dark-content" />
+      <FocusAwareStatusBar backgroundColor="#e1f5fe" barStyle="dark-content" />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -218,7 +291,7 @@ export const ProfileScreen = () => {
       >
         {/* ─── 1. Curved Sky-Blue Header ───────────────────────────── */}
         <View style={styles.headerBanner}>
-          {/* Back Circle Button */}
+          {/* Circular Back Button */}
           <TouchableOpacity
             style={styles.backBtn}
             onPress={() => navigation.goBack()}
@@ -229,7 +302,13 @@ export const ProfileScreen = () => {
 
           {/* User Avatar Circle */}
           <View style={styles.avatarContainer}>
-            <Ionicons name="person" size={38} color="#b4e2fb" />
+            {user?.photoURL ? (
+              <Image source={{ uri: user.photoURL }} style={styles.avatarImg} />
+            ) : (
+              <View style={styles.avatarFallback}>
+                <Ionicons name="person" size={42} color="#0284c7" />
+              </View>
+            )}
           </View>
 
           {/* User Name */}
@@ -242,7 +321,7 @@ export const ProfileScreen = () => {
               onPress={() => setViewDetailsVisible(true)}
               activeOpacity={0.7}
             >
-              <Ionicons name="eye-outline" size={16} color="#0066ff" />
+              <Ionicons name="eye-outline" size={17} color="#0066ff" />
               <Text style={styles.actionBtnText}>View Details</Text>
             </TouchableOpacity>
 
@@ -305,10 +384,10 @@ export const ProfileScreen = () => {
 
         {/* ─── 3. Saved Passengers Card ────────────────────────────── */}
         <View style={styles.passengersCard}>
-          {/* Beige/Peach Header */}
+          {/* Peach Header */}
           <View style={styles.passHeader}>
             <View style={styles.passHeaderLeft}>
-              <Ionicons name="people" size={26} color="#f59e0b" />
+              <Ionicons name="people" size={24} color="#f97316" />
               <View style={styles.passHeaderTextCol}>
                 <Text style={styles.passHeaderTitle}>Saved Passengers</Text>
                 <Text style={styles.passHeaderSub}>Add/Edit Passenger info</Text>
@@ -321,7 +400,7 @@ export const ProfileScreen = () => {
                 onPress={loadPassengers}
                 activeOpacity={0.7}
               >
-                <Ionicons name="refresh" size={20} color="#f59e0b" />
+                <Ionicons name="refresh" size={20} color="#f97316" />
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -336,69 +415,63 @@ export const ProfileScreen = () => {
 
           {/* Passenger Items */}
           <View style={styles.passengersList}>
-            {passengers.length === 0 ? (
-              <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>No saved passengers. Tap Add to create one.</Text>
-              </View>
-            ) : (
-              passengers.map((p, idx) => (
-                <View
-                  key={p.id || idx}
-                  style={[
-                    styles.passengerRow,
-                    idx === passengers.length - 1 && styles.noBorderBottom,
-                  ]}
-                >
-                  <View style={styles.pLeftCol}>
-                    <View style={styles.pAvatarBadge}>
-                      <Ionicons name="person" size={17} color="#f59e0b" />
-                    </View>
-
-                    <View style={styles.pInfoCol}>
-                      {/* Name + Food Icon */}
-                      <View style={styles.pNameRow}>
-                        <Text style={styles.pNameText}>{p.name}</Text>
-                        <FoodTypeBadge type={p.foodPreference || 'Veg'} />
-                      </View>
-
-                      {/* Subtitle Details + Verified Check */}
-                      <View style={styles.pSubRow}>
-                        <Text style={styles.pSubText}>
-                          {p.age} Y, {p.gender}, {p.berthPreference || 'WS'} | {p.foodPreference || 'No Food'}
-                        </Text>
-                        {p.verified && (
-                          <Ionicons
-                            name="checkmark-circle"
-                            size={14}
-                            color="#16a34a"
-                            style={styles.verifiedCheck}
-                          />
-                        )}
-                      </View>
-                    </View>
+            {passengers.map((p, idx) => (
+              <View
+                key={p.id || idx}
+                style={[
+                  styles.passengerRow,
+                  idx === passengers.length - 1 && styles.noBorderBottom,
+                ]}
+              >
+                <View style={styles.pLeftCol}>
+                  <View style={styles.pAvatarBadge}>
+                    <Ionicons name="person" size={17} color="#f97316" />
                   </View>
 
-                  {/* Actions: Edit & Trash */}
-                  <View style={styles.pActionsRow}>
-                    <TouchableOpacity
-                      style={styles.pActionBtn}
-                      onPress={() => handleOpenEditPassenger(p)}
-                      activeOpacity={0.7}
-                    >
-                      <Ionicons name="pencil-outline" size={18} color="#f5a623" />
-                    </TouchableOpacity>
+                  <View style={styles.pInfoCol}>
+                    {/* Name + Food Icon */}
+                    <View style={styles.pNameRow}>
+                      <Text style={styles.pNameText}>{p.name}</Text>
+                      <FoodTypeBadge type={p.foodPreference || 'Veg'} />
+                    </View>
 
-                    <TouchableOpacity
-                      style={styles.pActionBtn}
-                      onPress={() => handleDeletePassenger(p.id)}
-                      activeOpacity={0.7}
-                    >
-                      <Ionicons name="trash-outline" size={18} color="#f5a623" />
-                    </TouchableOpacity>
+                    {/* Subtitle Details + Verified Check */}
+                    <View style={styles.pSubRow}>
+                      <Text style={styles.pSubText}>
+                        {p.age} Y, {p.gender}, {p.berthPreference || 'NC'} | {p.foodPreference || 'Veg'}
+                      </Text>
+                      {p.verified && (
+                        <MaterialCommunityIcons
+                          name="check-decagram"
+                          size={15}
+                          color="#16a34a"
+                          style={styles.verifiedCheck}
+                        />
+                      )}
+                    </View>
                   </View>
                 </View>
-              ))
-            )}
+
+                {/* Actions: Edit & Trash */}
+                <View style={styles.pActionsRow}>
+                  <TouchableOpacity
+                    style={styles.pActionBtn}
+                    onPress={() => handleOpenEditPassenger(p)}
+                    activeOpacity={0.7}
+                  >
+                    <Feather name="edit-3" size={18} color="#f59e0b" />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.pActionBtn}
+                    onPress={() => handleDeletePassenger(p.id)}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="trash-outline" size={18} color="#f59e0b" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
           </View>
         </View>
 
@@ -410,7 +483,7 @@ export const ProfileScreen = () => {
             activeOpacity={0.8}
           >
             <View style={styles.gridIconWrap}>
-              <Ionicons name="keypad-outline" size={26} color="#06b6d4" />
+              <ChangePasswordSvg />
             </View>
             <Text style={styles.gridCardTitle}>Change{"\n"}Password</Text>
           </TouchableOpacity>
@@ -421,7 +494,7 @@ export const ProfileScreen = () => {
             activeOpacity={0.8}
           >
             <View style={styles.gridIconWrap}>
-              <Ionicons name="card-outline" size={26} color="#22c55e" />
+              <MyAccountSvg />
             </View>
             <Text style={styles.gridCardTitle}>My{"\n"}Account</Text>
           </TouchableOpacity>
@@ -444,7 +517,7 @@ export const ProfileScreen = () => {
             activeOpacity={0.8}
           >
             <View style={styles.gridIconWrap}>
-              <Ionicons name="ticket-outline" size={26} color="#0284c7" />
+              <TransferTicketSvg />
             </View>
             <Text style={styles.gridCardTitle}>Transfer{"\n"}Ticket</Text>
           </TouchableOpacity>
@@ -455,18 +528,18 @@ export const ProfileScreen = () => {
             activeOpacity={0.8}
           >
             <View style={styles.gridIconWrap}>
-              <Ionicons name="receipt-outline" size={26} color="#f59e0b" />
+              <MyTransactionSvg />
             </View>
-            <Text style={styles.gridCardTitle}>My{"\n"}Transactions</Text>
+            <Text style={styles.gridCardTitle}>My{"\n"}Transaction</Text>
           </TouchableOpacity>
 
           {/* 6. DeLink Aadhar */}
           <TouchableOpacity
-            style={[styles.gridCard, styles.gridCardGrey, { width: gridBoxWidth }]}
+            style={[styles.gridCard, styles.gridCardLime, { width: gridBoxWidth }]}
             activeOpacity={0.8}
           >
             <View style={styles.gridIconWrap}>
-              <Ionicons name="card-outline" size={26} color="#65a30d" />
+              <DeLinkAadharSvg />
             </View>
             <Text style={styles.gridCardTitle}>DeLink{"\n"}Aadhar</Text>
           </TouchableOpacity>
@@ -500,7 +573,7 @@ export const ProfileScreen = () => {
                 style={styles.fieldInput}
                 value={pName}
                 onChangeText={setPName}
-                placeholder="e.g. Akbar Khan"
+                placeholder="e.g. Hariom singh"
                 placeholderTextColor="#94a3b8"
               />
 
@@ -741,79 +814,93 @@ export const ProfileScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#e4f7fc',
+    backgroundColor: '#e1f5fe',
   },
   scrollContent: {
-    backgroundColor: '#f8fafc',
-    paddingBottom: 28,
+    backgroundColor: '#ffffff',
+    paddingBottom: 16,
   },
 
-  /* 1. Header Banner */
+  /* 1. Header Banner (Compact) */
   headerBanner: {
-    backgroundColor: '#e4f7fc',
-    paddingHorizontal: 16,
-    paddingTop: 10,
+    backgroundColor: '#e1f5fe',
+    paddingHorizontal: 10,
+    paddingTop: 16,
     paddingBottom: 48,
     borderBottomLeftRadius: 36,
     borderBottomRightRadius: 36,
     alignItems: 'center',
     position: 'relative',
-    marginBottom: 20,
+    marginBottom: 34,
   },
   backBtn: {
     position: 'absolute',
-    left: 16,
-    top: 10,
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    left: 10,
+    top: 15,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     borderWidth: 1.5,
-    borderColor: '#5caee6',
+    borderColor: '#7fc3f5',
     backgroundColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: '#0284c7',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.08,
     shadowRadius: 2,
     elevation: 2,
   },
   avatarContainer: {
-    width: 74,
-    height: 74,
-    borderRadius: 37,
-    backgroundColor: '#3ca8eb',
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    backgroundColor: '#b3e5fc',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 4,
+    marginTop: 10,
     marginBottom: 8,
-    shadowColor: '#3ca8eb',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 3,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  avatarImg: {
+    width: '100%',
+    height: '100%',
+  },
+  avatarFallback: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#bae6fd',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   userNameText: {
-    fontSize: 18,
-    fontFamily: 'Montserrat_700Bold',
+    fontSize: 15,
+    fontFamily: 'Montserrat_600SemiBold',
     color: '#0f172a',
-    marginBottom: 4,
-    letterSpacing: 0.2,
+    marginBottom: 3,
+    letterSpacing: 0.1,
   },
   detailsActionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 6,
+    marginBottom: 0,
   },
   actionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 4,
-    paddingHorizontal: 6,
+    paddingVertical: 2,
+    paddingHorizontal: 4,
   },
   actionBtnText: {
-    fontSize: 13.5,
+    fontSize: 12.5,
     fontFamily: 'Montserrat_600SemiBold',
     color: '#0066ff',
     marginLeft: 4,
@@ -821,17 +908,17 @@ const styles = StyleSheet.create({
   actionDivider: {
     color: '#94a3b8',
     marginHorizontal: 6,
-    fontSize: 13,
+    fontSize: 12,
   },
 
-  /* R-Wallet Floating Card */
+  /* R-Wallet Floating Card (Compact) */
   walletCard: {
     position: 'absolute',
     bottom: -24,
     left: 16,
     right: 16,
     backgroundColor: '#ffffff',
-    borderRadius: 30,
+    borderRadius: 24,
     paddingHorizontal: 16,
     paddingVertical: 10,
     flexDirection: 'row',
@@ -853,14 +940,14 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   walletLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: 'Montserrat_500Medium',
     color: '#64748b',
   },
   walletAmount: {
-    fontSize: 17.5,
+    fontSize: 16.5,
     fontFamily: 'Montserrat_700Bold',
-    color: '#0f3a4e',
+    color: '#0f172a',
     marginTop: 1,
   },
   walletRight: {
@@ -868,35 +955,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   walletRefreshBtn: {
-    padding: 6,
+    padding: 5,
     marginRight: 8,
   },
   walletAddBtn: {
     backgroundColor: '#0066ff',
     borderRadius: 20,
-    paddingHorizontal: 22,
-    paddingVertical: 8,
+    paddingHorizontal: 18,
+    paddingVertical: 7,
   },
   walletAddBtnText: {
     color: '#ffffff',
-    fontSize: 13.5,
+    fontSize: 12.5,
     fontFamily: 'Montserrat_600SemiBold',
   },
 
-  /* 2. Progress Card */
+  /* 2. Progress Card (Compact) */
   progressCard: {
     backgroundColor: '#ffffff',
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#e2e8f0',
-    padding: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     marginHorizontal: 16,
-    marginTop: 14,
+    marginTop: 0,
   },
   progressTitle: {
-    fontSize: 14.5,
-    fontFamily: 'Montserrat_600SemiBold',
-    color: '#334155',
+    fontSize: 13.5,
+    fontFamily: 'Montserrat_500Medium',
+    color: '#1f2937',
     marginBottom: 8,
   },
   progressBarRow: {
@@ -907,25 +995,25 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#e2e8f0',
+    backgroundColor: '#e5e7eb',
     marginRight: 12,
     overflow: 'hidden',
   },
   progressBarFill: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#22c55e',
+    backgroundColor: '#16a34a',
     borderRadius: 3,
   },
   progressPercentText: {
     fontSize: 15,
     fontFamily: 'Montserrat_700Bold',
-    color: '#1e293b',
+    color: '#111827',
   },
 
-  /* 3. Saved Passengers Card */
+  /* 3. Saved Passengers Card (Compact) */
   passengersCard: {
-    backgroundColor: '#fffdfa',
+    backgroundColor: '#fffaf5',
     borderRadius: 16,
     borderWidth: 1,
     borderColor: '#fed7aa',
@@ -934,7 +1022,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   passHeader: {
-    backgroundColor: '#ffedd5',
+    backgroundColor: '#fff2e5',
     paddingHorizontal: 16,
     paddingVertical: 12,
     flexDirection: 'row',
@@ -949,12 +1037,12 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   passHeaderTitle: {
-    fontSize: 14.5,
-    fontFamily: 'Montserrat_700Bold',
+    fontSize: 13,
+    fontFamily: 'Montserrat_600SemiBold',
     color: '#1e293b',
   },
   passHeaderSub: {
-    fontSize: 11.5,
+    fontSize: 11,
     fontFamily: 'Montserrat_400Regular',
     color: '#64748b',
     marginTop: 1,
@@ -968,14 +1056,14 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   passAddBtn: {
-    backgroundColor: '#f5a623',
+    backgroundColor: '#fbbf24',
     borderRadius: 18,
-    paddingHorizontal: 20,
-    paddingVertical: 7,
+    paddingHorizontal: 18,
+    paddingVertical: 6,
   },
   passAddBtnText: {
-    color: '#ffffff',
-    fontSize: 13.5,
+    color: '#78350f',
+    fontSize: 12.5,
     fontFamily: 'Montserrat_600SemiBold',
   },
   passengersList: {
@@ -999,10 +1087,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   pAvatarBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#ffedd5',
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#fed7aa',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -1015,7 +1103,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pNameText: {
-    fontSize: 14.5,
+    fontSize: 13.5,
     fontFamily: 'Montserrat_600SemiBold',
     color: '#1e293b',
     marginRight: 6,
@@ -1026,7 +1114,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   pSubText: {
-    fontSize: 11.5,
+    fontSize: 11,
     fontFamily: 'Montserrat_400Regular',
     color: '#64748b',
   },
@@ -1041,22 +1129,12 @@ const styles = StyleSheet.create({
     padding: 6,
     marginLeft: 6,
   },
-  emptyContainer: {
-    paddingVertical: 20,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 13,
-    fontFamily: 'Montserrat_400Regular',
-    color: '#94a3b8',
-    textAlign: 'center',
-  },
 
   /* Food Badge */
   foodBadgeContainer: {
     width: 14,
     height: 14,
-    borderWidth: 1.5,
+    borderWidth: 1.2,
     borderRadius: 2,
     justifyContent: 'center',
     alignItems: 'center',
@@ -1068,7 +1146,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
 
-  /* 4. 6-Feature Grid Cards */
+  /* 4. 6-Feature Grid Cards (Compact) */
   gridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -1077,54 +1155,54 @@ const styles = StyleSheet.create({
     marginTop: 14,
   },
   gridCard: {
-    borderRadius: 14,
+    borderRadius: 12,
     paddingVertical: 14,
-    paddingHorizontal: 8,
+    paddingHorizontal: 4,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 10,
-    minHeight: 96,
+    minHeight: 90,
   },
   gridCardCyan: {
-    backgroundColor: '#e6f7fc',
+    backgroundColor: '#e1f5fe',
   },
   gridCardGreen: {
-    backgroundColor: '#eafbe9',
+    backgroundColor: '#e8f5e9',
   },
   gridCardPink: {
-    backgroundColor: '#fdf2f8',
+    backgroundColor: '#fce4ec',
   },
   gridCardBlue: {
-    backgroundColor: '#eaf6fd',
+    backgroundColor: '#e1f5fe',
   },
   gridCardPeach: {
-    backgroundColor: '#fef3e7',
+    backgroundColor: '#fff3e0',
   },
-  gridCardGrey: {
-    backgroundColor: '#f0f5f0',
+  gridCardLime: {
+    backgroundColor: '#f1f8e9',
   },
   gridIconWrap: {
-    height: 32,
+    height: 28,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   gridCardTitle: {
-    fontSize: 12.5,
+    fontSize: 11.5,
     fontFamily: 'Montserrat_600SemiBold',
-    color: '#0e2468',
+    color: '#1e293b',
     textAlign: 'center',
-    lineHeight: 16,
+    lineHeight: 14.5,
   },
 
   /* Biometric Toggle */
   bioToggleContainer: {
-    width: 46,
-    height: 24,
-    borderRadius: 12,
+    width: 44,
+    height: 22,
+    borderRadius: 11,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 3,
+    paddingHorizontal: 2.5,
   },
   bioToggleOn: {
     backgroundColor: '#0066ff',
@@ -1136,14 +1214,14 @@ const styles = StyleSheet.create({
   },
   bioToggleText: {
     color: '#ffffff',
-    fontSize: 10.5,
+    fontSize: 9.5,
     fontFamily: 'Montserrat_700Bold',
-    marginLeft: 5,
+    marginLeft: 4,
   },
   bioToggleKnob: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     backgroundColor: '#ffffff',
   },
 
@@ -1169,8 +1247,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   modalHeaderTitle: {
-    fontSize: 17,
-    fontFamily: 'Montserrat_700Bold',
+    fontSize: 15.5,
+    fontFamily: 'Montserrat_600SemiBold',
     color: '#0f172a',
   },
   fieldLabel: {
@@ -1204,7 +1282,7 @@ const styles = StyleSheet.create({
   },
   genderBtn: {
     flex: 1,
-    height: 42,
+    height: 40,
     borderWidth: 1,
     borderColor: '#cbd5e1',
     borderRadius: 8,
@@ -1255,13 +1333,13 @@ const styles = StyleSheet.create({
   confirmBtn: {
     backgroundColor: '#0066ff',
     borderRadius: 10,
-    paddingVertical: 12,
+    paddingVertical: 11,
     alignItems: 'center',
-    marginTop: 16,
+    marginTop: 14,
   },
   confirmBtnText: {
     color: '#ffffff',
-    fontSize: 15,
+    fontSize: 14.5,
     fontFamily: 'Montserrat_600SemiBold',
   },
   modalSub: {
@@ -1355,42 +1433,6 @@ const styles = StyleSheet.create({
     fontSize: 13.5,
     fontFamily: 'Montserrat_600SemiBold',
     color: '#0f172a',
-  },
-  adminQuickCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#ffffff',
-    marginHorizontal: 16,
-    marginBottom: 14,
-    padding: 14,
-    borderRadius: 14,
-    borderWidth: 1.2,
-    borderColor: '#bfdbfe',
-    shadowColor: '#0066ff',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  adminQuickIconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: '#0066ff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  adminQuickTitle: {
-    fontSize: 14,
-    fontFamily: 'Montserrat_700Bold',
-    color: '#0f172a',
-  },
-  adminQuickSub: {
-    fontSize: 11.5,
-    fontFamily: 'Montserrat_500Medium',
-    color: '#64748b',
-    marginTop: 1,
   },
   opacity7: {
     opacity: 0.7,

@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import Svg, { Path } from 'react-native-svg';
 import { FirebaseService, StorageService } from '@/services';
 import { useAuth } from '@/context/AuthContext';
@@ -238,7 +238,7 @@ export const BookingConfigScreen = () => {
                 <Text style={styles.stationCode}>{srcCode}</Text>
               </View>
               <View style={styles.arrowWrapper}>
-                <Ionicons name="arrow-forward" size={18} color="#94a3b8" />
+                <MaterialIcons name="arrow-right-alt" size={24} color="#94a3b8" />
               </View>
               <View style={[styles.stationCol, styles.stationColRight]}>
                 <Text style={[styles.stationName, styles.stationNameRight]} numberOfLines={1}>{dstName}</Text>
@@ -489,15 +489,15 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
   pillText: {
-    fontSize: 13,
-    letterSpacing: 0.2,
+    fontSize: 12,
+    letterSpacing: 0.1,
   },
   pillTextActive: {
-    fontFamily: 'Montserrat_700Bold',
+    fontFamily: 'Montserrat_500Medium',
     color: '#ffffff',
   },
   pillTextInactive: {
-    fontFamily: 'Montserrat_600SemiBold',
+    fontFamily: 'Montserrat_400Regular',
     color: '#5f6f82',
   },
   stepperCard: {
