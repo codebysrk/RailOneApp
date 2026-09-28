@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import { Pressable, Text, StyleSheet, ViewStyle, TextStyle, Platform } from 'react-native';
 import { colors } from '@/theme/colors';
 import { radius, spacing } from '@/theme/spacing';
 
@@ -24,17 +24,21 @@ export const Button: React.FC<ButtonProps> = ({
   const isOutline = variant === 'outline';
 
   return (
-    <TouchableOpacity 
-      style={[
+    <Pressable 
+      style={({ pressed }) => [
         styles.button,
         isPrimary && styles.primary,
         isOutline && styles.outline,
         disabled && styles.disabled,
+        Platform.OS === 'ios' && pressed && { opacity: 0.8 },
         style
       ]} 
       onPress={onPress}
       disabled={disabled}
-      activeOpacity={0.8}
+      android_ripple={{
+        color: isPrimary ? 'rgba(255, 255, 255, 0.28)' : 'rgba(0, 102, 255, 0.14)',
+        borderless: false,
+      }}
     >
       <Text style={[
         styles.text,
@@ -45,7 +49,7 @@ export const Button: React.FC<ButtonProps> = ({
       ]}>
         {title}
       </Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 
@@ -56,6 +60,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
+    overflow: 'hidden',
   },
   primary: {
     backgroundColor: colors.brandBlue,

@@ -569,7 +569,7 @@ export const AdminScreen: React.FC = () => {
     triggerHaptic('medium');
     setApprovingRequestId(item.id);
     try {
-      await FirebaseService.approveRechargeRequest(item.id, currentAdmin?.email || 'admin@railone.com');
+      await FirebaseService.approveRechargeRequest(item, currentAdmin);
       triggerHaptic('success');
       setRechargeRequests((prev) =>
         prev.map((r) =>

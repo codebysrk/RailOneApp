@@ -9,15 +9,15 @@ import {
   Easing,
   useWindowDimensions,
   BackHandler,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { Ionicons, Feather } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { AppHeader, FocusAwareStatusBar } from '@/components/common';
 import { colors } from '@/theme/colors';
 import { useAuth } from '@/context/AuthContext';
 import { FirebaseService } from '@/services';
-import { AppAlert } from '@/context/AlertContext';
 
 interface NotificationItem {
   id: string;
@@ -37,12 +37,19 @@ export const NotificationScreen: React.FC = () => {
   const { width } = useWindowDimensions();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [selectedNotif, setSelectedNotif] = useState<NotificationItem | null>(null);
-  const [deleting, setDeleting] = useState(false);
+  const [lastDeletedNotif, setLastDeletedNotif] = useState<NotificationItem | null>(null);
+  const [showUndoSnackbar, setShowUndoSnackbar] = useState(false);
+  const undoTimeoutRef = useRef<any>(null);
+  const pendingDeleteIdRef = useRef<string | null>(null);
+
   const isAdmin = user?.role === 'admin';
 
   // Entrance slide from right (width -> 0) + subtle fade (0 -> 1)
   const translateX = useRef(new Animated.Value(width)).current;
   const opacity = useRef(new Animated.Value(0)).current;
+
+  // Snackbar animation
+  const snackbarAnim = useRef(new Animated.Value(0)).current;
 
   const handleBack = useCallback(() => {
     Animated.parallel([
@@ -62,6 +69,20 @@ export const NotificationScreen: React.FC = () => {
     });
   }, [translateX, opacity, width, navigation]);
 
+  const commitPendingDelete = useCallback(() => {
+    if (undoTimeoutRef.current) {
+      clearTimeout(undoTimeoutRef.current);
+      undoTimeoutRef.current = null;
+    }
+    const idToDelete = pendingDeleteIdRef.current;
+    if (idToDelete) {
+      pendingDeleteIdRef.current = null;
+      FirebaseService.deleteNotification(idToDelete).catch((err) => {
+        console.warn('Error deleting notification:', err);
+      });
+    }
+  }, []);
+
   useEffect(() => {
     Animated.parallel([
       Animated.timing(translateX, {
@@ -78,10 +99,6 @@ export const NotificationScreen: React.FC = () => {
     ]).start();
 
     const onBackPress = () => {
-      if (selectedNotif) {
-        setSelectedNotif(null);
-        return true;
-      }
       handleBack();
       return true;
     };
@@ -90,12 +107,14 @@ export const NotificationScreen: React.FC = () => {
     let unsub: (() => void) | null = null;
     if (user?.uid) {
       unsub = FirebaseService.listenToUserNotifications(user.uid, isAdmin, (list) => {
-        // Ensure strictly sorted descending by time (newest on top)
-        const sorted = [...list].sort((a, b) => {
-          const timeA = a.createdAtMillis || (a.createdAt?.toMillis ? a.createdAt.toMillis() : 0);
-          const timeB = b.createdAtMillis || (b.createdAt?.toMillis ? b.createdAt.toMillis() : 0);
-          return timeB - timeA;
-        });
+        // Ensure strictly sorted descending by time (newest on top) and exclude pending deleted item
+        const sorted = [...list]
+          .filter((item) => item.id !== pendingDeleteIdRef.current)
+          .sort((a, b) => {
+            const timeA = a.createdAtMillis || (a.createdAt?.toMillis ? a.createdAt.toMillis() : 0);
+            const timeB = b.createdAtMillis || (b.createdAt?.toMillis ? b.createdAt.toMillis() : 0);
+            return timeB - timeA;
+          });
         setNotifications(sorted);
       });
     }
@@ -103,24 +122,82 @@ export const NotificationScreen: React.FC = () => {
     return () => {
       backSub.remove();
       if (unsub) unsub();
+      commitPendingDelete();
     };
-  }, [user?.uid, isAdmin, selectedNotif, handleBack]);
+  }, [user?.uid, isAdmin, handleBack, commitPendingDelete]);
 
-  const confirmDeleteNotification = async () => {
+  const triggerSnackbar = () => {
+    setShowUndoSnackbar(true);
+    Animated.timing(snackbarAnim, {
+      toValue: 1,
+      duration: 220,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: true,
+    }).start();
+
+    if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+    undoTimeoutRef.current = setTimeout(() => {
+      hideSnackbar();
+    }, 4500);
+  };
+
+  const hideSnackbar = () => {
+    Animated.timing(snackbarAnim, {
+      toValue: 0,
+      duration: 180,
+      easing: Easing.in(Easing.quad),
+      useNativeDriver: true,
+    }).start(() => {
+      setShowUndoSnackbar(false);
+      setLastDeletedNotif(null);
+      commitPendingDelete();
+    });
+  };
+
+  const handleDeleteNotification = () => {
     if (!selectedNotif) return;
-    const notifId = selectedNotif.id;
-    setDeleting(true);
-    try {
-      if (notifId && !notifId.startsWith('default_')) {
-        await FirebaseService.deleteNotification(notifId);
-      }
-      setNotifications((prev) => prev.filter((n) => n.id !== notifId));
-      setSelectedNotif(null);
-    } catch (err: any) {
-      console.warn('Error deleting notification:', err);
-    } finally {
-      setDeleting(false);
+    const itemToDelete = selectedNotif;
+    const notifId = itemToDelete.id;
+
+    // Commit any previous pending delete immediately
+    commitPendingDelete();
+
+    // Close bottom sheet
+    setSelectedNotif(null);
+
+    // Track for undo & optimistic delete
+    pendingDeleteIdRef.current = notifId;
+    setLastDeletedNotif(itemToDelete);
+    setNotifications((prev) => prev.filter((n) => n.id !== notifId));
+
+    // Show undo snackbar
+    triggerSnackbar();
+  };
+
+  const handleUndo = () => {
+    if (!lastDeletedNotif) {
+      hideSnackbar();
+      return;
     }
+    // Cancel the pending deletion from Firebase
+    if (undoTimeoutRef.current) {
+      clearTimeout(undoTimeoutRef.current);
+      undoTimeoutRef.current = null;
+    }
+    pendingDeleteIdRef.current = null;
+
+    const restored = lastDeletedNotif;
+    setNotifications((prev) => [restored, ...prev]);
+
+    Animated.timing(snackbarAnim, {
+      toValue: 0,
+      duration: 180,
+      easing: Easing.in(Easing.quad),
+      useNativeDriver: true,
+    }).start(() => {
+      setShowUndoSnackbar(false);
+      setLastDeletedNotif(null);
+    });
   };
 
   return (
@@ -136,10 +213,10 @@ export const NotificationScreen: React.FC = () => {
           },
         ]}
       >
-        <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-          {/* ─── Blue Header (Clean without any delete icon) ────────────── */}
+        <SafeAreaView style={styles.safeArea} edges={['top']}>
+          {/* Header matching official app */}
           <AppHeader
-            title="Notifications"
+            title="Notification"
             variant="blue"
             onBack={handleBack}
           />
@@ -162,33 +239,11 @@ export const NotificationScreen: React.FC = () => {
             ) : (
               notifications.map((item) => (
                 <View key={`notif-${item.id}`} style={styles.notificationItem}>
-                  {/* Header Row */}
+                  {/* Header Row: Title & 3-Dots */}
                   <View style={styles.itemHeaderRow}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 8 }}>
-                      <Ionicons
-                        name={
-                          item.type === 'recharge_approved'
-                            ? 'checkmark-circle'
-                            : item.type === 'recharge_request'
-                            ? 'card'
-                            : item.type === 'recharge_rejected'
-                            ? 'close-circle'
-                            : 'notifications'
-                        }
-                        size={17}
-                        color={
-                          item.type === 'recharge_approved'
-                            ? '#16a34a'
-                            : item.type === 'recharge_rejected'
-                            ? '#dc2626'
-                            : '#0066ff'
-                        }
-                        style={{ marginRight: 6 }}
-                      />
-                      <Text style={styles.itemTitle} numberOfLines={1}>
-                        {item.title}
-                      </Text>
-                    </View>
+                    <Text style={styles.itemTitle} numberOfLines={1}>
+                      {item.title}
+                    </Text>
 
                     {/* 3 Dots Options Button */}
                     <TouchableOpacity
@@ -197,7 +252,7 @@ export const NotificationScreen: React.FC = () => {
                       style={styles.dotsBtn}
                       onPress={() => setSelectedNotif(item)}
                     >
-                      <Ionicons name="ellipsis-horizontal" size={20} color="#64748b" />
+                      <Ionicons name="ellipsis-horizontal" size={19} color="#64748b" />
                     </TouchableOpacity>
                   </View>
 
@@ -212,11 +267,53 @@ export const NotificationScreen: React.FC = () => {
               ))
             )}
           </ScrollView>
+
+          {/* ─── UNDO SNACKBAR (Official RailOne match) ───────────── */}
+          {showUndoSnackbar && (
+            <Animated.View
+              style={[
+                styles.snackbarContainer,
+                {
+                  opacity: snackbarAnim,
+                  transform: [
+                    {
+                      translateY: snackbarAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [40, 0],
+                      }),
+                    },
+                  ],
+                },
+              ]}
+            >
+              <TouchableOpacity
+                onPress={hideSnackbar}
+                style={styles.snackbarCloseBtn}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons name="close" size={20} color="#ffffff" />
+              </TouchableOpacity>
+              <Text style={styles.snackbarText}>Notification deleted</Text>
+              <TouchableOpacity
+                style={styles.undoBtn}
+                onPress={handleUndo}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.undoBtnText}>Undo</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          )}
         </SafeAreaView>
       </Animated.View>
 
-      {/* ─── 3 DOTS OPTIONS MODAL / ACTION SHEET ─────────────────── */}
-      {selectedNotif && (
+      {/* ─── 3-DOTS BOTTOM SHEET (Exact Official Match) ─────────── */}
+      <Modal
+        visible={Boolean(selectedNotif)}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSelectedNotif(null)}
+        statusBarTranslucent
+      >
         <View style={styles.actionSheetOverlay}>
           <TouchableOpacity
             style={StyleSheet.absoluteFill}
@@ -224,60 +321,28 @@ export const NotificationScreen: React.FC = () => {
             onPress={() => setSelectedNotif(null)}
           />
 
-          <View style={styles.actionSheetBox}>
-            <View style={styles.sheetHandle} />
-
-            <View style={styles.sheetHeader}>
-              <View style={styles.sheetIconCircle}>
-                <Ionicons name="notifications-outline" size={20} color="#0066ff" />
-              </View>
-              <View style={{ flex: 1, marginLeft: 10 }}>
+          {selectedNotif && (
+            <View style={styles.actionSheetBox}>
+              <View style={styles.sheetHeader}>
                 <Text style={styles.sheetTitle} numberOfLines={1}>
                   {selectedNotif.title}
                 </Text>
-                <Text style={styles.sheetSub} numberOfLines={1}>
-                  {selectedNotif.createdAtStr || selectedNotif.timestamp || 'Recent notification'}
-                </Text>
               </View>
-              <TouchableOpacity
-                style={styles.sheetCloseBtn}
-                onPress={() => setSelectedNotif(null)}
-              >
-                <Ionicons name="close" size={20} color="#94a3b8" />
-              </TouchableOpacity>
-            </View>
 
-            <View style={styles.sheetBody}>
-              <Text style={styles.sheetPreviewText} numberOfLines={2}>
-                "{selectedNotif.message}"
-              </Text>
-            </View>
-
-            <View style={styles.sheetActionsRow}>
-              <TouchableOpacity
-                style={styles.sheetDeleteBtn}
-                onPress={confirmDeleteNotification}
-                disabled={deleting}
-                activeOpacity={0.8}
-              >
-                <Feather name="trash-2" size={16} color="#ffffff" style={{ marginRight: 6 }} />
-                <Text style={styles.sheetDeleteBtnText}>
-                  {deleting ? 'Deleting...' : 'Delete Notification'}
-                </Text>
-              </TouchableOpacity>
+              <View style={styles.sheetDivider} />
 
               <TouchableOpacity
-                style={styles.sheetCancelBtn}
-                onPress={() => setSelectedNotif(null)}
-                disabled={deleting}
-                activeOpacity={0.8}
+                style={styles.sheetDeleteRow}
+                onPress={handleDeleteNotification}
+                activeOpacity={0.7}
               >
-                <Text style={styles.sheetCancelBtnText}>Cancel</Text>
+                <Ionicons name="trash" size={22} color="#dc2626" style={styles.trashIcon} />
+                <Text style={styles.sheetDeleteText}>Delete Notification</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          )}
         </View>
-      )}
+      </Modal>
     </View>
   );
 };
@@ -305,14 +370,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
   },
   scrollContent: {
-    paddingHorizontal: 10,
-    paddingTop: 16,
-    paddingBottom: 24,
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 80,
   },
   notificationItem: {
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: '#e2e8f0',
   },
   itemHeaderRow: {
     flexDirection: 'row',
@@ -322,28 +387,28 @@ const styles = StyleSheet.create({
   },
   itemTitle: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#1e3a8a',
-    letterSpacing: 0.2,
-  },
-  itemMessage: {
-    fontSize: 14,
-    lineHeight: 21,
-    color: '#475569',
-    letterSpacing: 0.1,
-  },
-  itemTimestamp: {
-    fontSize: 12,
-    color: '#94a3b8',
-    marginTop: 10,
-    fontWeight: '400',
+    fontFamily: 'Montserrat_700Bold',
+    color: '#152546',
+    letterSpacing: -0.2,
+    flex: 1,
+    paddingRight: 8,
   },
   dotsBtn: {
-    padding: 6,
-    borderRadius: 6,
-    backgroundColor: '#f8fafc',
+    padding: 4,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  itemMessage: {
+    fontSize: 13.5,
+    lineHeight: 20,
+    fontFamily: 'Montserrat_500Medium',
+    color: '#475569',
+  },
+  itemTimestamp: {
+    fontSize: 11,
+    fontFamily: 'Montserrat_400Regular',
+    color: '#94a3b8',
+    marginTop: 8,
   },
   emptyContainer: {
     alignItems: 'center',
@@ -373,107 +438,93 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 19,
   },
+
+  // ─── ACTION SHEET (OFFICIAL RAILONE STYLE) ───────────────────
   actionSheetOverlay: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
     justifyContent: 'flex-end',
-    zIndex: 100000,
-    elevation: 20,
   },
   actionSheetBox: {
     backgroundColor: '#ffffff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 28,
+    borderTopLeftRadius: 26,
+    borderTopRightRadius: 26,
+    paddingTop: 18,
+    paddingBottom: 36,
+    paddingHorizontal: 20,
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.15,
     shadowRadius: 10,
-    elevation: 25,
-  },
-  sheetHandle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#cbd5e1',
-    alignSelf: 'center',
-    marginBottom: 12,
+    elevation: 30,
   },
   sheetHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  sheetIconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#eff6ff',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingBottom: 14,
   },
   sheetTitle: {
-    fontSize: 14.5,
+    fontSize: 16,
     fontFamily: 'Montserrat_700Bold',
-    color: '#0f172a',
+    color: '#152546',
   },
-  sheetSub: {
-    fontSize: 11,
-    fontFamily: 'Montserrat_500Medium',
-    color: '#94a3b8',
-    marginTop: 1,
+  sheetDivider: {
+    height: 1,
+    backgroundColor: '#e2e8f0',
+    marginBottom: 18,
   },
-  sheetCloseBtn: {
-    padding: 4,
-  },
-  sheetBody: {
-    backgroundColor: '#f8fafc',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  sheetPreviewText: {
-    fontSize: 12.5,
-    fontFamily: 'Montserrat_500Medium',
-    color: '#475569',
-    lineHeight: 18,
-    fontStyle: 'italic',
-  },
-  sheetActionsRow: {
-    gap: 8,
-  },
-  sheetDeleteBtn: {
-    backgroundColor: '#dc2626',
+  sheetDeleteRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 10,
-    shadowColor: '#dc2626',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    paddingVertical: 8,
+    paddingHorizontal: 6,
   },
-  sheetDeleteBtnText: {
+  trashIcon: {
+    marginRight: 14,
+  },
+  sheetDeleteText: {
+    fontSize: 15,
+    fontFamily: 'Montserrat_600SemiBold',
+    color: '#0f172a',
+  },
+
+  // ─── BOTTOM SNACKBAR (OFFICIAL BLUE UNDO BAR) ────────────────
+  snackbarContainer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 16,
+    right: 16,
+    backgroundColor: '#0066ff',
+    borderRadius: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 10,
+  },
+  snackbarCloseBtn: {
+    marginRight: 10,
+  },
+  snackbarText: {
+    flex: 1,
+    color: '#ffffff',
+    fontSize: 14,
+    fontFamily: 'Montserrat_600SemiBold',
+  },
+  undoBtn: {
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    borderRadius: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+  },
+  undoBtnText: {
+    color: '#ffffff',
     fontSize: 13.5,
     fontFamily: 'Montserrat_700Bold',
-    color: '#ffffff',
-  },
-  sheetCancelBtn: {
-    backgroundColor: '#f1f5f9',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 11,
-    borderRadius: 10,
-  },
-  sheetCancelBtnText: {
-    fontSize: 13,
-    fontFamily: 'Montserrat_600SemiBold',
-    color: '#475569',
   },
 });

@@ -7,7 +7,7 @@ import {
   SectionList,
   Platform,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import Svg, { Path } from "react-native-svg";
@@ -66,6 +66,7 @@ const TabTicketIcon = ({ color, isSelected, tab }: { color: string; isSelected: 
 };
 
 export const BookingsScreen = () => {
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
   const { user } = useAuth();
   const [filter, setFilter] = useState<
@@ -238,7 +239,14 @@ export const BookingsScreen = () => {
         />
 
       {/* Bottom Filter Navigation Bar */}
-      <View style={styles.filterBarWrapper}>
+      <View
+        style={[
+          styles.filterBarWrapper,
+          {
+            paddingBottom: insets.bottom > 0 ? insets.bottom : (Platform.OS === 'ios' ? 20 : 10),
+          },
+        ]}
+      >
         <View style={styles.filterBar}>
           {(["Upcoming", "Completed", "Cancelled", "All"] as const).map(
             (tab) => {

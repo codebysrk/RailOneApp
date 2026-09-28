@@ -75,11 +75,17 @@ export const FirebaseFirestoreService = {
   },
 
   listenToUserProfile: (uid: string, callback: (data: any) => void) => {
-    return onSnapshot(doc(db, 'users', uid), (snap) => {
-      if (snap.exists()) {
-        callback(snap.data());
+    return onSnapshot(
+      doc(db, 'users', uid),
+      (snap) => {
+        if (snap.exists()) {
+          callback(snap.data());
+        }
+      },
+      (err) => {
+        console.warn('User profile listener error:', err);
       }
-    });
+    );
   },
 
   initializeUserProfile: async (uid: string, data: any) => {
@@ -390,28 +396,45 @@ export const FirebaseFirestoreService = {
   },
 
   approveRechargeRequest: async (
-    request: WalletRechargeRequest,
+    request: WalletRechargeRequest | any,
     adminUser: any
   ) => {
-    const reqRef = doc(db, 'wallet_requests', request.id);
-    const userRef = doc(db, 'users', request.userId);
+    let reqData = request;
+    const reqId = typeof request === 'string' ? request : request?.id;
+    const reqRef = doc(db, 'wallet_requests', reqId);
+
+    // If only request ID was passed or userId is missing, fetch request data from Firestore
+    if (typeof request === 'string' || !request?.userId) {
+      const snap = await getDoc(reqRef);
+      if (!snap.exists()) {
+        throw new Error('Recharge request not found.');
+      }
+      reqData = { id: snap.id, ...snap.data() };
+    }
+
+    const userId = reqData.userId;
+    const amount = Number(reqData.amount) || 0;
+    const userRef = doc(db, 'users', userId);
+    const adminEmail = typeof adminUser === 'string' ? adminUser : (adminUser?.email || 'admin@railone.com');
+    const adminRole = typeof adminUser === 'object' ? (adminUser?.role || 'admin') : 'admin';
+    const adminId = typeof adminUser === 'object' ? (adminUser?.uid || 'admin') : 'admin';
 
     const newBalance = await runTransaction(db, async (txn) => {
       const userDoc = await txn.get(userRef);
       const currentWallet = userDoc.exists() ? (userDoc.data()?.wallet || 0) : 0;
-      const balance = Number((currentWallet + request.amount).toFixed(2));
+      const balance = Number((currentWallet + amount).toFixed(2));
 
       // 1. Update user wallet
       txn.set(userRef, { wallet: balance, updatedAt: serverTimestamp() }, { merge: true });
 
       // 2. Add credit entry in user's wallet_ledger
       const txnId = 'TXN_' + Date.now();
-      const ledgerRef = doc(db, 'users', request.userId, 'wallet_ledger', txnId);
+      const ledgerRef = doc(db, 'users', userId, 'wallet_ledger', txnId);
       txn.set(ledgerRef, {
         id: txnId,
         type: 'credit',
-        amount: request.amount,
-        description: `Approved Recharge (${request.id}) by ${adminUser?.email || 'Admin'}`,
+        amount: amount,
+        description: `Approved Recharge (${reqId}) by ${adminEmail}`,
         balanceAfter: balance,
         timestamp: serverTimestamp(),
         status: 'success',
@@ -420,9 +443,9 @@ export const FirebaseFirestoreService = {
       // 3. Update request status to approved
       txn.update(reqRef, {
         status: 'approved',
-        adminRole: adminUser?.role || 'admin',
-        adminEmail: adminUser?.email || 'Admin',
-        adminId: adminUser?.uid || 'admin',
+        adminRole: adminRole,
+        adminEmail: adminEmail,
+        adminId: adminId,
         approvedAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
@@ -436,10 +459,10 @@ export const FirebaseFirestoreService = {
       await setDoc(notifRef, {
         id: notifRef.id,
         title: 'Wallet Recharge Approved! 🎉',
-        message: `₹${request.amount.toFixed(2)} has been credited to your R-Wallet balance.`,
+        message: `₹${amount.toFixed(2)} has been credited to your R-Wallet balance.`,
         type: 'recharge_approved',
-        userId: request.userId,
-        amount: request.amount,
+        userId: userId,
+        amount: amount,
         isRead: false,
         createdAt: serverTimestamp(),
         createdAtStr: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
@@ -459,12 +482,15 @@ export const FirebaseFirestoreService = {
     const reqRef = doc(db, 'wallet_requests', requestId);
     const snap = await getDoc(reqRef);
     const reqData = snap.data();
+    const adminEmail = typeof adminUser === 'string' ? adminUser : (adminUser?.email || 'admin@railone.com');
+    const adminRole = typeof adminUser === 'object' ? (adminUser?.role || 'admin') : 'admin';
+    const adminId = typeof adminUser === 'object' ? (adminUser?.uid || 'admin') : 'admin';
 
     await updateDoc(reqRef, {
       status: 'rejected',
-      adminRole: adminUser?.role || 'admin',
-      adminEmail: adminUser?.email || 'Admin',
-      adminId: adminUser?.uid || 'admin',
+      adminRole: adminRole,
+      adminEmail: adminEmail,
+      adminId: adminId,
       rejectionReason: reason,
       rejectedAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
@@ -543,17 +569,23 @@ export const FirebaseFirestoreService = {
       );
     }
 
-    return onSnapshot(q, (snap) => {
-      const list: any[] = [];
-      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
-      // Sort new notifications to top
-      list.sort((a, b) => {
-        const timeA = a.createdAtMillis || (a.createdAt?.toMillis ? a.createdAt.toMillis() : 0);
-        const timeB = b.createdAtMillis || (b.createdAt?.toMillis ? b.createdAt.toMillis() : 0);
-        return timeB - timeA;
-      });
-      actualCallback(list);
-    });
+    return onSnapshot(
+      q,
+      (snap) => {
+        const list: any[] = [];
+        snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+        // Sort new notifications to top
+        list.sort((a, b) => {
+          const timeA = a.createdAtMillis || (a.createdAt?.toMillis ? a.createdAt.toMillis() : 0);
+          const timeB = b.createdAtMillis || (b.createdAt?.toMillis ? b.createdAt.toMillis() : 0);
+          return timeB - timeA;
+        });
+        actualCallback(list);
+      },
+      (err) => {
+        console.warn('Notifications listener error:', err);
+      }
+    );
   },
 
   deleteNotification: async (notificationId: string) => {

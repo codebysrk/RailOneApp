@@ -255,11 +255,19 @@ export const MenuDrawer = ({ visible, onClose }: Props) => {
     },
   ];
 
+  const handleBackPress = () => {
+    if (addMoneyVisible) {
+      handleCloseAddMoney();
+    } else {
+      handleClose();
+    }
+  };
+
   return (
     <Modal
       transparent
       visible={visible}
-      onRequestClose={handleClose}
+      onRequestClose={handleBackPress}
       animationType="none"
       statusBarTranslucent
     >

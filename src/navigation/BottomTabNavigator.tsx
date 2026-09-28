@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
-import { TouchableOpacity, Platform } from 'react-native';
+import { TouchableOpacity, Pressable, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors } from '@/theme/colors';
 import { HomeScreen, BookingsScreen, ProfileScreen, MenuScreen } from '@/screens';
@@ -10,10 +11,14 @@ import { MenuDrawer } from '@/components/common/MenuDrawer';
 const Tab = createBottomTabNavigator<BottomTabParamList>();
 
 export const BottomTabNavigator: React.FC = () => {
+  const insets = useSafeAreaInsets();
   const [menuVisible, setMenuVisible] = useState(false);
 
   const openMenu = useCallback(() => setMenuVisible(true), []);
   const closeMenu = useCallback(() => setMenuVisible(false), []);
+
+  const tabHeight = (Platform.OS === 'ios' ? 56 : 56) + insets.bottom;
+  const tabPaddingBottom = insets.bottom > 0 ? insets.bottom : (Platform.OS === 'ios' ? 14 : 5);
 
   return (
     <>
@@ -24,8 +29,8 @@ export const BottomTabNavigator: React.FC = () => {
           tabBarInactiveTintColor: '#93c5fd',
           tabBarHideOnKeyboard: true,
           tabBarStyle: {
-            height: Platform.OS === 'ios' ? 74 : 58,
-            paddingBottom: Platform.OS === 'ios' ? 19 : 5,
+            height: tabHeight,
+            paddingBottom: tabPaddingBottom,
             paddingTop: 6,
             backgroundColor: '#0066ff',
             borderTopWidth: 0,
@@ -45,11 +50,19 @@ export const BottomTabNavigator: React.FC = () => {
             marginBottom: -1,
           },
           tabBarButton: (props) => (
-            <TouchableOpacity
-              {...(props as any)}
-              activeOpacity={0.7}
-              style={props.style}
-            />
+            Platform.OS === 'android' ? (
+              <Pressable
+                {...(props as any)}
+                android_ripple={{ color: 'rgba(255, 255, 255, 0.22)', borderless: true }}
+                style={props.style}
+              />
+            ) : (
+              <TouchableOpacity
+                {...(props as any)}
+                activeOpacity={0.7}
+                style={props.style}
+              />
+            )
           ),
           tabBarIcon: ({ color }) => {
             const ICON_SIZE = 26;

@@ -367,6 +367,24 @@ export const UnreservedScreen = () => {
                 </TouchableOpacity>
               </View>
 
+              {location === "at" && (
+                <TouchableOpacity
+                  style={styles.qrScanBtn}
+                  onPress={() => {
+                    AppAlert.show(
+                      "QR Scanner",
+                      "Station QR Code scanning will be available in an upcoming update. You can manually select stations below.",
+                      undefined,
+                      "info"
+                    );
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="qr-code-outline" size={20} color="#0066ff" />
+                  <Text style={styles.qrScanBtnText}>Scan Station QR Code</Text>
+                </TouchableOpacity>
+              )}
+
               <TouchableOpacity
                 style={styles.primaryBtn}
                 onPress={handleProceedToBook}
@@ -544,7 +562,7 @@ export const UnreservedScreen = () => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.white },
   scrollView: { flex: 1, backgroundColor: "#f4f5f9" },
-  content: { padding: 16, paddingBottom: 36 },
+  content: { padding: 16, paddingBottom: 48 },
   card: {
     backgroundColor: colors.white,
     borderRadius: 24,
@@ -627,6 +645,23 @@ const styles = StyleSheet.create({
     ...elevation.sm,
   },
 
+  qrScanBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#eff6ff",
+    borderWidth: 1.5,
+    borderColor: "#bfdbfe",
+    borderRadius: 28,
+    paddingVertical: 12,
+    marginBottom: 12,
+  },
+  qrScanBtnText: {
+    fontFamily: "Montserrat_600SemiBold",
+    color: "#0066ff",
+    fontSize: 13,
+    marginLeft: 8,
+  },
   primaryBtn: {
     backgroundColor: "#0066ff",
     paddingVertical: 14,

@@ -31,6 +31,19 @@ export const colors = {
   gridIcRed: '#ef4444',
 
   white: '#ffffff',
-  background: '#f1f5f9'
-};
+  background: '#f1f5f9',
 
+  // M3 Surface Tokens
+  surface: '#ffffff',
+  surfaceVariant: '#f1f5f9',
+  onSurface: '#1e293b',
+  onSurfaceVariant: '#64748b',
+  outline: '#e2e8f0',
+  outlineVariant: '#cbd5e1',
+
+  // Ticket Type Accent Colors
+  ticketJourney: '#0066ff',
+  ticketReturn: '#7c3aed',
+  ticketPlatform: '#f59e0b',
+  ticketSeason: '#16a34a',
+};

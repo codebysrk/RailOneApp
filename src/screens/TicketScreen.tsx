@@ -23,7 +23,7 @@ import {
   useIsFocused,
 } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons, Feather } from "@expo/vector-icons";
+import { Ionicons, Feather, MaterialIcons } from "@expo/vector-icons";
 import { AppAlert } from "@/context/AlertContext";
 import { AppHeader } from "@/components/common";
 import { colors } from "@/theme/colors";
@@ -31,6 +31,7 @@ import { spacing, elevation } from "@/theme/spacing";
 import { useAuth } from "@/context/AuthContext";
 import { FirebaseService } from "@/services";
 import { RailwayDistanceEngine } from "@/services/RailwayDistanceEngine";
+import Svg, { Polygon } from "react-native-svg";
 
 // ─── Font Weight to Montserrat Mapping ─────────────────────────────────────────
 const FONT_WEIGHT_MAP: Record<string, string> = {
@@ -145,12 +146,66 @@ const ReverseSlidingBlock = React.memo(({ value }: { value: string }) => {
   );
 });
 
+interface DiamondPatternProps {
+  width: number;
+  height: number;
+}
+
+const DynamicPreviewDiamondBackground: React.FC<DiamondPatternProps> = React.memo(({ width, height }) => {
+  const bannerH = height > 0 ? height : 220;
+  const diamondHeight = bannerH / 2.5;
+  const diamondWidth = Math.round(diamondHeight * 0.57);
+  const halfW = diamondWidth / 2;
+  const halfH = diamondHeight / 2;
+
+  const cols = Math.ceil(width / halfW) + 2;
+
+  const polygons = useMemo(() => {
+    const items: Array<{
+      key: string;
+      points: string;
+      fill: string;
+    }> = [];
+
+    const yShift = 40;
+
+    for (let c = -1; c < cols; c++) {
+      const x = c * halfW;
+      const yOffset = (c % 2 === 0 ? 0 : halfH) - yShift;
+      const isLight = Math.abs(c) % 2 === 1;
+
+      for (let r = 0; r <= 4; r++) {
+        const y = yOffset + r * diamondHeight;
+        const pts = `${x},${y - halfH} ${x + halfW},${y} ${x},${y + halfH} ${x - halfW},${y}`;
+        items.push({
+          key: `d-${c}-${r}`,
+          points: pts,
+          fill: isLight ? '#444444' : '#222222',
+        });
+      }
+    }
+    return items;
+  }, [width, bannerH, cols, halfW, halfH, diamondHeight]);
+
+  return (
+    <View style={[StyleSheet.absoluteFill, { transform: [{ scaleX: -1 }], opacity: 0.3 }]} pointerEvents="none">
+      <Svg width="100%" height="100%">
+        {polygons.map((p) => (
+          <Polygon key={p.key} points={p.points} fill={p.fill} />
+        ))}
+      </Svg>
+    </View>
+  );
+});
+
 export const TicketScreen = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const { user } = useAuth();
   const ticketData = route.params?.ticket;
   const fromBooking = route.params?.fromBooking;
+
+  const [dynamicBannerSize, setDynamicBannerSize] = useState({ width: 360, height: 220 });
 
   const pnr = ticketData?.pnr || "---";
   const ticketId = ticketData?.ticketId || "---";
@@ -161,7 +216,7 @@ export const TicketScreen = () => {
   const distance = useMemo(() => {
     if (ticketData?.distance && ticketData.distance !== "---") {
       const distStr = String(ticketData.distance).trim();
-      return distStr.toLowerCase().includes("km") ? distStr : `${distStr} km`;
+      return distStr.toLowerCase().includes("km") ? distStr.toLowerCase() : `${distStr} km`;
     }
     const srcCode = ticketData?.sourceCode || source;
     const dstCode = ticketData?.destCode || dest;
@@ -172,7 +227,7 @@ export const TicketScreen = () => {
         via,
       );
       if (res && res.distance && res.distance.value > 0) {
-        return res.distance.formatted;
+        return res.distance.formatted.toLowerCase();
       }
     }
     if (ticketData?.fare && parseFloat(ticketData.fare) > 0) {
@@ -528,7 +583,7 @@ export const TicketScreen = () => {
   ]);
 
   return (
-    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
       {/* ─── Header ─────────────────────────────────────────────────── */}
       <AppHeader
         title="Booking Details"
@@ -572,7 +627,21 @@ export const TicketScreen = () => {
               <View style={styles.cyanRibbon} />
 
               {/* Dynamic Dark Banner */}
-              <View style={styles.darkBanner}>
+              <View
+                style={styles.darkBanner}
+                onLayout={(e) => {
+                  const { width, height } = e.nativeEvent.layout;
+                  if (width > 0 && height > 0) {
+                    setDynamicBannerSize({ width, height });
+                  }
+                }}
+              >
+                {/* Dynamic Preview Diamond / Rhombus Background Pattern */}
+                <DynamicPreviewDiamondBackground
+                  width={dynamicBannerSize.width}
+                  height={dynamicBannerSize.height}
+                />
+
                 {/* Left Vertical Column */}
                 <View style={styles.verticalColLeft}>
                   <Text style={styles.verticalTextEnglish}>
@@ -622,75 +691,110 @@ export const TicketScreen = () => {
                 />
               </View>
 
-              {/* Ticket Body (Warm Off-White Cream Paper Section) */}
+              {/* Ticket Body (Official UTS Mobile Match) */}
               <View style={styles.ticketBody}>
-                {/* Row 1: Journey Ticket & Reference ID */}
-                <View style={styles.rowBetween}>
-                  <Text style={styles.ticketTypeTitle}>Journey Ticket</Text>
-                  <Text style={styles.ticketIdText}>{ticketId}</Text>
+                {/* Row 1: Journey Ticket & ID on Left, ACTIVE badge on Right */}
+                <View style={styles.utsTopRow}>
+                  <View>
+                    <Text style={styles.utsFieldLabel}>
+                      {ticketData?.ticketType === "RETURN" ? "Return Ticket" : "Journey Ticket"}
+                    </Text>
+                    <Text style={styles.utsTicketId}>{ticketId}</Text>
+                  </View>
+                  <View style={styles.utsActiveBadge}>
+                    <Text style={styles.utsActiveBadgeText}>• ACTIVE</Text>
+                  </View>
                 </View>
 
-                {/* Row 2: Route & Distance */}
-                <View style={styles.routeRow}>
-                  <Text style={styles.stnNameLeft}>{source}</Text>
-                  <TouchableOpacity
-                    onPress={handleDistancePress}
-                    activeOpacity={0.8}
-                    hitSlop={{ top: 8, bottom: 8, left: 10, right: 10 }}
-                  >
-                    <Text style={styles.distanceText}>—{displayDistance}—</Text>
-                  </TouchableOpacity>
-                  <Text style={styles.stnNameRight}>{dest}</Text>
-                </View>
-
-                {/* Row 3: Via & Passenger */}
-                <View style={styles.detailsGrid}>
+                {/* Row 2: Source (Left) & Destination (Right) */}
+                <View style={styles.utsGridRow}>
                   <View style={styles.gridColLeft}>
-                    <Text style={styles.gridLabel}>Via</Text>
-                    <Text style={styles.gridValue}>{via}</Text>
+                    <Text style={styles.utsFieldLabel}>Source</Text>
+                    <Text style={styles.utsStationName}>{source}</Text>
                   </View>
                   <View style={styles.gridColRight}>
-                    <Text style={styles.gridLabelRight}>Passenger</Text>
-                    <Text style={styles.gridValueRight}>
+                    <Text style={[styles.utsFieldLabel, styles.alignRight]}>Destination</Text>
+                    <Text style={[styles.utsStationName, styles.alignRight]}>{dest}</Text>
+                  </View>
+                </View>
+
+                {/* Row 3: Distance (Left) & Passenger (Right) */}
+                <View style={styles.utsGridRow}>
+                  <View style={styles.gridColLeft}>
+                    <Text style={styles.utsFieldLabel}>Distance</Text>
+                    <TouchableOpacity
+                      onPress={handleDistancePress}
+                      activeOpacity={0.8}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <Text style={styles.utsFieldValue}>{displayDistance}</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.gridColRight}>
+                    <Text style={[styles.utsFieldLabel, styles.alignRight]}>Passenger</Text>
+                    <Text style={[styles.utsFieldValue, styles.alignRight]}>
                       {adultsCount} Adult, {childCount} Child
                     </Text>
                   </View>
                 </View>
 
-                {/* Row 4: Booked on & Valid Till */}
-                <View style={styles.detailsGrid}>
+                {/* Row 4: Ticket Type (Left) & Train Types (Right) */}
+                <View style={styles.utsGridRow}>
                   <View style={styles.gridColLeft}>
-                    <Text style={styles.gridLabel}>Booked on</Text>
-                    <Text style={styles.gridValue}>{bookedNumeric}</Text>
+                    <Text style={styles.utsFieldLabel}>Ticket Type</Text>
+                    <Text style={styles.utsFieldValue}>
+                      {ticketData?.ticketType || "JOURNEY"}
+                    </Text>
                   </View>
                   <View style={styles.gridColRight}>
-                    <Text style={styles.gridLabelRight}>*Valid Till</Text>
-                    <Text style={styles.gridValueRight}>
-                      {validTillNumeric}
+                    <Text style={[styles.utsFieldLabel, styles.alignRight]}>Train Types</Text>
+                    <Text style={[styles.utsFieldValue, styles.alignRight]}>
+                      {ticketData?.trainType || "ORDINARY"}
                     </Text>
                   </View>
                 </View>
 
-                {/* Row 5: Class | Type | Fare */}
-                <View style={styles.fareInfoBlock}>
-                  <Text style={styles.fareSummaryText}>
-                    {ticketData?.classType || "SECOND"} |{" "}
-                    {ticketData?.trainType || "ORDINARY"} | JOURNEY | ₹{fare}
-                  </Text>
-                  <Text style={styles.irCodeText}>{irCode}</Text>
+                {/* Row 5: Class (Left) & Fare (Right) */}
+                <View style={styles.utsGridRow}>
+                  <View style={styles.gridColLeft}>
+                    <Text style={styles.utsFieldLabel}>Class</Text>
+                    <Text style={styles.utsFieldValue}>
+                      {ticketData?.classType || "SECOND"}
+                    </Text>
+                  </View>
+                  <View style={styles.gridColRight}>
+                    <Text style={[styles.utsFieldLabel, styles.alignRight]}>Fare</Text>
+                    <Text style={[styles.utsFieldValue, styles.alignRight]}>
+                      ₹{Number(fare).toFixed(2)}
+                    </Text>
+                  </View>
                 </View>
+
+                {/* Row 6: Via Chip */}
+                <View style={styles.viaChipContainer}>
+                  <MaterialIcons
+                    name="alt-route"
+                    size={24}
+                    color="#64748b"
+                    style={{ marginRight: 6, transform: [{ rotate: "90deg" }] }}
+                  />
+                  <Text style={styles.viaChipText}>Via: {via || "---"}</Text>
+                </View>
+
+                {/* Row 7: IR GST / Code */}
+                <Text style={styles.irCodeText}>{irCode}</Text>
 
                 {/* Perforation Notch Cutout Line */}
                 <View style={styles.tearWrapper}>
                   <View style={[styles.tearCutout, styles.tearCutoutLeft]} />
-                  <View style={styles.tearDashedLine} />
                   <View style={[styles.tearCutout, styles.tearCutoutRight]} />
                 </View>
 
-                {/* Row 6: Validity Disclaimer */}
+                {/* Row 8: Validity Disclaimer */}
                 <Text style={styles.validityNote}>
-                  *Valid for start of journey by {validTillDate} or until
-                  departure of first train
+                  {ticketData?.ticketType === "RETURN"
+                    ? "*Valid for return journey till 23:59 of the next day or until departure of the first train."
+                    : "*Valid for start of journey within 3 hour or until departure of the first train."}
                 </Text>
               </View>
 
@@ -703,7 +807,7 @@ export const TicketScreen = () => {
           <View style={styles.warningCard}>
             <Text style={styles.warningText}>
               Note: This ticket is non refundable. Ticket is stored locally on
-              the device, Please do not change your handset or perform factory
+              the device. Please do not change your handset or perform factory
               reset.
             </Text>
           </View>
@@ -954,14 +1058,14 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#0066ff" },
   keyboardContainer: { flex: 1 },
   scrollView: { flex: 1, backgroundColor: "#f2f2f2" },
-  scrollContent: { paddingHorizontal: 10, paddingTop: 4, paddingBottom: 0 },
+  scrollContent: { paddingHorizontal: 8, paddingTop: 2, paddingBottom: 24 },
   greetingContainer: {
     backgroundColor: "#ffffff",
-    marginHorizontal: -10,
-    marginTop: -4,
-    paddingVertical: 8,
+    marginHorizontal: -8,
+    marginTop: -2,
+    paddingVertical: 5,
     paddingHorizontal: 10,
-    marginBottom: 6,
+    marginBottom: 4,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
@@ -971,7 +1075,7 @@ const styles = StyleSheet.create({
   },
   greetingText: {
     fontFamily: "Montserrat_400Regular",
-    fontSize: 12,
+    fontSize: 11,
     color: "#404040",
     textAlign: "left",
   },
@@ -985,18 +1089,20 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   ticketCardWrapper: { borderRadius: 12, overflow: "hidden" },
-  cyanRibbon: { height: 12, backgroundColor: "rgb(0, 190, 204)" },
+  cyanRibbon: { height: 9, backgroundColor: "rgb(0, 190, 204)" },
   progressBarTrack: {
-    height: 4,
+    height: 3,
     backgroundColor: "#adadad",
     width: "100%",
     overflow: "hidden",
   },
   progressBarFill: { height: "100%", backgroundColor: "rgb(0, 190, 204)" },
   darkBanner: {
-    backgroundColor: "#000000",
+    backgroundColor: "#121212",
+    position: "relative",
+    overflow: "hidden",
     flexDirection: "row",
-    paddingVertical: 14,
+    paddingVertical: 22, // Increased height as requested
     alignItems: "center",
     justifyContent: "space-between",
   },
@@ -1009,10 +1115,10 @@ const styles = StyleSheet.create({
     fontFamily: "Montserrat_700Bold",
     fontWeight: "700",
     color: "#a0aab8",
-    fontSize: 13,
-    letterSpacing: 2,
+    fontSize: 12.5,
+    letterSpacing: 1.5,
     transform: [{ rotate: "-90deg" }],
-    width: 160,
+    width: 150,
     textAlign: "center",
   },
   verticalColRight: {
@@ -1024,10 +1130,10 @@ const styles = StyleSheet.create({
     fontFamily: "Montserrat_700Bold",
     fontWeight: "700",
     color: "#a0aab8",
-    fontSize: 18,
-    letterSpacing: 1.5,
+    fontSize: 17,
+    letterSpacing: 1,
     transform: [{ rotate: "-90deg" }],
-    width: 140,
+    width: 130,
     textAlign: "center",
   },
   verticalDashedSeparator: {
@@ -1042,7 +1148,7 @@ const styles = StyleSheet.create({
   previewCloseText: {
     fontFamily: "Montserrat_600SemiBold",
     color: "#ffffff",
-    fontSize: 14.5,
+    fontSize: 14,
     letterSpacing: 0.2,
   },
   timerRow: {
@@ -1052,8 +1158,8 @@ const styles = StyleSheet.create({
     marginVertical: 2,
   },
   odometerBlock: {
-    width: 65,
-    height: 46,
+    width: 62,
+    height: 44,
     overflow: "hidden",
     justifyContent: "center",
     alignItems: "center",
@@ -1065,17 +1171,17 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    height: 46,
-    width: 65,
+    height: 44,
+    width: 62,
     justifyContent: "center",
     alignItems: "center",
   },
   timerColon: {
     fontFamily: "Montserrat_600SemiBold",
     color: "#ff2020",
-    fontSize: 34,
-    height: 46,
-    lineHeight: 46,
+    fontSize: 32,
+    height: 44,
+    lineHeight: 44,
     marginHorizontal: 2,
     textAlign: "center",
     textAlignVertical: "center",
@@ -1084,10 +1190,10 @@ const styles = StyleSheet.create({
   timerDigital: {
     fontFamily: "Montserrat_700Bold",
     color: "#ff2020",
-    fontSize: 38,
+    fontSize: 36,
     letterSpacing: 0.5,
-    height: 46,
-    lineHeight: 46,
+    height: 44,
+    lineHeight: 44,
     textAlign: "center",
     textAlignVertical: "center",
     includeFontPadding: false,
@@ -1096,16 +1202,16 @@ const styles = StyleSheet.create({
     fontFamily: "Montserrat_700Bold",
     fontWeight: "700",
     color: "#a0aab8",
-    fontSize: 13,
+    fontSize: 12.5,
     marginTop: 2,
   },
   bookingDateValue: {
     fontFamily: "Montserrat_600SemiBold",
     fontWeight: "600",
     color: "#ff9800",
-    fontSize: 24,
+    fontSize: 23,
     letterSpacing: 0.2,
-    lineHeight: 30,
+    lineHeight: 28,
     marginTop: 2,
   },
   rNumberText: {
@@ -1125,126 +1231,106 @@ const styles = StyleSheet.create({
   },
   ticketBody: {
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: 6,
     backgroundColor: "#ffffff",
   },
-  rowBetween: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 4,
-  },
-  ticketTypeTitle: {
-    fontFamily: "Montserrat_600SemiBold",
-    fontWeight: "600",
-    fontSize: 13.5,
-    color: "#475569",
-    letterSpacing: 0.2,
-  },
-  ticketIdText: {
-    fontFamily: "Montserrat_600SemiBold",
-    fontWeight: "600",
-    fontSize: 14,
-    color: "#0f172a",
-    letterSpacing: 0.5,
-  },
-  routeRow: {
+  utsTopRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginTop: 6,
-    marginBottom: 6,
+    marginBottom: 2,
   },
-  stnNameLeft: {
-    fontFamily: "Montserrat_600SemiBold",
-    fontWeight: "600",
-    fontSize: 12,
-    color: "#0f172a",
-    flex: 1,
-    letterSpacing: 0.2,
-    lineHeight: 17,
-  },
-  distanceText: {
+  utsFieldLabel: {
     fontFamily: "Montserrat_600SemiBold",
     fontWeight: "600",
     fontSize: 11,
-    color: "#475569",
-    marginHorizontal: 4,
-    flexShrink: 0,
-    textAlign: "center",
-    letterSpacing: 0.2,
-    lineHeight: 17,
+    color: "#6b7280",
+    letterSpacing: 0.1,
+    marginBottom: 1,
   },
-  stnNameRight: {
-    fontFamily: "Montserrat_600SemiBold",
-    fontWeight: "600",
-    fontSize: 12,
-    color: "#0f172a",
-    flex: 1,
-    textAlign: "right",
-    letterSpacing: 0.2,
-    lineHeight: 17,
+  utsTicketId: {
+    fontFamily: "Montserrat_700Bold",
+    fontWeight: "700",
+    fontSize: 15,
+    color: "#111827",
+    letterSpacing: 0.5,
   },
-  detailsGrid: {
+  utsActiveBadge: {
+    backgroundColor: "#e8f8ee",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#bbf0c8",
+    alignSelf: "flex-start",
+    marginTop: 1,
+  },
+  utsActiveBadgeText: {
+    fontFamily: "Montserrat_700Bold",
+    fontWeight: "700",
+    fontSize: 10.5,
+    color: "#16a34a",
+    letterSpacing: 0.4,
+  },
+  utsGridRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginVertical: 4.5,
+    alignItems: "flex-start",
+    marginTop: 2,
   },
   gridColLeft: { flex: 1 },
   gridColRight: { flex: 1, alignItems: "flex-end" },
-  gridLabel: {
+  utsStationName: {
     fontFamily: "Montserrat_700Bold",
     fontWeight: "700",
-    fontSize: 12,
-    color: "#596579",
+    fontSize: 13.5,
+    color: "#111827",
     letterSpacing: 0.2,
+    textTransform: "uppercase",
   },
-  gridLabelRight: {
+  utsFieldValue: {
     fontFamily: "Montserrat_700Bold",
     fontWeight: "700",
-    fontSize: 12,
-    color: "#596579",
-    textAlign: "right",
-    letterSpacing: 0.2,
-  },
-  gridValue: {
-    fontFamily: "Montserrat_600SemiBold",
-    fontWeight: "600",
-    fontSize: 13,
-    color: "#0f172a",
-    marginTop: 2,
-    letterSpacing: 0.1,
-  },
-  gridValueRight: {
-    fontFamily: "Montserrat_600SemiBold",
-    fontWeight: "600",
-    fontSize: 13,
-    color: "#0f172a",
-    textAlign: "right",
-    marginTop: 2,
-    letterSpacing: 0.1,
-  },
-  fareInfoBlock: { marginTop: 7, marginBottom: 4 },
-  fareSummaryText: {
-    fontFamily: "Montserrat_600SemiBold",
-    fontWeight: "600",
     fontSize: 12.5,
-    color: "#334155",
+    color: "#111827",
+    letterSpacing: 0.2,
+  },
+  alignRight: {
+    textAlign: "right",
+  },
+  viaChipContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    backgroundColor: "#f3f4f6",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginTop: 4,
+    marginBottom: 2,
+  },
+  viaChipText: {
+    fontFamily: "Montserrat_600SemiBold",
+    fontWeight: "600",
+    fontSize: 12.5, // Increased slightly
+    color: "#64748b", // lighter grey
     letterSpacing: 0.2,
   },
   irCodeText: {
     fontFamily: "Montserrat_500Medium",
     fontWeight: "500",
-    fontSize: 11.5,
+    fontSize: 10.5,
     color: "#64748b",
-    marginTop: 2,
+    marginTop: 1,
     letterSpacing: 0.3,
   },
   tearWrapper: {
-    height: 16,
+    height: 12,
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 6,
+    marginVertical: 1,
   },
   tearDashedLine: {
     flex: 1,
@@ -1255,21 +1341,21 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
   },
   tearCutout: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     backgroundColor: "#f2f2f2",
     position: "absolute",
-    top: -7,
+    top: -2,
   },
-  tearCutoutLeft: { left: -25 },
-  tearCutoutRight: { right: -25 },
+  tearCutoutLeft: { left: -20 },
+  tearCutoutRight: { right: -20 },
   validityNote: {
     fontFamily: "Montserrat_500Medium",
-    fontSize: 10.5,
+    fontSize: 9.5,
     color: "#64748b",
-    lineHeight: 15,
-    marginTop: 5,
+    lineHeight: 14,
+    marginTop: 2,
   },
   warningCard: {
     backgroundColor: "#f9e6e6",

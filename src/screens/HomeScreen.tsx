@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -11,10 +11,13 @@ import {
   ImageBackground,
   Linking,
   useWindowDimensions,
+  Platform,
+  BackHandler,
+  ToastAndroid,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import Svg, {
@@ -80,6 +83,26 @@ export const HomeScreen = () => {
       }
     });
   }, []);
+
+  // Android native double-tap back to exit
+  useFocusEffect(
+    useCallback(() => {
+      if (Platform.OS !== "android") return;
+      let lastBackPress = 0;
+      const onBackPress = () => {
+        const now = Date.now();
+        if (now - lastBackPress < 2000) {
+          BackHandler.exitApp();
+          return true;
+        }
+        lastBackPress = now;
+        ToastAndroid.show("Press back again to exit", ToastAndroid.SHORT);
+        return true;
+      };
+      const sub = BackHandler.addEventListener("hardwareBackPress", onBackPress);
+      return () => sub.remove();
+    }, [])
+  );
 
   useEffect(() => {
     if (user?.role === 'admin') {
@@ -188,10 +211,12 @@ export const HomeScreen = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* ─── User Greeting ───────────────────────────────────────── */}
-        <Text style={styles.greeting}>
-          Hi, {user?.name ? user.name.split(" ")[0] : "User"}!
-        </Text>
+        {/* ─── User Greeting ────────────────────────────────────────── */}
+        <View style={styles.greetingRow}>
+          <Text style={styles.greeting}>
+            Hi, {user?.name ? user.name.split(" ")[0] : "User"}!
+          </Text>
+        </View>
 
         {/* ─── 1. Journey Planner ──────────────────────────────────── */}
         <Text style={styles.sectionTitle}>Journey Planner</Text>
@@ -645,13 +670,41 @@ const styles = StyleSheet.create({
     paddingTop: 36,
     paddingBottom: 36,
   },
+  greetingRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 8,
+    marginBottom: 14,
+  },
   greeting: {
-    fontFamily: "Montserrat_600SemiBold",
-    fontSize: 11,
+    fontFamily: "Montserrat_700Bold",
+    fontSize: 15,
     color: "#0f172a",
     letterSpacing: -0.2,
-    marginTop: 8,
-    marginBottom: 12,
+  },
+  greetingSub: {
+    fontFamily: "Montserrat_400Regular",
+    fontSize: 11,
+    color: "#64748b",
+    marginTop: 2,
+  },
+  walletQuickView: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f0fdf4",
+    borderWidth: 1,
+    borderColor: "#bbf7d0",
+    borderRadius: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    gap: 5,
+  },
+  walletQuickText: {
+    fontFamily: "Montserrat_700Bold",
+    fontSize: 12,
+    color: "#16a34a",
+    letterSpacing: 0.2,
   },
   sectionTitle: {
     fontFamily: "Montserrat_700Bold",

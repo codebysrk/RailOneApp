@@ -818,7 +818,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     backgroundColor: '#ffffff',
-    paddingBottom: 16,
+    paddingBottom: 36,
   },
 
   /* 1. Header Banner (Compact) */

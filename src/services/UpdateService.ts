@@ -2,7 +2,7 @@ import { Linking } from 'react-native';
 
 const GITHUB_OWNER = 'codebysrk';
 const GITHUB_REPO = 'RailOneApp';
-const CURRENT_APP_VERSION = '1.0.0';
+const CURRENT_APP_VERSION = '1.1.0';
 
 export interface ReleaseInfo {
   updateAvailable: boolean;

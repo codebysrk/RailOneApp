@@ -338,6 +338,129 @@ class RailwayDistanceEngineService {
   public getAllSections(): RailwaySection[] {
     return VERIFIED_RAILWAY_SECTIONS;
   }
+
+  /**
+   * Computes the official CRIS/UTS VIA junction(s) for a journey between two stations.
+   * Matches official UTS railway logic:
+   * - Authoritative corridor mappings (e.g. INDB-UJN => DWX, NZM-MRA => TKD).
+   * - Graph traversal for prominent intermediate junctions.
+   * - Returns '---' if stations are consecutive or direct.
+   */
+  public computeOfficialViaRoute(fromCode: string, toCode: string): string {
+    const src = this.normalizeCode(fromCode);
+    const dst = this.normalizeCode(toCode);
+
+    if (!src || !dst || src === dst) {
+      return "---";
+    }
+
+    const pairKey = `${src}-${dst}`;
+    const reverseKey = `${dst}-${src}`;
+
+    // 1. Authoritative UTS corridor-specific via junctions
+    const AUTHORITATIVE_VIA: Record<string, string> = {
+      "INDB-UJN": "DWX",
+      "UJN-INDB": "DWX",
+      "NZM-MRA": "TKD",
+      "MRA-NZM": "TKD",
+      "NDLS-MRA": "TKD",
+      "MRA-NDLS": "TKD",
+      "DLI-MRA": "TKD",
+      "MRA-DLI": "TKD",
+      "NZM-GWL": "TKD",
+      "GWL-NZM": "TKD",
+      "NDLS-GWL": "TKD",
+      "GWL-NDLS": "TKD",
+      "NZM-AGC": "TKD",
+      "AGC-NZM": "TKD",
+      "NDLS-AGC": "TKD",
+      "AGC-NDLS": "TKD",
+      "NZM-MTJ": "TKD",
+      "MTJ-NZM": "TKD",
+      "NDLS-MTJ": "TKD",
+      "MTJ-NDLS": "TKD",
+      "NDLS-BPL": "TKD, GWL, JHS",
+      "BPL-NDLS": "JHS, GWL, TKD",
+      "NDLS-RKMP": "TKD, GWL, JHS",
+      "RKMP-NDLS": "JHS, GWL, TKD",
+      "NDLS-HWH": "TKD, CNB, PRYJ",
+      "HWH-NDLS": "PRYJ, CNB, TKD",
+      "NDLS-MMCT": "TKD, KOTA, BRC",
+      "MMCT-NDLS": "BRC, KOTA, TKD",
+      "AGC-JHS": "GWL",
+      "JHS-AGC": "GWL",
+      "GWL-BPL": "JHS, BINA",
+      "BPL-GWL": "BINA, JHS",
+      "BPL-NGP": "ET",
+      "NGP-BPL": "ET",
+      "HWH-PNBE": "ASN, JAJ",
+      "PNBE-HWH": "JAJ, ASN",
+      "PNBE-NDLS": "BXR, DDU, CNB",
+      "NDLS-PNBE": "CNB, DDU, BXR",
+      "CSMT-PUNE": "KYN, KJT",
+      "PUNE-CSMT": "KJT, KYN",
+      "MAS-SBC": "AJJ, JTJ",
+      "SBC-MAS": "JTJ, AJJ",
+      "SC-VSKP": "KZJ, BZA",
+      "VSKP-SC": "BZA, KZJ",
+      "ADI-MMCT": "BRC, ST",
+      "MMCT-ADI": "ST, BRC",
+      "JP-NDLS": "RE",
+      "NDLS-JP": "RE",
+      "JP-AII": "FL",
+      "AII-JP": "FL",
+      "CNB-LKO": "ON",
+      "LKO-CNB": "ON",
+      "CDG-NDLS": "UMB",
+      "NDLS-CDG": "UMB",
+    };
+
+    if (AUTHORITATIVE_VIA[pairKey]) {
+      return AUTHORITATIVE_VIA[pairKey];
+    }
+    if (AUTHORITATIVE_VIA[reverseKey]) {
+      return AUTHORITATIVE_VIA[reverseKey];
+    }
+
+    // 2. Compute via Dijkstra graph intermediate junctions
+    const shortest = this.findShortestPath(src, dst);
+    if (!shortest || shortest.path.length <= 2) {
+      return "---";
+    }
+
+    // Major Indian Railway Junctions that define Via routes on UTS tickets
+    const MAJOR_JUNCTION_CODES = new Set([
+      "TKD", "PWL", "MTJ", "AGC", "GWL", "JHS", "BINA", "BPL", "ET", "CNB",
+      "PRYJ", "DDU", "GZB", "ALJN", "KOTA", "RTM", "BRC", "ST", "BSL", "IGP",
+      "KYN", "AJJ", "JTJ", "BZA", "KZJ", "KPD", "RU", "GTL", "BSB", "LKO",
+      "GKP", "ASN", "KGP", "TATA", "ROU", "BSP", "R", "NGP", "WR", "SUR",
+      "PUNE", "DWX", "FL", "RE", "AWR", "BKI", "JU", "MB", "BE", "CPR",
+      "HJP", "MFP", "SPJ", "KIR", "NJP", "UMB", "LDH", "ASR", "BKN"
+    ]);
+
+    const intermediateNodes = shortest.path.slice(1, -1);
+    const matchedJunctions = intermediateNodes.filter((node) => MAJOR_JUNCTION_CODES.has(node));
+
+    if (matchedJunctions.length === 0) {
+      if (intermediateNodes.length === 1) {
+        return intermediateNodes[0];
+      }
+      return "---";
+    }
+
+    if (matchedJunctions.length === 1) {
+      return matchedJunctions[0];
+    }
+
+    if (matchedJunctions.length <= 3) {
+      return matchedJunctions.join(", ");
+    }
+
+    const first = matchedJunctions[0];
+    const mid = matchedJunctions[Math.floor(matchedJunctions.length / 2)];
+    const last = matchedJunctions[matchedJunctions.length - 1];
+    return [first, mid, last].filter((v, i, a) => a.indexOf(v) === i).join(", ");
+  }
 }
 
 export const RailwayDistanceEngine = new RailwayDistanceEngineService();

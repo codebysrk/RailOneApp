@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Image, Text, TextInput, StyleSheet, StatusBar as RNStatusBar, Platform, Animated, Easing } from 'react-native';
+import { View, Image, Text, TextInput, ScrollView, FlatList, StyleSheet, StatusBar as RNStatusBar, Platform, Animated, Easing } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
@@ -86,6 +86,17 @@ if (TextInput.defaultProps == null) {
   TextInput.defaultProps = {};
 }
 TextInput.defaultProps.style = { fontFamily: 'Montserrat_400Regular' };
+
+// Global Android native overscroll stretch/glow behavior
+if (ScrollView.defaultProps == null) {
+  ScrollView.defaultProps = {};
+}
+ScrollView.defaultProps.overScrollMode = 'always';
+
+if (FlatList.defaultProps == null) {
+  FlatList.defaultProps = {};
+}
+FlatList.defaultProps.overScrollMode = 'always';
 
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { NetworkProvider } from './src/context/NetworkContext';

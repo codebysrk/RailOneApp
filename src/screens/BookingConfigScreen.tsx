@@ -12,7 +12,7 @@ import {
   Keyboard,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import Svg, { Path } from 'react-native-svg';
 import { FirebaseService, StorageService } from '@/services';
@@ -46,6 +46,7 @@ const trainTypeOptions = [
 
 const ticketTypeOptions = [
   { id: 'JOURNEY', label: 'JOURNEY' },
+  { id: 'RETURN', label: 'RETURN' },
 ];
 
 const classOptions = [
@@ -53,6 +54,7 @@ const classOptions = [
 ];
 
 export const BookingConfigScreen = () => {
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const { user, refreshProfile } = useAuth();
@@ -88,7 +90,8 @@ export const BookingConfigScreen = () => {
   const defaultSingleAdultFare = calculateFare(trainKey, 1, 0);
   const activeBaseFare = customBaseFare !== null ? customBaseFare : defaultSingleAdultFare;
 
-  const rawPassengerFare = (adults * activeBaseFare) + Math.round(child * 0.5 * activeBaseFare);
+  const tripMultiplier = ticketType === 'RETURN' ? 2 : 1;
+  const rawPassengerFare = ((adults * activeBaseFare) + Math.round(child * 0.5 * activeBaseFare)) * tripMultiplier;
   const totalFare = concession ? Math.round(rawPassengerFare * 0.5) : rawPassengerFare;
 
   const handleFareDoubleTap = () => {
@@ -120,18 +123,7 @@ export const BookingConfigScreen = () => {
     isBookingRef.current = true;
     setIsBooking(true);
 
-    let computedVia = 'TKD';
-    if ((srcCode === 'MRA' || srcCode === 'GWL') && (dstCode === 'NDLS' || dstCode === 'NZM' || dstCode === 'DLI')) {
-      computedVia = 'TKD';
-    } else if ((srcCode === 'NDLS' || srcCode === 'NZM') && (dstCode === 'MRA' || dstCode === 'GWL')) {
-      computedVia = 'TKD';
-    } else if (srcCode === 'NDLS' && (dstCode === 'BPL' || dstCode === 'RKMP')) {
-      computedVia = 'TKD, GWL, JHS';
-    } else if (srcCode === 'NDLS' && dstCode === 'HWH') {
-      computedVia = 'TKD, CNB, PRYJ';
-    } else if (srcCode === 'NDLS' && dstCode === 'MMCT') {
-      computedVia = 'TKD, KOTA, BRC';
-    }
+    const computedVia = RailwayDistanceEngine.computeOfficialViaRoute(srcCode, dstCode);
 
     const now = new Date();
     const currentDay = now.getDate().toString().padStart(2, '0');
@@ -154,7 +146,14 @@ export const BookingConfigScreen = () => {
     const fullDateTime = `${currentDay} ${monthName} ${currentYear}, ${timeFormatted}`;
 
     const bookedOnStr = `${currentDay}/${currentMonth}/${currentYear} ${timeWithSeconds}`;
-    const validTillStr = `${currentDay}/${currentMonth}/${currentYear} 23:59`;
+    const validTillDateObj = new Date(now);
+    if (ticketType === 'RETURN') {
+      validTillDateObj.setDate(validTillDateObj.getDate() + 1);
+    }
+    const validDay = validTillDateObj.getDate().toString().padStart(2, '0');
+    const validMonth = (validTillDateObj.getMonth() + 1).toString().padStart(2, '0');
+    const validYear = validTillDateObj.getFullYear();
+    const validTillStr = `${validDay}/${validMonth}/${validYear} 23:59`;
 
     const routeInfo = RailwayDistanceEngine.getRailwayDistance(srcCode, dstCode, computedVia);
     const computedDistance = routeInfo.distance.formatted;
@@ -177,7 +176,8 @@ export const BookingConfigScreen = () => {
       destStation: { code: dstCode, name: dstName },
       adults: adults,
       children: child,
-      journeyType: 'JOURNEY',
+      journeyType: ticketType,
+      ticketType: ticketType,
       bookedOn: bookedOnStr,
       validTill: validTillStr,
       createdAt: now.toISOString(),
@@ -234,14 +234,14 @@ export const BookingConfigScreen = () => {
           <View style={styles.mainWrapper}>
             <View style={styles.stationRow}>
               <View style={styles.stationCol}>
-                <Text style={styles.stationName} numberOfLines={1}>{srcName}</Text>
+                <Text style={styles.stationName} numberOfLines={1} ellipsizeMode="tail">{srcName}</Text>
                 <Text style={styles.stationCode}>{srcCode}</Text>
               </View>
               <View style={styles.arrowWrapper}>
                 <MaterialIcons name="arrow-right-alt" size={24} color="#94a3b8" />
               </View>
               <View style={[styles.stationCol, styles.stationColRight]}>
-                <Text style={[styles.stationName, styles.stationNameRight]} numberOfLines={1}>{dstName}</Text>
+                <Text style={[styles.stationName, styles.stationNameRight]} numberOfLines={1} ellipsizeMode="tail">{dstName}</Text>
                 <Text style={[styles.stationCode, styles.stationCodeRight]}>{dstCode}</Text>
               </View>
             </View>
@@ -360,7 +360,12 @@ export const BookingConfigScreen = () => {
                 </TouchableOpacity>
               </View>
 
-              <View style={styles.bookBtnWrapper}>
+              <View
+                style={[
+                  styles.bookBtnWrapper,
+                  { paddingBottom: Math.max(insets.bottom, 12) },
+                ]}
+              >
                 <TouchableOpacity
                   style={[styles.bookBtn, isBooking && { opacity: 0.7 }]}
                   onPress={handleBookNow}
