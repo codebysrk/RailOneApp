@@ -11,6 +11,12 @@ import {
   Montserrat_700Bold,
   Montserrat_800ExtraBold,
 } from '@expo-google-fonts/montserrat';
+import {
+  Poppins_400Regular,
+  Poppins_500Medium,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+} from '@expo-google-fonts/poppins';
 import { StatusBar } from 'expo-status-bar';
 
 // Keep the splash screen visible while loading resources
@@ -18,7 +24,7 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 
 // Helper to map weight to loaded Montserrat font
 const getMontserratFont = (fontWeight, fontFamily) => {
-  if (fontFamily && typeof fontFamily === 'string' && fontFamily.startsWith('Montserrat')) {
+  if (fontFamily && typeof fontFamily === 'string' && (fontFamily.startsWith('Montserrat') || fontFamily.startsWith('Poppins'))) {
     return fontFamily;
   }
   const weightStr = String(fontWeight || '').toLowerCase();
@@ -53,7 +59,13 @@ if (Text.render) {
   const originalTextRender = Text.render;
   Text.render = function (props, ref) {
     const flattened = StyleSheet.flatten(props && props.style) || {};
-    if (flattened.fontFamily === 'sans-serif' || flattened.fontFamily === 'System' || flattened.fontFamily === 'normal' || flattened.fontFamily === 'Roboto') {
+    if (
+      flattened.fontFamily === 'sans-serif' ||
+      flattened.fontFamily === 'System' ||
+      flattened.fontFamily === 'normal' ||
+      flattened.fontFamily === 'Roboto' ||
+      (typeof flattened.fontFamily === 'string' && flattened.fontFamily.startsWith('Poppins'))
+    ) {
       return originalTextRender.call(this, props, ref);
     }
     const targetFont = getMontserratFont(flattened.fontWeight, flattened.fontFamily);
@@ -70,7 +82,13 @@ if (TextInput.render) {
   const originalTextInputRender = TextInput.render;
   TextInput.render = function (props, ref) {
     const flattened = StyleSheet.flatten(props && props.style) || {};
-    if (flattened.fontFamily === 'sans-serif' || flattened.fontFamily === 'System' || flattened.fontFamily === 'normal' || flattened.fontFamily === 'Roboto') {
+    if (
+      flattened.fontFamily === 'sans-serif' ||
+      flattened.fontFamily === 'System' ||
+      flattened.fontFamily === 'normal' ||
+      flattened.fontFamily === 'Roboto' ||
+      (typeof flattened.fontFamily === 'string' && flattened.fontFamily.startsWith('Poppins'))
+    ) {
       return originalTextInputRender.call(this, props, ref);
     }
     const targetFont = getMontserratFont(flattened.fontWeight, flattened.fontFamily);
@@ -252,6 +270,10 @@ export default function App() {
     Montserrat_600SemiBold,
     Montserrat_700Bold,
     Montserrat_800ExtraBold,
+    Poppins_400Regular,
+    Poppins_500Medium,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
   });
 
   // FIX H9: if fonts fail to load due to asset error, proceed with system font fallback rather than freezing splash

@@ -28,6 +28,7 @@ import { AppHeader } from "@/components/common";
 import { useAuth } from "@/context/AuthContext";
 import { FirebaseService } from "@/services";
 import { RailwayDistanceEngine } from "@/services/RailwayDistanceEngine";
+import { getIndianRailwaysIrCode } from "@/utils";
 import Svg, { Polygon, Line } from "react-native-svg";
 
 // ─── Font Weight to Montserrat Mapping ─────────────────────────────────────────
@@ -59,7 +60,8 @@ const Text = (props: React.ComponentProps<typeof RNText>) => {
     (flatStyle.fontFamily === "sans-serif" ||
       flatStyle.fontFamily === "System" ||
       flatStyle.fontFamily === "normal" ||
-      flatStyle.fontFamily === "Roboto")
+      flatStyle.fontFamily === "Roboto" ||
+      (typeof flatStyle.fontFamily === "string" && flatStyle.fontFamily.startsWith("Poppins")))
   ) {
     return <RNText {...props} />;
   }
@@ -159,13 +161,14 @@ interface DiamondPatternProps {
 }
 
 const DynamicPreviewDiamondBackground: React.FC<DiamondPatternProps> = React.memo(({ width, height }) => {
+  const bannerW = width > 0 ? width : 360;
   const bannerH = height > 0 ? height : 220;
+  const diamondWidth = bannerW / 8.5;
   const diamondHeight = bannerH / 2.5;
-  const diamondWidth = Math.round(diamondHeight * 0.57);
   const halfW = diamondWidth / 2;
   const halfH = diamondHeight / 2;
 
-  const cols = Math.ceil(width / halfW) + 2;
+  const cols = Math.ceil(bannerW / halfW) + 4;
 
   const polygons = useMemo(() => {
     const items: Array<{
@@ -174,28 +177,28 @@ const DynamicPreviewDiamondBackground: React.FC<DiamondPatternProps> = React.mem
       fill: string;
     }> = [];
 
-    const yShift = 40;
+    const yShift = 34;
 
-    for (let c = -1; c < cols; c++) {
+    for (let c = -2; c < cols; c++) {
       const x = c * halfW;
       const yOffset = (c % 2 === 0 ? 0 : halfH) - yShift;
       const isLight = Math.abs(c) % 2 === 1;
 
-      for (let r = 0; r <= 4; r++) {
+      for (let r = -1; r <= 4; r++) {
         const y = yOffset + r * diamondHeight;
         const pts = `${x},${y - halfH} ${x + halfW},${y} ${x},${y + halfH} ${x - halfW},${y}`;
         items.push({
           key: `d-${c}-${r}`,
           points: pts,
-          fill: isLight ? '#444444' : '#222222',
+          fill: isLight ? '#6b7280' : '#000000ff',
         });
       }
     }
     return items;
-  }, [width, bannerH, cols, halfW, halfH, diamondHeight]);
+  }, [bannerW, bannerH, cols, halfW, halfH, diamondWidth, diamondHeight]);
 
   return (
-    <View style={[StyleSheet.absoluteFill, { transform: [{ scaleX: -1 }], opacity: 0.3 }]} pointerEvents="none">
+    <View style={[StyleSheet.absoluteFill, { transform: [{ scaleX: -1 }], opacity: 0.1 }]} pointerEvents="none">
       <Svg width="100%" height="100%">
         {polygons.map((p) => (
           <Polygon key={p.key} points={p.points} fill={p.fill} />
@@ -310,14 +313,12 @@ export const TicketScreen = () => {
       ticketData?.rNumber || "R" + Math.floor(10000 + Math.random() * 90000),
     [ticketData?.rNumber],
   );
-  const irCode = useMemo(
-    () =>
-      ticketData?.irCode ||
-      "IR:" +
-        Math.random().toString(36).substring(2, 10).toUpperCase() +
-        "C1ZR",
-    [ticketData?.irCode],
-  );
+  const irCode = useMemo(() => {
+    if (ticketData?.irCode && /^IR:\d{2}AAAGM0289C1Z[A-Z0-9]$/i.test(ticketData.irCode)) {
+      return ticketData.irCode;
+    }
+    return getIndianRailwaysIrCode(ticketData?.sourceCode || source || ticketData?.source);
+  }, [ticketData?.irCode, ticketData?.sourceCode, source, ticketData?.source]);
 
   // Dynamic passenger quantities from database
   const adultsCount = useMemo(() => {
@@ -704,7 +705,7 @@ export const TicketScreen = () => {
                     <Text style={styles.utsFieldLabel}>
                       {ticketData?.ticketType === "RETURN" ? "Return Ticket" : "Journey Ticket"}
                     </Text>
-                    <Text style={styles.utsTicketId}>{ticketId}</Text>
+                    <Text style={styles.utsFieldValue}>{ticketId}</Text>
                   </View>
                   <View style={styles.utsActiveBadge}>
                     <Text style={styles.utsActiveBadgeText}>• ACTIVE</Text>
@@ -715,11 +716,11 @@ export const TicketScreen = () => {
                 <View style={styles.utsGridRow}>
                   <View style={styles.gridColLeft}>
                     <Text style={styles.utsFieldLabel}>Source</Text>
-                    <Text style={styles.utsStationName}>{source}</Text>
+                    <Text style={styles.utsFieldValue}>{source}</Text>
                   </View>
                   <View style={styles.gridColRight}>
                     <Text style={[styles.utsFieldLabel, styles.alignRight]}>Destination</Text>
-                    <Text style={[styles.utsStationName, styles.alignRight]}>{dest}</Text>
+                    <Text style={[styles.utsFieldValue, styles.alignRight]}>{dest}</Text>
                   </View>
                 </View>
 
@@ -1091,7 +1092,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   ticketCardWrapper: { borderRadius: 12, overflow: "hidden", backgroundColor: "#ffffff" },
-  cyanRibbon: { height: 16, backgroundColor: "rgb(0, 190, 204)" },
+  cyanRibbon: { height: 16, backgroundColor: "rgba(74, 226, 236, 1)" },
   progressBarTrack: {
     height: 5,
     backgroundColor: "#adadad",
@@ -1104,8 +1105,8 @@ const styles = StyleSheet.create({
     position: "relative",
     overflow: "hidden",
     flexDirection: "row",
-    paddingTop: 2,
-    paddingBottom: 2,
+    paddingTop: 8,
+    paddingBottom: 8,
     alignItems: "center",
     justifyContent: "space-between",
   },
@@ -1115,8 +1116,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   verticalTextEnglish: {
-    fontFamily: "sans-serif",
-    fontWeight: "700",
+    fontFamily: "Poppins_700Bold",
     color: "#6b7280",
     fontSize: 15,
     letterSpacing: 0.5,
@@ -1130,10 +1130,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   verticalTextHindi: {
-    fontFamily: "sans-serif",
-    fontWeight: "700",
+    fontFamily: "Poppins_700Bold",
     color: "#6b7280",
-    fontSize: 20,
+    fontSize: 16,
     letterSpacing: 0,
     transform: [{ rotate: "-90deg" }],
     width: 130,
@@ -1251,31 +1250,23 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   utsFieldLabel: {
-    fontFamily: "sans-serif",
+    fontFamily: "Poppins_400Regular",
     fontWeight: "400",
     fontSize: 11.5,
     color: "#6b7280",
     letterSpacing: 0,
-    marginBottom: 2,
-  },
-  utsTicketId: {
-    fontFamily: "sans-serif",
-    fontWeight: "bold",
-    fontSize: 13.5,
-    color: "#111827",
-    letterSpacing: 0,
+    marginBottom: -1,
   },
   utsActiveBadge: {
     backgroundColor: "#dcfce7",
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
     borderRadius: 12,
     alignSelf: "flex-start",
     marginTop: 2,
   },
   utsActiveBadgeText: {
-    fontFamily: "sans-serif",
-    fontWeight: "bold",
+    fontFamily: "Poppins_500Medium",
     fontSize: 10,
     color: "#059669",
     letterSpacing: 0.2,
@@ -1288,16 +1279,8 @@ const styles = StyleSheet.create({
   },
   gridColLeft: { flex: 1 },
   gridColRight: { flex: 1, alignItems: "flex-end" },
-  utsStationName: {
-    fontFamily: "sans-serif",
-    fontWeight: "bold",
-    fontSize: 12.5,
-    color: "#111827",
-    letterSpacing: 0,
-    textTransform: "uppercase",
-  },
   utsFieldValue: {
-    fontFamily: "sans-serif",
+    fontFamily: "Poppins_700Bold",
     fontWeight: "bold",
     fontSize: 12.5,
     color: "#111827",
@@ -1310,30 +1293,28 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     alignSelf: "stretch",
-    backgroundColor: "#f1f5f9",
+    backgroundColor: "#f8f8f8c8",
     borderWidth: 1,
-    borderColor: "#e2e8f0",
-    borderRadius: 8,
+    borderColor: "#eaeaeaff",
+    borderRadius: 12,
     paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingVertical: 8,
     marginTop: 10,
     marginBottom: 6,
   },
   viaChipText: {
-    fontFamily: "sans-serif",
-    fontWeight: "bold",
+    fontFamily: "Poppins_500Medium",
+    fontWeight: "500",
     fontSize: 11.5,
-    color: "#64748b",
+    color: "#4c4d4e",
     letterSpacing: 0,
   },
   irCodeText: {
-    fontFamily: "sans-serif",
-    fontWeight: "500",
-    fontSize: 10.5,
-    color: "#94a3b8",
+    fontFamily: "Poppins_500Medium",
+    fontSize: 12,
+    color: "#3a3a3aff",
     marginTop: 4,
     marginBottom: 5,
-    letterSpacing: 0,
   },
   tearWrapper: {
     height: 12,
@@ -1360,7 +1341,7 @@ const styles = StyleSheet.create({
   tearCutoutLeft: { left: -27 },
   tearCutoutRight: { right: -27 },
   validityNote: {
-    fontFamily: "sans-serif",
+    fontFamily: "Poppins_400Regular",
     fontWeight: "400",
     fontSize: 9.5,
     color: "#6b7280",
@@ -1369,7 +1350,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   warningCard: {
-    backgroundColor: "#fde8e8",
+    backgroundColor: "#ffe4e4ff",
     borderRadius: 8,
     paddingVertical: 9,
     paddingHorizontal: 12,
@@ -1377,9 +1358,9 @@ const styles = StyleSheet.create({
   },
   warningText: {
     fontFamily: "Montserrat_500Medium",
-    color: "#dc2626",
-    fontSize: 10.5,
-    lineHeight: 14.5,
+    color: "#f81010ff",
+    fontSize: 11,
+    lineHeight: 15,
     textAlign: "center",
   },
   connectingBtn: {

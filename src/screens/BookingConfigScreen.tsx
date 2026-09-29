@@ -22,6 +22,7 @@ import { AppHeader } from '@/components/common';
 import { calculateFare, TrainType } from '@/services/FareEngine';
 import { RailwayDistanceEngine } from '@/services/RailwayDistanceEngine';
 import { triggerHaptic } from '@/utils/haptics';
+import { getIndianRailwaysIrCode } from '@/utils';
 
 const FareTicketIcon = ({ size = 30, color = "#0066ff" }: { size?: number; color?: string }) => (
   <Svg width={size} height={size * 0.72} viewBox="0 0 32 23" fill="none">
@@ -158,7 +159,7 @@ export const BookingConfigScreen = () => {
     const routeInfo = RailwayDistanceEngine.getRailwayDistance(srcCode, dstCode, computedVia);
     const computedDistance = routeInfo.distance.formatted;
     const computedRNumber = 'R' + Math.floor(10000 + Math.random() * 90000);
-    const computedIrCode = 'IR:' + Math.random().toString(36).substring(2, 10).toUpperCase() + 'C1ZR';
+    const computedIrCode = getIndianRailwaysIrCode(srcCode || srcName);
     const generatedTicketId = 'XMSQEB' + Math.floor(1000 + Math.random() * 9000);
     const bookingIdStr = 'BK_' + Date.now();
 
