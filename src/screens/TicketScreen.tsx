@@ -1257,7 +1257,7 @@ const styles = StyleSheet.create({
   utsFieldLabel: {
     fontFamily: "sans-serif",
     fontWeight: "400",
-    fontSize: 9.5,
+    fontSize: 11.5,
     color: "#6b7280",
     letterSpacing: 0,
     marginBottom: 2,
