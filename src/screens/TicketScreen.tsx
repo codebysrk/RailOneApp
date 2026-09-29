@@ -57,6 +57,16 @@ const Text = (props: React.ComponentProps<typeof RNText>) => {
     return <RNText {...props} />;
   }
 
+  if (
+    flatStyle.fontFamily &&
+    (flatStyle.fontFamily === "sans-serif" ||
+      flatStyle.fontFamily === "System" ||
+      flatStyle.fontFamily === "normal" ||
+      flatStyle.fontFamily === "Roboto")
+  ) {
+    return <RNText {...props} />;
+  }
+
   const weightKey = String(flatStyle.fontWeight).toLowerCase();
   const mappedFamily = FONT_WEIGHT_MAP[weightKey] || "Montserrat_500Medium";
 
@@ -1245,6 +1255,7 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   utsFieldLabel: {
+    fontFamily: "sans-serif",
     fontWeight: "400",
     fontSize: 9.5,
     color: "#6b7280",
@@ -1252,6 +1263,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   utsTicketId: {
+    fontFamily: "sans-serif",
     fontWeight: "bold",
     fontSize: 13.5,
     color: "#111827",
@@ -1266,6 +1278,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   utsActiveBadgeText: {
+    fontFamily: "sans-serif",
     fontWeight: "bold",
     fontSize: 10,
     color: "#059669",
@@ -1280,6 +1293,7 @@ const styles = StyleSheet.create({
   gridColLeft: { flex: 1 },
   gridColRight: { flex: 1, alignItems: "flex-end" },
   utsStationName: {
+    fontFamily: "sans-serif",
     fontWeight: "bold",
     fontSize: 12.5,
     color: "#111827",
@@ -1287,6 +1301,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   utsFieldValue: {
+    fontFamily: "sans-serif",
     fontWeight: "bold",
     fontSize: 12.5,
     color: "#111827",
@@ -1309,12 +1324,14 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   viaChipText: {
+    fontFamily: "sans-serif",
     fontWeight: "bold",
     fontSize: 11.5,
     color: "#64748b",
     letterSpacing: 0,
   },
   irCodeText: {
+    fontFamily: "sans-serif",
     fontWeight: "500",
     fontSize: 10.5,
     color: "#94a3b8",
@@ -1347,6 +1364,7 @@ const styles = StyleSheet.create({
   tearCutoutLeft: { left: -27 },
   tearCutoutRight: { right: -27 },
   validityNote: {
+    fontFamily: "sans-serif",
     fontWeight: "400",
     fontSize: 9.5,
     color: "#6b7280",

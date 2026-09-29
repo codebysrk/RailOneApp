@@ -53,6 +53,9 @@ if (Text.render) {
   const originalTextRender = Text.render;
   Text.render = function (props, ref) {
     const flattened = StyleSheet.flatten(props && props.style) || {};
+    if (flattened.fontFamily === 'sans-serif' || flattened.fontFamily === 'System' || flattened.fontFamily === 'normal' || flattened.fontFamily === 'Roboto') {
+      return originalTextRender.call(this, props, ref);
+    }
     const targetFont = getMontserratFont(flattened.fontWeight, flattened.fontFamily);
     const newProps = {
       ...props,
@@ -67,6 +70,9 @@ if (TextInput.render) {
   const originalTextInputRender = TextInput.render;
   TextInput.render = function (props, ref) {
     const flattened = StyleSheet.flatten(props && props.style) || {};
+    if (flattened.fontFamily === 'sans-serif' || flattened.fontFamily === 'System' || flattened.fontFamily === 'normal' || flattened.fontFamily === 'Roboto') {
+      return originalTextInputRender.call(this, props, ref);
+    }
     const targetFont = getMontserratFont(flattened.fontWeight, flattened.fontFamily);
     const newProps = {
       ...props,
