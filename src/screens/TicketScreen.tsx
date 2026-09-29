@@ -70,7 +70,7 @@ const Text = (props: React.ComponentProps<typeof RNText>) => {
 };
 
 // ─── Dual Mechanical Rolling Reel (Jata Hua & Aata Hua Digits) ───────────────────
-const CELL_HEIGHT = 46;
+const CELL_HEIGHT = 44;
 
 const ReverseSlidingBlock = React.memo(({ value }: { value: string }) => {
   const [displayVal, setDisplayVal] = useState(value);
