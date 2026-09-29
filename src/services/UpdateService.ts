@@ -78,15 +78,7 @@ export const UpdateService = {
         publishedAt: data.published_at ? new Date(data.published_at).toLocaleDateString() : '',
       };
     } catch (error: any) {
-      // Silently ignore network/DNS errors — expected when device is offline
-      const isNetworkError =
-        error?.message?.includes('fetch failed') ||
-        error?.message?.includes('UnknownHostException') ||
-        error?.message?.includes('network') ||
-        error?.message?.includes('No address associated');
-      if (!isNetworkError) {
-        console.warn('Failed to check for updates:', error);
-      }
+      console.warn('Failed to check for updates:', error);
       return null;
     }
   },
