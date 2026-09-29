@@ -782,8 +782,8 @@ export const TicketScreen = () => {
 
                 {/* Row 6: Via Chip */}
                 <View style={styles.viaChipContainer}>
-                  <Ionicons
-                    name="share-social-outline"
+                  <MaterialIcons
+                    name="alt-route"
                     size={16}
                     color="#64748b"
                     style={{ marginRight: 6 }}
