@@ -214,8 +214,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           status: initialStatus,
         });
       }
-    } catch (err) {
-      console.warn('AuthContext: failed to load profile, keeping last known state:', err);
+    } catch (err: any) {
+      // Silently handle offline / network errors — expected when device has no internet
+      const isOffline =
+        err?.code === 'failed-precondition' ||
+        err?.code === 'unavailable' ||
+        err?.message?.includes('offline') ||
+        err?.message?.includes('network') ||
+        err?.message?.includes('Failed to get document');
+      if (!isOffline) {
+        console.warn('AuthContext: failed to load profile:', err);
+      }
       setUser((prev) => {
         if (prev) return prev;
         return {

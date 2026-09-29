@@ -2,7 +2,7 @@ import { Linking } from 'react-native';
 
 const GITHUB_OWNER = 'codebysrk';
 const GITHUB_REPO = 'RailOneApp';
-const CURRENT_APP_VERSION = '1.1.0';
+const CURRENT_APP_VERSION = '1.1.1';
 
 export interface ReleaseInfo {
   updateAvailable: boolean;
@@ -77,8 +77,16 @@ export const UpdateService = {
         downloadUrl,
         publishedAt: data.published_at ? new Date(data.published_at).toLocaleDateString() : '',
       };
-    } catch (error) {
-      console.warn('Failed to check for updates:', error);
+    } catch (error: any) {
+      // Silently ignore network/DNS errors — expected when device is offline
+      const isNetworkError =
+        error?.message?.includes('fetch failed') ||
+        error?.message?.includes('UnknownHostException') ||
+        error?.message?.includes('network') ||
+        error?.message?.includes('No address associated');
+      if (!isNetworkError) {
+        console.warn('Failed to check for updates:', error);
+      }
       return null;
     }
   },
