@@ -31,8 +31,12 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: 📱 Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: 📱 Android SDK — verify pre-installed tools
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "SDK_ROOT=$ANDROID_SDK_ROOT"
+          ls $ANDROID_HOME/cmdline-tools/ || true
+          sdkmanager --list 2>/dev/null | head -20 || true
 
       - name: 🐘 Setup Gradle
         uses: gradle/actions/setup-gradle@v4
