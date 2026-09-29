@@ -1115,7 +1115,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   verticalTextEnglish: {
-    fontFamily: "Montserrat_700Bold",
+    fontFamily: "sans-serif",
     fontWeight: "700",
     color: "#6b7280",
     fontSize: 13,
@@ -1130,7 +1130,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   verticalTextHindi: {
-    fontFamily: "Montserrat_700Bold",
+    fontFamily: "sans-serif",
     fontWeight: "700",
     color: "#6b7280",
     fontSize: 18,
