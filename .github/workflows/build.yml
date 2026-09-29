@@ -2,7 +2,6 @@ name: Build & Release 4 Split Android APKs
 
 on:
   push:
-    branches: [ main ]
     tags:
       - 'v*'
   workflow_dispatch:
