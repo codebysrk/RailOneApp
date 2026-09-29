@@ -188,7 +188,7 @@ const DynamicPreviewDiamondBackground: React.FC<DiamondPatternProps> = React.mem
   }, [width, bannerH, cols, halfW, halfH, diamondHeight]);
 
   return (
-    <View style={[StyleSheet.absoluteFill, { transform: [{ scaleX: -1 }], opacity: 0.3 }]} pointerEvents="none">
+    <View style={[StyleSheet.absoluteFill, { transform: [{ scaleX: -1 }], opacity: 0.05 }]} pointerEvents="none">
       <Svg width="100%" height="100%">
         {polygons.map((p) => (
           <Polygon key={p.key} points={p.points} fill={p.fill} />
@@ -623,8 +623,8 @@ export const TicketScreen = () => {
           {/* ─── 1. Main Pixel-Perfect Ticket Card ────────────────────── */}
           <View style={styles.ticketShadow}>
             <View style={styles.ticketCardWrapper}>
-              {/* Top Cyan Accent Ribbon */}
-              <View style={styles.cyanRibbon} />
+              {/* Top Pink/Brown Accent Ribbon */}
+              <View style={styles.pinkRibbon} />
 
               {/* Dynamic Dark Banner */}
               <View
@@ -636,7 +636,7 @@ export const TicketScreen = () => {
                   }
                 }}
               >
-                {/* Dynamic Preview Diamond / Rhombus Background Pattern */}
+                {/* Dynamic Preview Background Pattern (Hidden in target) */}
                 <DynamicPreviewDiamondBackground
                   width={dynamicBannerSize.width}
                   height={dynamicBannerSize.height}
@@ -682,13 +682,6 @@ export const TicketScreen = () => {
                 <View style={styles.verticalColRight}>
                   <Text style={styles.verticalTextHindi}>भारतीय रेल</Text>
                 </View>
-              </View>
-
-              {/* Dynamic Cyan Ribbon Progress Bar at Bottom of Dark Section */}
-              <View style={styles.progressBarTrack}>
-                <Animated.View
-                  style={[styles.progressBarFill, { width: progressWidth }]}
-                />
               </View>
 
               {/* Ticket Body (Official UTS Mobile Match) */}
@@ -772,11 +765,11 @@ export const TicketScreen = () => {
 
                 {/* Row 6: Via Chip */}
                 <View style={styles.viaChipContainer}>
-                  <MaterialIcons
-                    name="alt-route"
-                    size={24}
+                  <Ionicons
+                    name="share-social-outline"
+                    size={16}
                     color="#64748b"
-                    style={{ marginRight: 6, transform: [{ rotate: "90deg" }] }}
+                    style={{ marginRight: 6 }}
                   />
                   <Text style={styles.viaChipText}>Via: {via || "---"}</Text>
                 </View>
@@ -787,6 +780,7 @@ export const TicketScreen = () => {
                 {/* Perforation Notch Cutout Line */}
                 <View style={styles.tearWrapper}>
                   <View style={[styles.tearCutout, styles.tearCutoutLeft]} />
+                  <View style={styles.tearDashedLine} />
                   <View style={[styles.tearCutout, styles.tearCutoutRight]} />
                 </View>
 
@@ -798,8 +792,8 @@ export const TicketScreen = () => {
                 </Text>
               </View>
 
-              {/* Bottom Cyan Accent Ribbon */}
-              <View style={styles.cyanRibbon} />
+              {/* Bottom Pink/Brown Accent Ribbon */}
+              <View style={styles.pinkRibbon} />
             </View>
           </View>
 
@@ -1088,15 +1082,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
-  ticketCardWrapper: { borderRadius: 12, overflow: "hidden" },
-  cyanRibbon: { height: 9, backgroundColor: "rgb(0, 190, 204)" },
+  ticketCardWrapper: { borderRadius: 12, overflow: "hidden", backgroundColor: "#ffffff" },
+  pinkRibbon: { height: 16, backgroundColor: "#c29d95" },
   progressBarTrack: {
     height: 3,
     backgroundColor: "#adadad",
     width: "100%",
     overflow: "hidden",
   },
-  progressBarFill: { height: "100%", backgroundColor: "rgb(0, 190, 204)" },
+  progressBarFill: { height: "100%", backgroundColor: "#c29d95" },
   darkBanner: {
     backgroundColor: "#121212",
     position: "relative",
@@ -1238,62 +1232,60 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 2,
+    marginBottom: 0,
   },
   utsFieldLabel: {
     fontFamily: "Montserrat_600SemiBold",
     fontWeight: "600",
-    fontSize: 11,
+    fontSize: 10,
     color: "#6b7280",
     letterSpacing: 0.1,
-    marginBottom: 1,
+    marginBottom: 0,
   },
   utsTicketId: {
-    fontFamily: "Montserrat_700Bold",
-    fontWeight: "700",
-    fontSize: 15,
+    fontFamily: "Montserrat_600SemiBold",
+    fontWeight: "600",
+    fontSize: 13,
     color: "#111827",
     letterSpacing: 0.5,
   },
   utsActiveBadge: {
-    backgroundColor: "#e8f8ee",
+    backgroundColor: "#dcfce7",
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#bbf0c8",
+    borderRadius: 12,
     alignSelf: "flex-start",
     marginTop: 1,
   },
   utsActiveBadgeText: {
     fontFamily: "Montserrat_700Bold",
     fontWeight: "700",
-    fontSize: 10.5,
-    color: "#16a34a",
-    letterSpacing: 0.4,
+    fontSize: 10,
+    color: "#059669",
+    letterSpacing: 0.2,
   },
   utsGridRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginTop: 2,
+    marginTop: 0,
   },
   gridColLeft: { flex: 1 },
   gridColRight: { flex: 1, alignItems: "flex-end" },
   utsStationName: {
-    fontFamily: "Montserrat_700Bold",
-    fontWeight: "700",
-    fontSize: 13.5,
+    fontFamily: "Montserrat_600SemiBold",
+    fontWeight: "600",
+    fontSize: 12,
     color: "#111827",
-    letterSpacing: 0.2,
+    letterSpacing: 0.1,
     textTransform: "uppercase",
   },
   utsFieldValue: {
-    fontFamily: "Montserrat_700Bold",
-    fontWeight: "700",
-    fontSize: 12.5,
+    fontFamily: "Montserrat_600SemiBold",
+    fontWeight: "600",
+    fontSize: 12,
     color: "#111827",
-    letterSpacing: 0.2,
+    letterSpacing: 0.1,
   },
   alignRight: {
     textAlign: "right",
@@ -1301,29 +1293,30 @@ const styles = StyleSheet.create({
   viaChipContainer: {
     flexDirection: "row",
     alignItems: "center",
-    width: "100%",
-    backgroundColor: "#f3f4f6",
+    alignSelf: "stretch",
+    backgroundColor: "#f1f5f9",
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    marginTop: 4,
-    marginBottom: 2,
+    borderColor: "#e2e8f0",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginTop: 8,
+    marginBottom: 8,
   },
   viaChipText: {
     fontFamily: "Montserrat_600SemiBold",
     fontWeight: "600",
-    fontSize: 12.5, // Increased slightly
-    color: "#64748b", // lighter grey
+    fontSize: 11.5,
+    color: "#64748b",
     letterSpacing: 0.2,
   },
   irCodeText: {
     fontFamily: "Montserrat_500Medium",
     fontWeight: "500",
-    fontSize: 10.5,
+    fontSize: 11,
     color: "#64748b",
-    marginTop: 1,
+    marginTop: 2,
+    marginBottom: 6,
     letterSpacing: 0.3,
   },
   tearWrapper: {
@@ -1335,27 +1328,27 @@ const styles = StyleSheet.create({
   tearDashedLine: {
     flex: 1,
     height: 1,
-    borderWidth: 0.5,
+    borderWidth: 0.8,
     borderColor: "#cbd5e1",
     borderStyle: "dashed",
-    marginHorizontal: 8,
+    marginHorizontal: 12,
   },
   tearCutout: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
     backgroundColor: "#f2f2f2",
     position: "absolute",
-    top: -2,
+    top: -1,
   },
-  tearCutoutLeft: { left: -20 },
-  tearCutoutRight: { right: -20 },
+  tearCutoutLeft: { left: -19 },
+  tearCutoutRight: { right: -19 },
   validityNote: {
     fontFamily: "Montserrat_500Medium",
-    fontSize: 9.5,
+    fontSize: 10,
     color: "#64748b",
     lineHeight: 14,
-    marginTop: 2,
+    marginTop: 6,
   },
   warningCard: {
     backgroundColor: "#f9e6e6",
