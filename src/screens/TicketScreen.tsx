@@ -786,7 +786,7 @@ export const TicketScreen = () => {
                     name="alt-route"
                     size={16}
                     color="#64748b"
-                    style={{ marginRight: 6 }}
+                    style={{ marginRight: 6, transform: [{ rotate: "90deg" }] }}
                   />
                   <Text style={styles.viaChipText}>Via: {via || "---"}</Text>
                 </View>
