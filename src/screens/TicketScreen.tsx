@@ -188,7 +188,7 @@ const DynamicPreviewDiamondBackground: React.FC<DiamondPatternProps> = React.mem
   }, [width, bannerH, cols, halfW, halfH, diamondHeight]);
 
   return (
-    <View style={[StyleSheet.absoluteFill, { transform: [{ scaleX: -1 }], opacity: 0.05 }]} pointerEvents="none">
+    <View style={[StyleSheet.absoluteFill, { transform: [{ scaleX: -1 }], opacity: 0.3 }]} pointerEvents="none">
       <Svg width="100%" height="100%">
         {polygons.map((p) => (
           <Polygon key={p.key} points={p.points} fill={p.fill} />
@@ -623,8 +623,8 @@ export const TicketScreen = () => {
           {/* ─── 1. Main Pixel-Perfect Ticket Card ────────────────────── */}
           <View style={styles.ticketShadow}>
             <View style={styles.ticketCardWrapper}>
-              {/* Top Pink/Brown Accent Ribbon */}
-              <View style={styles.pinkRibbon} />
+              {/* Top Cyan Accent Ribbon */}
+              <View style={styles.cyanRibbon} />
 
               {/* Dynamic Dark Banner */}
               <View
@@ -636,7 +636,7 @@ export const TicketScreen = () => {
                   }
                 }}
               >
-                {/* Dynamic Preview Background Pattern (Hidden in target) */}
+                {/* Dynamic Preview Diamond / Rhombus Background Pattern */}
                 <DynamicPreviewDiamondBackground
                   width={dynamicBannerSize.width}
                   height={dynamicBannerSize.height}
@@ -682,6 +682,13 @@ export const TicketScreen = () => {
                 <View style={styles.verticalColRight}>
                   <Text style={styles.verticalTextHindi}>भारतीय रेल</Text>
                 </View>
+              </View>
+
+              {/* Dynamic Cyan Ribbon Progress Bar at Bottom of Dark Section */}
+              <View style={styles.progressBarTrack}>
+                <Animated.View
+                  style={[styles.progressBarFill, { width: progressWidth }]}
+                />
               </View>
 
               {/* Ticket Body (Official UTS Mobile Match) */}
@@ -792,8 +799,8 @@ export const TicketScreen = () => {
                 </Text>
               </View>
 
-              {/* Bottom Pink/Brown Accent Ribbon */}
-              <View style={styles.pinkRibbon} />
+              {/* Bottom Cyan Accent Ribbon */}
+              <View style={styles.cyanRibbon} />
             </View>
           </View>
 
@@ -1083,14 +1090,14 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   ticketCardWrapper: { borderRadius: 12, overflow: "hidden", backgroundColor: "#ffffff" },
-  pinkRibbon: { height: 16, backgroundColor: "#c29d95" },
+  cyanRibbon: { height: 9, backgroundColor: "rgb(0, 190, 204)" },
   progressBarTrack: {
     height: 3,
     backgroundColor: "#adadad",
     width: "100%",
     overflow: "hidden",
   },
-  progressBarFill: { height: "100%", backgroundColor: "#c29d95" },
+  progressBarFill: { height: "100%", backgroundColor: "rgb(0, 190, 204)" },
   darkBanner: {
     backgroundColor: "#121212",
     position: "relative",
