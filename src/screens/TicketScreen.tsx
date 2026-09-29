@@ -1102,7 +1102,7 @@ const styles = StyleSheet.create({
   ticketCardWrapper: { borderRadius: 12, overflow: "hidden", backgroundColor: "#ffffff" },
   cyanRibbon: { height: 16, backgroundColor: "rgb(0, 190, 204)" },
   progressBarTrack: {
-    height: 3,
+    height: 6,
     backgroundColor: "#adadad",
     width: "100%",
     overflow: "hidden",
