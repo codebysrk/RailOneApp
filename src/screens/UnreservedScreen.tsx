@@ -17,7 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, Feather, MaterialIcons } from "@expo/vector-icons";
 import Svg, { Path } from "react-native-svg";
 import { colors } from "@/theme/colors";
-import { spacing, elevation } from "@/theme/spacing";
+import { elevation } from "@/theme/spacing";
 import { AppAlert } from "@/context/AlertContext";
 import { AppHeader, SegmentedControl } from "@/components/common";
 import { FirebaseService, StorageService, StationModel } from "@/services";

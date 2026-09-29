@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   ScrollView,
   Share,
-  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
@@ -28,7 +27,7 @@ type MenuItem = {
 export const MenuScreen = () => {
   const navigation = useNavigation<any>();
   const { user, logout } = useAuth();
-  const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [, setCheckingUpdate] = useState(false);
   const [updateInfo, setUpdateInfo] = useState<ReleaseInfo | null>(null);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
 

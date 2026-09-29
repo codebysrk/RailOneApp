@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { FocusAwareStatusBar, AppHeader } from '@/components/common';
 import { StorageService } from '@/services';
 

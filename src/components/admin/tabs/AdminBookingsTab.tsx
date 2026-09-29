@@ -40,8 +40,6 @@ export const AdminBookingsTab: React.FC<AdminBookingsTabProps> = ({
   filteredBookings,
   bookingSearchQuery,
   setBookingSearchQuery,
-  usersList,
-  userBookingCountMap,
   selectedUserFilterId,
   setSelectedUserFilterId,
   bookingStatusFilter,

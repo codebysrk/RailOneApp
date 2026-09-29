@@ -112,7 +112,7 @@ const DeLinkAadharSvg = () => (
 export const ProfileScreen = () => {
   const { width } = useWindowDimensions();
   const gridBoxWidth = (width - 48) / 3;
-  const { user, updateUserProfile, addWalletBalance, requestWalletRecharge, refreshProfile, isAdmin } = useAuth();
+  const { user, updateUserProfile, addWalletBalance, requestWalletRecharge, refreshProfile } = useAuth();
   const navigation = useNavigation<any>();
 
   // Modals state

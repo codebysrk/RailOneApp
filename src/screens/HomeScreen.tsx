@@ -7,7 +7,6 @@ import {
   FlatList,
   TouchableOpacity,
   Image,
-  Dimensions,
   ImageBackground,
   Linking,
   useWindowDimensions,
@@ -16,7 +15,6 @@ import {
   ToastAndroid,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { StatusBar } from "expo-status-bar";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -28,7 +26,7 @@ import Svg, {
   Path,
 } from "react-native-svg";
 import { colors } from "@/theme/colors";
-import { spacing, elevation } from "@/theme/spacing";
+import { elevation } from "@/theme/spacing";
 import { FirebaseService, UpdateService, ReleaseInfo } from "@/services";
 import { useAuth } from "@/context/AuthContext";
 import { UpdateModal, FocusAwareStatusBar } from "@/components/common";

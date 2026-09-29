@@ -9,7 +9,6 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
-  Share,
   Animated,
   Easing,
   BackHandler,
@@ -23,11 +22,9 @@ import {
   useIsFocused,
 } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons, Feather, MaterialIcons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { AppAlert } from "@/context/AlertContext";
 import { AppHeader } from "@/components/common";
-import { colors } from "@/theme/colors";
-import { spacing, elevation } from "@/theme/spacing";
 import { useAuth } from "@/context/AuthContext";
 import { FirebaseService } from "@/services";
 import { RailwayDistanceEngine } from "@/services/RailwayDistanceEngine";
@@ -217,7 +214,6 @@ export const TicketScreen = () => {
 
   const [dynamicBannerSize, setDynamicBannerSize] = useState({ width: 360, height: 220 });
 
-  const pnr = ticketData?.pnr || "---";
   const ticketId = ticketData?.ticketId || "---";
   const source = ticketData?.source || "---";
   const dest = ticketData?.dest || "---";
@@ -352,7 +348,7 @@ export const TicketScreen = () => {
     return 0;
   }, [ticketData?.children, ticketData?.child, ticketData?.passengers]);
 
-  const { bookedNumeric, validTillNumeric, validTillDate, bookingDate } =
+  const { validTillNumeric, bookingDate } =
     useMemo(() => {
       const now = new Date();
       const currentDay = now.getDate().toString().padStart(2, "0");

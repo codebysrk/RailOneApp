@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -20,7 +20,7 @@ const HeaderSortIcon = ({ color = "#ffffff", size = 17.5 }: { color?: string; si
   <FontAwesome5 name="sort-amount-down-alt" size={size} color={color} />
 );
 
-const TabTicketIcon = ({ color, isSelected, tab }: { color: string; isSelected: boolean; tab: string }) => {
+const TabTicketIcon = ({ isSelected, tab }: { color?: string; isSelected: boolean; tab: string }) => {
   // Define fill colors based on tab
   const getFillColor = () => {
     if (!isSelected) return 'none';

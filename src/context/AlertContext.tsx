@@ -8,7 +8,6 @@ import {
   TouchableWithoutFeedback,
   Animated,
   useWindowDimensions,
-  Platform,
   ViewStyle,
   TextStyle,
 } from 'react-native';
