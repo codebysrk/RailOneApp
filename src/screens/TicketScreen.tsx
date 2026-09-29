@@ -590,17 +590,6 @@ export const TicketScreen = () => {
         subtitle={`Mobile: ${userMobile}`}
         variant="blue"
         onBack={handleBack}
-        rightAction={{
-          icon: "share-social-outline",
-          borderless: true,
-          onPress: async () => {
-            try {
-              await Share.share({
-                message: `RailOne UTS Journey Ticket\nTicket ID (UTS): ${ticketId}\nRoute: ${source} -> ${dest}\nFare: ₹${fare}\nValid Till: ${validTillNumeric}`,
-              });
-            } catch {}
-          },
-        }}
       />
 
       <KeyboardAvoidingView
@@ -1068,31 +1057,26 @@ export const TicketScreen = () => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#0066ff" },
   keyboardContainer: { flex: 1 },
-  scrollView: { flex: 1, backgroundColor: "#f2f2f2" },
-  scrollContent: { paddingHorizontal: 8, paddingTop: 2, paddingBottom: 24 },
+  scrollView: { flex: 1, backgroundColor: "#ebedf0" },
+  scrollContent: { paddingHorizontal: 14, paddingTop: 0, paddingBottom: 28 },
   greetingContainer: {
     backgroundColor: "#ffffff",
-    marginHorizontal: -8,
-    marginTop: -2,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    marginBottom: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 2,
-    elevation: 1,
-    zIndex: 10,
+    marginHorizontal: -14,
+    marginTop: 0,
+    paddingVertical: 9,
+    paddingHorizontal: 16,
+    marginBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e2e8f0",
   },
   greetingText: {
     fontFamily: "Montserrat_400Regular",
-    fontSize: 11,
-    color: "#404040",
+    fontSize: 11.5,
+    color: "#475569",
     textAlign: "left",
   },
   ticketShadow: {
-    marginHorizontal: 6,
-    marginBottom: 4,
+    marginBottom: 10,
     borderRadius: 12,
     backgroundColor: "#ffffff",
     shadowColor: "#000",
@@ -1371,28 +1355,27 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   warningCard: {
-    backgroundColor: "#f9e6e6",
-    borderRadius: 6,
-    paddingVertical: 5,
-    paddingHorizontal: 8,
-    marginVertical: 4,
+    backgroundColor: "#fde8e8",
+    borderRadius: 8,
+    paddingVertical: 9,
+    paddingHorizontal: 12,
+    marginBottom: 12,
   },
   warningText: {
     fontFamily: "Montserrat_500Medium",
-    color: "#ef4444",
+    color: "#dc2626",
     fontSize: 10.5,
-    lineHeight: 14,
+    lineHeight: 14.5,
     textAlign: "center",
   },
   connectingBtn: {
     backgroundColor: "#ffffff",
-    paddingVertical: 8,
+    paddingVertical: 9,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: "#0066ff",
     alignItems: "center",
-    marginBottom: 6,
-    marginTop: 2,
+    marginBottom: 12,
   },
   connectingBtnText: {
     fontFamily: "Montserrat_600SemiBold",
@@ -1401,7 +1384,7 @@ const styles = StyleSheet.create({
   },
   qrSection: {
     backgroundColor: "#ffffff",
-    marginHorizontal: -10,
+    marginHorizontal: -14,
     paddingVertical: 14,
     alignItems: "center",
     justifyContent: "center",
@@ -1414,11 +1397,11 @@ const styles = StyleSheet.create({
   sectionDivider: {
     height: 6,
     backgroundColor: "#e5e7eb",
-    marginHorizontal: -10,
+    marginHorizontal: -14,
   },
   infoSection: {
     backgroundColor: "#ffffff",
-    marginHorizontal: -10,
+    marginHorizontal: -14,
     paddingHorizontal: 14,
     paddingVertical: 14,
   },
