@@ -31,7 +31,7 @@ import { spacing, elevation } from "@/theme/spacing";
 import { useAuth } from "@/context/AuthContext";
 import { FirebaseService } from "@/services";
 import { RailwayDistanceEngine } from "@/services/RailwayDistanceEngine";
-import Svg, { Polygon } from "react-native-svg";
+import Svg, { Polygon, Line } from "react-native-svg";
 
 // ─── Font Weight to Montserrat Mapping ─────────────────────────────────────────
 const FONT_WEIGHT_MAP: Record<string, string> = {
@@ -649,7 +649,19 @@ export const TicketScreen = () => {
                   </Text>
                 </View>
 
-                <View style={styles.verticalDashedSeparator} />
+                {/* Left Vertical Dashed Line (Absolute) */}
+                <View style={styles.verticalDashedSeparatorLeft}>
+                  <Svg height="100%" width="100%">
+                    <Line x1="1" y1="0" x2="1" y2="100%" stroke="#ffffff" strokeOpacity="0.5" strokeWidth="1.5" strokeDasharray="6 4" />
+                  </Svg>
+                </View>
+
+                {/* Right Vertical Dashed Line (Absolute) */}
+                <View style={styles.verticalDashedSeparatorRight}>
+                  <Svg height="100%" width="100%">
+                    <Line x1="1" y1="0" x2="1" y2="100%" stroke="#ffffff" strokeOpacity="0.5" strokeWidth="1.5" strokeDasharray="6 4" />
+                  </Svg>
+                </View>
 
                 {/* Center Countdown Content */}
                 <View style={styles.centerBannerContent}>
@@ -675,8 +687,6 @@ export const TicketScreen = () => {
                     Ticket is Non-Transferable
                   </Text>
                 </View>
-
-                <View style={styles.verticalDashedSeparator} />
 
                 {/* Right Vertical Column */}
                 <View style={styles.verticalColRight}>
@@ -1137,13 +1147,19 @@ const styles = StyleSheet.create({
     width: 130,
     textAlign: "center",
   },
-  verticalDashedSeparator: {
-    width: 1,
-    alignSelf: "stretch",
-    marginVertical: -8,
-    borderLeftWidth: 1.5,
-    borderColor: "#bdc5d0",
-    borderStyle: "dashed",
+  verticalDashedSeparatorLeft: {
+    position: "absolute",
+    left: 28,
+    top: 0,
+    bottom: 0,
+    width: 2,
+  },
+  verticalDashedSeparatorRight: {
+    position: "absolute",
+    right: 28,
+    top: 0,
+    bottom: 0,
+    width: 2,
   },
   centerBannerContent: { flex: 1, alignItems: "center", paddingHorizontal: 2 },
   previewCloseText: {
