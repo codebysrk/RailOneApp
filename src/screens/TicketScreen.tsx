@@ -1074,7 +1074,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     marginHorizontal: -8,
     marginTop: -2,
-    paddingVertical: 5,
+    paddingVertical: 10,
     paddingHorizontal: 10,
     marginBottom: 10,
     shadowColor: "#000",
@@ -1091,6 +1091,7 @@ const styles = StyleSheet.create({
     textAlign: "left",
   },
   ticketShadow: {
+    marginHorizontal: 6,
     marginBottom: 4,
     borderRadius: 12,
     backgroundColor: "#ffffff",
